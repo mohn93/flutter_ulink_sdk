@@ -10,7 +10,7 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
-  app_links: ^3.4.3
+  app_links: ^6.4.0
   http: ^1.1.0
   shared_preferences: ^2.2.2
   uuid: ^4.0.0
