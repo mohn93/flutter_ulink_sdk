@@ -120,7 +120,7 @@ class ULink {
   /// Get the initial link if the app was opened with one
   Future<void> _getInitialLink() async {
     try {
-      final Uri? initialLink = await _appLinks.getInitialAppLink();
+      final Uri? initialLink = await _appLinks.getInitialLink();
       if (initialLink != null) {
         _log('Initial app link: $initialLink');
 

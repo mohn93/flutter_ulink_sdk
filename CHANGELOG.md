@@ -12,14 +12,16 @@
 - Create dynamic links with custom slugs and parameters
 - Social media tag support for better link sharing
 - Automatic handling of dynamic links in your app
-- Resolve links to retrieve their data
 - Support for custom API configuration
 - Test utilities for easier development and testing
-- Added resolveLink method to retrieve original data from dynamic links
-- Added ULinkResolvedData model for handling resolved link data
-- Added automatic resolution of ULink format links (d/[slug]) in link listeners
-- Added comprehensive documentation for link resolution
-- Added example for resolving links in example/test/link_resolve_test.dart
+
+## 0.0.2
+
+* Added resolveLink method to retrieve original data from dynamic links
+* Added ULinkResolvedData model for handling resolved link data
+* Added automatic resolution of ULink format links (d/[slug]) in link listeners
+* Added comprehensive documentation for link resolution
+* Added example for resolving links in example/test/link_resolve_test.dart
 
 ## 0.0.1
 
