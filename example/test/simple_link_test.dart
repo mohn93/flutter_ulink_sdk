@@ -22,7 +22,6 @@ void main() async {
       'iosFallbackUrl': 'myapp://product/123',
       'androidFallbackUrl': 'myapp://product/123',
       'fallbackUrl': 'https://myapp.com/product/123',
-      'deepLink': 'myapp://deeplink/product/123',
       'parameters': {
         'ogTitle': 'Basic Link Title',
         'ogDescription': 'Basic link description for social sharing',
@@ -41,7 +40,6 @@ void main() async {
       'iosFallbackUrl': 'myapp://product/456',
       'androidFallbackUrl': 'myapp://product/456',
       'fallbackUrl': 'https://myapp.com/product/456',
-      'deepLink': 'myapp://deeplink/product/456',
       'parameters': {
         'ogTitle': 'Amazing Product You Must See!',
         'ogDescription':
@@ -63,7 +61,6 @@ void main() async {
       'iosFallbackUrl': 'myapp://product/789',
       'androidFallbackUrl': 'myapp://product/789',
       'fallbackUrl': 'https://myapp.com/product/789',
-      'deepLink': 'myapp://deeplink/product/789',
       'parameters': {
         'utm_source': 'social_share',
         'utm_medium': 'app',

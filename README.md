@@ -13,7 +13,16 @@ and the Flutter guide for
 
 # ULink SDK for Flutter
 
-A Flutter SDK for creating and handling dynamic links with ULink.
+A Flutter SDK for creating and handling dynamic links with ULink, similar to Branch.io.
+
+## Features
+
+- Create dynamic links with custom slugs and parameters
+- Social media tag support for better link sharing
+- Automatic handling of dynamic links in your app
+- Resolve links to retrieve their data
+- Support for custom API configuration
+- Test utilities for easier development and testing
 
 ## Installation
 
@@ -26,26 +35,7 @@ dependencies:
 
 ## Setup
 
-### 1. Environment Configuration
-
-The SDK uses environment variables for configuration. Create a `env.dart` file based on the provided example:
-
-1. Copy the example configuration file:
-   ```
-   cp lib/src/config/env.example.dart lib/src/config/env.dart
-   ```
-
-2. Update `env.dart` with your API key and base URL:
-   ```dart
-   class ULinkEnvironment {
-     static const String apiKey = 'your_api_key_here';
-     static const String baseUrl = 'https://api.ulink.ly';
-   }
-   ```
-
-3. Make sure the `env.dart` file is in `.gitignore` to avoid committing sensitive information.
-
-### 2. Initialize the SDK
+### Initialize the SDK
 
 Initialize the SDK in your app:
 
@@ -55,7 +45,7 @@ import 'package:flutter_ulink_sdk/flutter_ulink_sdk.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   
-  // Initialize with default environment values
+  // Initialize with production defaults
   final ulink = await ULink.initialize();
   
   // Or with custom config
@@ -63,7 +53,7 @@ void main() async {
     config: ULinkConfig(
       apiKey: 'your_api_key',
       baseUrl: 'https://api.ulink.ly', // Use 'http://localhost:3000' for local testing
-      debug: true,
+      debug: true, // Enable debug logging
     ),
   );
   
@@ -119,6 +109,7 @@ void initState() {
       final slug = data.slug;
       final fallbackUrl = data.fallbackUrl;
       final parameters = data.parameters;
+      final socialMediaTags = data.socialMediaTags;
       final rawData = data.rawData;
     });
   });
@@ -130,13 +121,18 @@ void initState() {
 Resolve a dynamic link to get its data:
 
 ```dart
+// Resolve a ULink format URL (d/slug)
 final resolveResponse = await ULink.instance.resolveLink('https://ulink.ly/d/your-slug');
 
 if (resolveResponse.success) {
   final resolvedData = ULinkResolvedData.fromJson(resolveResponse.data!);
   // Use the resolved data
+  print('Slug: ${resolvedData.slug}');
+  print('Fallback URL: ${resolvedData.fallbackUrl}');
+  print('Parameters: ${resolvedData.parameters}');
 } else {
   // Handle error
+  print('Error: ${resolveResponse.error}');
 }
 ```
 
@@ -158,6 +154,17 @@ final ulink = await ULink.initialize(
 await ulink.testListener('http://localhost:3000/d/test-slug');
 ```
 
+## API Endpoints
+
+The SDK uses the following API endpoints:
+
+- Create link: `POST /sdk/links`
+- Resolve link: `GET /sdk/resolve?url=...`
+
+## Example Project
+
+Check out the example project in the `example` directory for a complete implementation.
+
 ## License
 
-This project is licensed under the MIT License.
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.

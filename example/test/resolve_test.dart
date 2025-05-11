@@ -40,17 +40,20 @@ void main() async {
     print('\nTest 1: Creating a test link...');
     final createResponse = await ulink.createLink(
       ULinkParameters(
-        slug: 'test-link-$timestamp',
+        slug: 'resolve-api-test-$timestamp',
         iosFallbackUrl: 'myapp://product/123',
         androidFallbackUrl: 'myapp://product/123',
         fallbackUrl: 'https://myapp.com/product/123',
         socialMediaTags: SocialMediaTags(
-          ogTitle: 'Test Link',
-          ogDescription: 'This link is created to test the SDK',
+          ogTitle: 'Test Link for Resolve API',
+          ogDescription:
+              'This link is created to test the updated resolve API endpoint',
           ogImage: 'https://example.com/test-image.jpg',
         ),
         parameters: {
-          'utm_source': 'sdk_test',
+          'utm_source': 'test',
+          'utm_medium': 'sdk',
+          'utm_campaign': 'resolve_api_test',
           'testParam': 'testValue',
         },
       ),
@@ -64,17 +67,17 @@ void main() async {
     final createdUrl = createResponse.url;
     print('Created test link: $createdUrl');
 
-    // Test 2: Resolve using the new API endpoint
-    print('\nTest 2: Resolving link using the new API endpoint...');
-    final resolveUrl = createdUrl!;
-    print('Resolving URL: $resolveUrl');
+    // Test 1: Resolve using the full URL with the updated endpoint
+    print(
+        '\nTest 1: Resolving link using the full URL with updated endpoint...');
+    print('Using endpoint: /sdk/resolve?url=...');
+    var resolveResponse = await ulink.resolveLink(createdUrl!);
+    _printResolveResponse('Full URL resolution', resolveResponse);
 
-    final resolveResponse = await ulink.resolveLink(resolveUrl);
-    _printResolveResponse('URL resolution', resolveResponse);
 
     // Test 3: Use the testListener method to simulate a link click
     print('\nTest 3: Testing link listener...');
-    await ulink.testListener(resolveUrl);
+    await ulink.testListener(createdUrl);
 
     // Wait for the listener to receive the link
     print('Waiting for link handler to process the link...');
@@ -111,11 +114,7 @@ void _printResolveResponse(String testName, ULinkResponse response) {
     if (response.data != null) {
       print('  Link Details:');
 
-      // Print all relevant data
-      if (response.data!.containsKey('slug')) {
-        print('    Slug: ${response.data!['slug']}');
-      }
-
+      // Print fallback URLs
       if (response.data!.containsKey('iosFallbackUrl')) {
         print('    iOS Fallback URL: ${response.data!['iosFallbackUrl']}');
       }
@@ -127,6 +126,15 @@ void _printResolveResponse(String testName, ULinkResponse response) {
 
       if (response.data!.containsKey('fallbackUrl')) {
         print('    Fallback URL: ${response.data!['fallbackUrl']}');
+      }
+
+      // Print slug information
+      if (response.data!.containsKey('slug')) {
+        print('    Slug: ${response.data!['slug']}');
+      }
+
+      if (response.data!.containsKey('id')) {
+        print('    ID: ${response.data!['id']}');
       }
 
       // Print parameters if they exist

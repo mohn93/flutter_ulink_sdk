@@ -1,6 +1,6 @@
 name: flutter_ulink_sdk
 description: "Flutter SDK for creating and handling dynamic links, similar to Branch.io"
-version: 0.0.2
+version: 0.0.1
 homepage: https://github.com/mohn93/flutter_ulink_sdk
 
 environment:
@@ -22,5 +22,8 @@ dev_dependencies:
   mockito: ^5.4.5
   build_runner: ^2.4.15
 
-
 flutter:
+  # The following line ensures that the Material Icons font is
+  # included with your application, so that you can use the icons in
+  # the material Icons class.
+  uses-material-design: false

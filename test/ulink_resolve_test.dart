@@ -31,8 +31,8 @@ void main() {
     setUp(() async {
       // Create a mock HTTP client using http's MockClient
       mockClient = MockClient((http.Request request) async {
-        // Check if this is a resolve request
-        if (request.url.path.contains('/sdk/links/resolve')) {
+        // Check if this is a resolve request with the correct endpoint format
+        if (request.url.path.contains('/sdk/resolve')) {
           return http.Response(
             json.encode(mockDynamicLinkData),
             200,

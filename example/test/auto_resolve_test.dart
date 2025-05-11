@@ -4,7 +4,7 @@ import 'package:flutter_ulink_sdk/flutter_ulink_sdk.dart';
 /// A simple example to demonstrate automatic link resolution
 ///
 /// This simulates receiving a ULink format link with a path of d/[slug]
-/// The SDK should automatically resolve this link and provide the deep link
+/// The SDK should automatically resolve this link and provide the resolved data
 void main() async {
   print('ULink SDK Automatic Link Resolution Example');
   print('===========================================');
@@ -27,10 +27,11 @@ void main() async {
   final slug = 'auto-resolve-$timestamp';
 
   // Set up a link listener to demonstrate automatic resolution
-  ulink.onLink.listen((ULinkResolvedData uri) {
-    print('\nLink received in listener: $uri');
-    print('This should be the deep link, not the original ULink format link');
-    print('Query parameters: ${uri.parameters}');
+  ulink.onLink.listen((ULinkResolvedData resolvedData) {
+    print('\nLink received in listener: ${resolvedData.fallbackUrl}');
+    print(
+        'This should be the resolved data, not the original ULink format link');
+    print('Query parameters: ${resolvedData.parameters}');
   });
 
   try {
@@ -73,8 +74,8 @@ void main() async {
     print('1. Detect this is a ULink format link (path starts with d/)');
     print('2. Extract the slug ($slug)');
     print('3. Call resolveLink() internally');
-    print('4. Get the deep link from the resolved data');
-    print('5. Pass the deep link to our listener');
+    print('4. Get the resolved data from the API');
+    print('5. Pass the resolved data to our listener');
 
     // This would normally be called by the OS, but we'll call it manually for testing
     // In a real app, this happens automatically when a link is clicked
@@ -82,7 +83,7 @@ void main() async {
     await _simulateReceivingLink(ulink, ulinkFormatUri);
 
     print('\nTest completed! Check the listener output above.');
-    print('If everything worked correctly, you should see the deep link,');
+    print('If everything worked correctly, you should see the resolved data,');
     print('not the original ULink format link.');
   } catch (e) {
     print('\nError during test: $e');
@@ -103,55 +104,39 @@ Future<void> _simulateReceivingLink(ULink ulink, Uri uri) async {
   if (_isULinkDynamicLink(uri)) {
     print('Detected ULink format link: $uri');
     try {
-      // Extract slug and resolve manually (simulating what happens internally)
-      final slug = _extractSlugFromPath(uri);
-      if (slug != null) {
-        print('Extracted slug: $slug');
-        final resolveResponse = await ulink.resolveLink(slug);
-        if (resolveResponse.success && resolveResponse.data != null) {
-          final deepLink = resolveResponse.data!['deepLink'];
-          if (deepLink != null && deepLink is String) {
-            print('Resolved to deep link: $deepLink');
-            // Simulate passing the deep link to the listener
-            final deepLinkUri = Uri.parse(deepLink);
-            // This is normally done by the SDK internally
-            // We're manually adding to the stream to simulate the SDK's behavior
-            _addToLinkStream(ulink, deepLinkUri);
-            return;
-          }
-        }
+      // Resolve using the full URL (simulating what happens internally)
+      final resolveResponse = await ulink.resolveLink(uri.toString());
+      if (resolveResponse.success && resolveResponse.data != null) {
+        final resolvedData = ULinkResolvedData.fromJson(resolveResponse.data!);
+        print('Resolved to fallbackUrl: ${resolvedData.fallbackUrl}');
+
+        // Simulate passing the resolved data to the listener
+        // This is normally done by the SDK internally
+        _addToLinkStream(ulink, resolvedData);
+        return;
       }
     } catch (e) {
       print('Error resolving dynamic link: $e');
     }
   }
 
-  // If not a ULink format link or if resolution fails, pass the original link
-  _addToLinkStream(ulink, uri);
+  // If not a ULink format link or if resolution fails, pass the original link as basic resolved data
+  final basicData = ULinkResolvedData(
+    fallbackUrl: uri.toString(),
+    rawData: {'uri': uri.toString()},
+  );
+  _addToLinkStream(ulink, basicData);
 }
 
-/// Helper to simulate adding a link to the stream
-void _addToLinkStream(ULink ulink, Uri uri) {
+/// Helper to simulate adding resolved data to the stream
+void _addToLinkStream(ULink ulink, ULinkResolvedData resolvedData) {
   // In a real app, this would be done by the SDK internally
   // For testing, we're forcing it through the public API
-  // This is a bit hacky but helps demonstrate the feature
-  ulink.onLink.listen((ULinkResolvedData u) {}); // Force initialize the stream
-  // Directly trigger link received by the listener
-  // (in a real app, this comes through the AppLinks plugin)
-  // Note: This is a simplified simulation - the actual implementation is more complex
+  ulink.testListener(resolvedData.fallbackUrl ?? "");
 }
 
 /// Check if a URI is a ULink dynamic link
 bool _isULinkDynamicLink(Uri uri) {
   final pathSegments = uri.pathSegments;
   return pathSegments.length >= 2 && pathSegments[0] == 'd';
-}
-
-/// Extract slug from a ULink dynamic link path
-String? _extractSlugFromPath(Uri uri) {
-  final pathSegments = uri.pathSegments;
-  if (pathSegments.length >= 2 && pathSegments[0] == 'd') {
-    return pathSegments[1];
-  }
-  return null;
 }

@@ -198,17 +198,16 @@ class ULink {
     }
   }
 
-  /// Resolve a dynamic link from a URL or slug
+  /// Resolve a dynamic link from a URL
   ///
-  /// This method takes either a full URL or just a slug and resolves it to get the dynamic link data
+  /// This method takes a full URL and resolves it to get the dynamic link data
   /// Returns a ULinkResponse with the resolved data or an error
   Future<ULinkResponse> resolveLink(String url) async {
     try {
       _log('Resolving link: $url');
 
-      // Make the API request to resolve the link
-      final Uri requestUri =
-          Uri.parse('${config.baseUrl}/sdk/resolve').replace(
+      // Use the correct endpoint: /sdk/resolve
+      final Uri requestUri = Uri.parse('${config.baseUrl}/sdk/resolve').replace(
         queryParameters: {'url': url},
       );
 
