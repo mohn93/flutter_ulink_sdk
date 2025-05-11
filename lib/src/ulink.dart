@@ -84,8 +84,6 @@ class ULink {
     _appLinks.uriLinkStream.listen((Uri uri) async {
       _log('App link received: $uri');
 
-      // Check if this is a ULink dynamic link that needs to be resolved
-      if (_isULinkDynamicLink(uri)) {
         _log('Processing ULink dynamic link: $uri');
         try {
           // Resolve the URI to get the dynamic link data
@@ -101,7 +99,6 @@ class ULink {
           _log('Error resolving dynamic link: $e');
           // Fall through to default handling if resolution fails
         }
-      }
 
       // Default handling if not a ULink dynamic link or if resolution fails
       // Create a basic resolved data from the URI
@@ -124,8 +121,6 @@ class ULink {
       if (initialLink != null) {
         _log('Initial app link: $initialLink');
 
-        // Check if this is a ULink dynamic link that needs to be resolved
-        if (_isULinkDynamicLink(initialLink)) {
           _log('Processing initial ULink dynamic link: $initialLink');
           try {
             // Resolve the URI to get the dynamic link data
@@ -141,8 +136,6 @@ class ULink {
             _log('Error resolving initial dynamic link: $e');
             // Fall through to default handling if resolution fails
           }
-        }
-
         // Default handling if not a ULink dynamic link or if resolution fails
         // Create a basic resolved data from the URI
         final basicData = ULinkResolvedData(

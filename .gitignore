@@ -37,3 +37,4 @@ build/
 # Environment configuration
 lib/src/config/env.dart
 /example/ios/Runner/GeneratedPluginRegistrant.m
+/refs/
