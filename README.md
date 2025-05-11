@@ -21,8 +21,6 @@ A Flutter SDK for creating and handling dynamic links with ULink, similar to Bra
 - Social media tag support for better link sharing
 - Automatic handling of dynamic links in your app
 - Resolve links to retrieve their data
-- Support for custom API configuration
-- Test utilities for easier development and testing
 
 ## Installation
 
@@ -52,7 +50,6 @@ void main() async {
   final ulink = await ULink.initialize(
     config: ULinkConfig(
       apiKey: 'your_api_key',
-      baseUrl: 'https://api.ulink.ly', // Use 'http://localhost:3000' for local testing
       debug: true, // Enable debug logging
     ),
   );
@@ -135,31 +132,6 @@ if (resolveResponse.success) {
   print('Error: ${resolveResponse.error}');
 }
 ```
-
-## Testing
-
-For testing with localhost:
-
-```dart
-// Initialize with localhost URL
-final ulink = await ULink.initialize(
-  config: ULinkConfig(
-    apiKey: 'your_api_key',
-    baseUrl: 'http://localhost:3000',
-    debug: true,
-  ),
-);
-
-// Test the link listener
-await ulink.testListener('http://localhost:3000/d/test-slug');
-```
-
-## API Endpoints
-
-The SDK uses the following API endpoints:
-
-- Create link: `POST /sdk/links`
-- Resolve link: `GET /sdk/resolve?url=...`
 
 ## Example Project
 

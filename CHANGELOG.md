@@ -1,19 +1,11 @@
 # Changelog
 
-## Upcoming
+## 0.0.3
 
-### Features
-- Updated API endpoint for resolving links from `/sdk/links/$slug/resolve` to `/sdk/resolve?url=...`
-- Removed deepLink references from the SDK as the API no longer uses this property
-- Updated link handling to emit ULinkResolvedData objects instead of just URIs
-- Moved environment configuration from the main SDK to the example project
-- Set up production defaults in the main SDK while allowing custom configuration
-- Improved test files and examples
-- Create dynamic links with custom slugs and parameters
-- Social media tag support for better link sharing
-- Automatic handling of dynamic links in your app
-- Support for custom API configuration
-- Test utilities for easier development and testing
+### Fixes
+
+* Refactor ULink dynamic link handling;
+* Remove redundant checks for dynamic links
 
 ## 0.0.2
 
@@ -25,4 +17,4 @@
 
 ## 0.0.1
 
-- Initial development release
+* Initial development release
