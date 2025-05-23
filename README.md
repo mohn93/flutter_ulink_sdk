@@ -37,7 +37,7 @@ For ULink to work properly, you need to configure your Android and iOS projects 
 
 ### Domain Configuration
 
-Visit the [ULink website](https://shared.ly) to register your domain before proceeding with the following steps.
+Visit the [ULink website](https://shared.ly) to register your subdomain on shared.ly before proceeding with the following steps.
 
 ### Deep Linking Schema
 
@@ -73,13 +73,13 @@ For deep linking to work properly, you need to define a URI scheme for your app 
         <category android:name="android.intent.category.DEFAULT" />
         <category android:name="android.intent.category.BROWSABLE" />
         
-        <!-- Replace with your domain from ULink -->
+        <!-- Replace with your subdomain on shared.ly from ULink -->
         <data android:scheme="https" android:host="yourdomain.shared.ly" />
     </intent-filter>
 </activity>
 ```
 
-3. Create an `assetlinks.json` file and upload it to your server at the path `/.well-known/assetlinks.json`. The ULink dashboard will provide you with the correct content for this file.
+Note: The domain configuration including required files in the `.well-known` directory is automatically handled when you register your subdomain on shared.ly through the ULink service.
 
 ### iOS Setup
 
@@ -96,7 +96,7 @@ For deep linking to work properly, you need to define a URI scheme for your app 
    - Select "Associated Domains"
    - Add `applinks:yourdomain.shared.ly`
 
-6. Create an `apple-app-site-association` file and upload it to your server at the path `/.well-known/apple-app-site-association`. The ULink dashboard will provide you with the correct content for this file.
+Note: The domain configuration including required files in the `.well-known` directory is automatically handled when you register your subdomain on shared.ly through the ULink service.
 
 ## Setup
 
