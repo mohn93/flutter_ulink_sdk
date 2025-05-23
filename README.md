@@ -31,19 +31,39 @@ dependencies:
   flutter_ulink_sdk: ^1.0.0
 ```
 
-## Native Setup
+## Configuration
 
-For ULink to work properly, you need to configure your Android and iOS projects to handle deep links.
+### 1. ULink Dashboard Configuration
 
-### Domain Configuration
+Before setting up your mobile apps, you need to configure your project in the ULink dashboard:
 
-Visit the [ULink website](https://shared.ly) to register your subdomain on shared.ly before proceeding with the following steps.
+1. Visit the [ULink website](https://ulink.ly) to register for an account and create a project
+2. Reserve your subdomain on shared.ly through the ULink service
 
-### Deep Linking Schema
+#### Android Configuration
+1. Log in to the ULink dashboard and navigate to your project
+2. Go to the "Configure" section and select the "Android" tab
+3. Fill in the following information:
+   - **Package Name**: Enter your Android app's package name (e.g., com.yourcompany.app)
+   - **Deep Linking Schema**: Enter your app's URI scheme ending with "://" (e.g., yourappscheme://)
+   - **SHA-256 Certificate Fingerprints**: Add the SHA-256 fingerprint of your app signing key
+4. Save your changes
 
-For deep linking to work properly, you need to define a URI scheme for your app that ends with `://`. The scheme can be any identifier you choose and doesn't need to match your app name. For example, a company like "Acme Corp" might choose `acmeshop://` or `acmeapp://` as their deep linking schema.
+#### iOS Configuration
+1. In the ULink dashboard, select the "iOS" tab
+2. Fill in the following information:
+   - **Bundle Identifier**: Enter your iOS app's bundle identifier (e.g., com.yourcompany.app)
+   - **Deep Linking Schema**: Enter your app's URI scheme ending with "://" (same as Android)
+   - **Team ID**: Enter your Apple Developer Team ID
+3. Save your changes
 
-### Android Setup
+Note: The deep linking schema must end with `://` and can be any identifier you choose (e.g., `acmeshop://`). You will use the same schema in both platforms.
+
+### 2. Native App Configuration
+
+After configuring your project in the ULink dashboard, you need to set up your native app projects:
+
+#### Android Setup
 
 1. Open your Android project's `AndroidManifest.xml` file
 2. Add the following inside the `<application>` tag:
@@ -81,7 +101,7 @@ For deep linking to work properly, you need to define a URI scheme for your app 
 
 Note: The domain configuration including required files in the `.well-known` directory is automatically handled when you register your subdomain on shared.ly through the ULink service.
 
-### iOS Setup
+#### iOS Setup
 
 1. Open your iOS project in Xcode
 2. Go to your project's target settings
@@ -98,9 +118,7 @@ Note: The domain configuration including required files in the `.well-known` dir
 
 Note: The domain configuration including required files in the `.well-known` directory is automatically handled when you register your subdomain on shared.ly through the ULink service.
 
-## Setup
-
-### Initialize the SDK
+### 3. Flutter SDK Initialization
 
 Initialize the SDK in your app:
 
