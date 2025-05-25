@@ -69,6 +69,11 @@ After configuring your project in the ULink dashboard, you need to set up your n
 2. Add the following inside the `<application>` tag:
 
 ```xml
+<!-- 
+    Note: Your project may already have an activity defined with intent filters.
+    In that case, don't add a new activity - instead, add these intent filters
+    to your existing main activity, preserving any other intent filters you already have.
+-->
 <activity
     android:name="io.flutter.embedding.android.FlutterActivity"
     android:launchMode="singleTop"
@@ -76,6 +81,8 @@ After configuring your project in the ULink dashboard, you need to set up your n
     android:configChanges="orientation|keyboardHidden|keyboard|screenSize|locale|layoutDirection|fontScale|screenLayout|density|uiMode"
     android:hardwareAccelerated="true"
     android:windowSoftInputMode="adjustResize">
+    
+    <!-- Your other intent filters, if any, should remain here -->
     
     <!-- Deep Link handling -->
     <intent-filter>
