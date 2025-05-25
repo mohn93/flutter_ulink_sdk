@@ -66,7 +66,7 @@ After configuring your project in the ULink dashboard, you need to set up your n
 #### Android Setup
 
 1. Open your Android project's `AndroidManifest.xml` file
-2. Add the following inside the `<application>` tag:
+2. Add the following intent filters inside your main activity tag:
 
 ```xml
 <!-- 
