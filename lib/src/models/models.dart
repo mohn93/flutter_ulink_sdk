@@ -63,11 +63,14 @@ class ULinkParameters {
   /// Fallback URL for the link
   final String? fallbackUrl;
 
-  /// Additional parameters for the link
+  /// Additional parameters for the link (non-social media parameters)
   final Map<String, dynamic>? parameters;
 
   /// Social media tags for the link
   final SocialMediaTags? socialMediaTags;
+
+  /// Metadata map for social media data
+  final Map<String, dynamic>? metadata;
 
   /// Creates a new set of ULink parameters
   ULinkParameters({
@@ -77,6 +80,7 @@ class ULinkParameters {
     this.fallbackUrl,
     this.parameters,
     this.socialMediaTags,
+    this.metadata,
   });
 
   /// Converts the parameters to a JSON map
@@ -89,21 +93,67 @@ class ULinkParameters {
       data['androidFallbackUrl'] = androidFallbackUrl;
     if (fallbackUrl != null) data['fallbackUrl'] = fallbackUrl;
 
-    // Merge regular parameters and social media tags
-    final Map<String, dynamic> allParameters = {};
+    // Handle regular parameters (non-social media)
+    final Map<String, dynamic> regularParameters = {};
     if (parameters != null) {
-      allParameters.addAll(parameters!);
+      // Filter out social media parameters from regular parameters
+      parameters!.forEach((key, value) {
+        if (!key.startsWith('og') && !_isSocialMediaParameter(key)) {
+          regularParameters[key] = value;
+        }
+      });
     }
 
+    if (regularParameters.isNotEmpty) {
+      data['parameters'] = regularParameters;
+    }
+
+    // Handle metadata (social media data)
+    final Map<String, dynamic> metadataMap = {};
+
+    // Add social media tags from socialMediaTags object
     if (socialMediaTags != null) {
-      allParameters.addAll(socialMediaTags!.toJson());
+      metadataMap.addAll(socialMediaTags!.toJson());
     }
 
-    if (allParameters.isNotEmpty) {
-      data['parameters'] = allParameters;
+    // Add social media parameters from parameters map
+    if (parameters != null) {
+      parameters!.forEach((key, value) {
+        if (key.startsWith('og') || _isSocialMediaParameter(key)) {
+          metadataMap[key] = value;
+        }
+      });
+    }
+
+    // Add explicit metadata
+    if (metadata != null) {
+      metadataMap.addAll(metadata!);
+    }
+
+    if (metadataMap.isNotEmpty) {
+      data['metadata'] = metadataMap;
     }
 
     return data;
+  }
+
+  /// Helper method to identify social media parameters
+  bool _isSocialMediaParameter(String key) {
+    const socialMediaKeys = [
+      'ogTitle',
+      'ogDescription',
+      'ogImage',
+      'ogSiteName',
+      'ogType',
+      'ogUrl',
+      'twitterCard',
+      'twitterSite',
+      'twitterCreator',
+      'twitterTitle',
+      'twitterDescription',
+      'twitterImage',
+    ];
+    return socialMediaKeys.contains(key);
   }
 }
 
@@ -173,11 +223,14 @@ class ULinkResolvedData {
   /// Fallback URL for the link
   final String? fallbackUrl;
 
-  /// Additional parameters from the link
+  /// Additional parameters from the link (non-social media parameters)
   final Map<String, dynamic>? parameters;
 
   /// Social media tags from the link
   final SocialMediaTags? socialMediaTags;
+
+  /// Metadata containing social media data
+  final Map<String, dynamic>? metadata;
 
   /// Raw data from the response
   final Map<String, dynamic> rawData;
@@ -190,18 +243,35 @@ class ULinkResolvedData {
     this.fallbackUrl,
     this.parameters,
     this.socialMediaTags,
+    this.metadata,
     required this.rawData,
   });
 
   /// Creates a resolved link data object from JSON
   factory ULinkResolvedData.fromJson(Map<String, dynamic> json) {
-    // Extract social media tags if they exist
+    // Extract social media tags from metadata if it exists
     SocialMediaTags? socialMediaTags;
+    Map<String, dynamic>? metadata = json['metadata'] as Map<String, dynamic>?;
     Map<String, dynamic>? parameters =
         json['parameters'] as Map<String, dynamic>?;
 
-    if (parameters != null) {
-      // Extract social media tags
+    // Try to extract social media tags from metadata first
+    if (metadata != null) {
+      final ogTitle = metadata['ogTitle'];
+      final ogDescription = metadata['ogDescription'];
+      final ogImage = metadata['ogImage'];
+
+      if (ogTitle != null || ogDescription != null || ogImage != null) {
+        socialMediaTags = SocialMediaTags(
+          ogTitle: ogTitle,
+          ogDescription: ogDescription,
+          ogImage: ogImage,
+        );
+      }
+    }
+
+    // Fallback: check parameters for backward compatibility
+    if (socialMediaTags == null && parameters != null) {
       final ogTitle = parameters['ogTitle'];
       final ogDescription = parameters['ogDescription'];
       final ogImage = parameters['ogImage'];
@@ -222,6 +292,7 @@ class ULinkResolvedData {
       fallbackUrl: json['fallbackUrl'],
       parameters: parameters,
       socialMediaTags: socialMediaTags,
+      metadata: metadata,
       rawData: json,
     );
   }
