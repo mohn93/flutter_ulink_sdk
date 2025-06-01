@@ -62,13 +62,24 @@ class SocialMediaTags {
 
 /// Dynamic link parameters
 class ULinkParameters {
+  /// Link type: "unified" or "dynamic"
+  final String? type;
+
   /// Optional custom slug for the link
   final String? slug;
 
-  /// iOS fallback URL for the link
+
+
+  /// iOS URL for unified links (direct iOS app store or web URL)
+  final String? iosUrl;
+
+  /// Android URL for unified links (direct Google Play or web URL)
+  final String? androidUrl;
+
+  /// iOS fallback URL for dynamic links
   final String? iosFallbackUrl;
 
-  /// Android fallback URL for the link
+  /// Android fallback URL for dynamic links
   final String? androidFallbackUrl;
 
   /// Fallback URL for the link
@@ -85,7 +96,10 @@ class ULinkParameters {
 
   /// Creates a new set of ULink parameters
   ULinkParameters({
+    this.type,
     this.slug,
+    this.iosUrl,
+    this.androidUrl,
     this.iosFallbackUrl,
     this.androidFallbackUrl,
     this.fallbackUrl,
@@ -94,11 +108,60 @@ class ULinkParameters {
     this.metadata,
   });
 
+  /// Factory constructor for creating dynamic links
+  /// Dynamic links are designed for in-app deep linking with parameters and smart app store redirects
+  factory ULinkParameters.dynamic({
+    String? slug,
+    String? iosFallbackUrl,
+    String? androidFallbackUrl,
+    String? fallbackUrl,
+    Map<String, dynamic>? parameters,
+    SocialMediaTags? socialMediaTags,
+    Map<String, dynamic>? metadata,
+  }) {
+    return ULinkParameters(
+      type: 'dynamic',
+      slug: slug,
+      iosFallbackUrl: iosFallbackUrl,
+      androidFallbackUrl: androidFallbackUrl,
+      fallbackUrl: fallbackUrl,
+      parameters: parameters,
+      socialMediaTags: socialMediaTags,
+      metadata: metadata,
+    );
+  }
+
+  /// Factory constructor for creating unified links
+  /// Unified links are simple platform-based redirects intended for browser handling
+  factory ULinkParameters.unified({
+    String? slug,
+    required String iosUrl,
+    required String androidUrl,
+    required String fallbackUrl,
+    Map<String, dynamic>? parameters,
+    SocialMediaTags? socialMediaTags,
+    Map<String, dynamic>? metadata,
+  }) {
+    return ULinkParameters(
+      type: 'unified',
+      slug: slug,
+      iosUrl: iosUrl,
+      androidUrl: androidUrl,
+      fallbackUrl: fallbackUrl,
+      parameters: parameters,
+      socialMediaTags: socialMediaTags,
+      metadata: metadata,
+    );
+  }
+
   /// Converts the parameters to a JSON map
   Map<String, dynamic> toJson() {
     final Map<String, dynamic> data = {};
 
+    if (type != null) data['type'] = type;
     if (slug != null) data['slug'] = slug;
+    if (iosUrl != null) data['iosUrl'] = iosUrl;
+    if (androidUrl != null) data['androidUrl'] = androidUrl;
     if (iosFallbackUrl != null) data['iosFallbackUrl'] = iosFallbackUrl;
     if (androidFallbackUrl != null)
       data['androidFallbackUrl'] = androidFallbackUrl;

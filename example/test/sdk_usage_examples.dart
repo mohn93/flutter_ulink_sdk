@@ -263,11 +263,7 @@ void printResolveResponse(String testName, ULinkResponse response) {
     if (response.data != null) {
       print('  Link Details:');
 
-      // Print deep link and fallback URLs
-      if (response.data!.containsKey('deepLink')) {
-        print('    Deep Link: ${response.data!['deepLink']}');
-      }
-
+      // Print fallback URLs
       if (response.data!.containsKey('iosFallbackUrl')) {
         print('    iOS Fallback URL: ${response.data!['iosFallbackUrl']}');
       }

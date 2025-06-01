@@ -62,15 +62,16 @@ class _UnifiedLinkExampleState extends State<UnifiedLinkExample> {
       });
 
       final response = await ULink.instance.createLink(
-        ULinkParameters(
+        ULinkParameters.dynamic(
           slug: 'dynamic-example-${DateTime.now().millisecondsSinceEpoch}',
-          fallbackUrl: 'https://example.com/dynamic',
           iosFallbackUrl: 'https://apps.apple.com/app/example',
           androidFallbackUrl: 'https://play.google.com/store/apps/details?id=com.example',
-          // This will be treated as a dynamic link for in-app handling
+          fallbackUrl: 'https://example.com/dynamic',
           parameters: {
             'screen': 'home',
             'userId': '12345',
+            'utm_source': 'app',
+            'campaign': 'dynamic_example',
           },
         ),
       );
@@ -98,12 +99,18 @@ class _UnifiedLinkExampleState extends State<UnifiedLinkExample> {
       });
 
       final response = await ULink.instance.createLink(
-        ULinkParameters(
+        ULinkParameters.unified(
           slug: 'unified-example-${DateTime.now().millisecondsSinceEpoch}',
-          fallbackUrl: 'https://example.com/unified',
-          iosFallbackUrl: 'https://apps.apple.com/app/example',
-          androidFallbackUrl: 'https://play.google.com/store/apps/details?id=com.example',
-          // This will be treated as a unified link for external redirect
+          iosUrl: 'https://apps.apple.com/app/my-app/id123456789',
+          androidUrl: 'https://play.google.com/store/apps/details?id=com.example.myapp',
+          fallbackUrl: 'https://myapp.com/product/123',
+          parameters: {
+            'utm_source': 'email',
+            'campaign': 'summer',
+          },
+          metadata: {
+            'custom_param': 'value',
+          },
         ),
       );
 
@@ -206,10 +213,11 @@ class _UnifiedLinkExampleState extends State<UnifiedLinkExample> {
                     ),
                     SizedBox(height: 8),
                     Text(
-                      '• Dynamic links (type: dynamic) are handled in-app via onLink stream\n'
-                      '• Unified links (type: unified) are redirected externally via onUnifiedLink stream\n'
-                      '• Unknown links are treated as unified and redirected externally\n'
-                      '• Platform-specific URLs (iosUrl/androidUrl) are used when available',
+                      '• Dynamic links (type: dynamic) use fallback URLs for in-app handling\n'
+                      '• Unified links (type: unified) use iosUrl/androidUrl for direct platform redirects\n'
+                      '• Dynamic links are handled via onLink stream with parameters\n'
+                      '• Unified links are redirected externally via onUnifiedLink stream\n'
+                      '• Field usage: Dynamic (iosFallbackUrl, androidFallbackUrl) vs Unified (iosUrl, androidUrl)',
                       style: TextStyle(fontSize: 12),
                     ),
                   ],

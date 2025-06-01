@@ -50,15 +50,15 @@ The SDK automatically distinguishes between link types:
 
 ```dart
 final response = await ULink.instance.createLink(
-  ULinkParameters(
+  ULinkParameters.dynamic(
     slug: 'my-dynamic-link',
-    fallbackUrl: 'https://example.com/fallback',
     iosFallbackUrl: 'https://apps.apple.com/app/myapp',
     androidFallbackUrl: 'https://play.google.com/store/apps/details?id=com.myapp',
-    // This will be handled in-app as dynamic link
+    fallbackUrl: 'https://example.com/profile',
     parameters: {
       'screen': 'profile',
       'userId': '12345',
+      'utm_source': 'app',
     },
   ),
 );
@@ -68,31 +68,32 @@ final response = await ULink.instance.createLink(
 
 ```dart
 final response = await ULink.instance.createLink(
-  ULinkParameters(
-    slug: 'my-simple-link',
-    fallbackUrl: 'https://example.com/landing',
-    iosFallbackUrl: 'https://apps.apple.com/app/myapp',
-    androidFallbackUrl: 'https://play.google.com/store/apps/details?id=com.myapp',
-    // This will be treated as unified link based on server response
+  ULinkParameters.unified(
+    slug: 'my-unified-link',
+    iosUrl: 'https://apps.apple.com/app/my-app/id123456789',
+    androidUrl: 'https://play.google.com/store/apps/details?id=com.example.myapp',
+    fallbackUrl: 'https://myapp.com/product/123',
+    parameters: {
+      'utm_source': 'email',
+      'campaign': 'summer',
+    },
+    metadata: {
+      'custom_param': 'value',
+    },
   ),
 );
 ```
 
-### Listening for Link Events
+## Field Usage by Link Type
 
-```dart
-ULink.instance.linkStream.listen((linkData) {
-  if (linkData.linkType == ULinkType.dynamic) {
-    // Handle dynamic link in-app
-    print('Dynamic link received: ${linkData.parameters}');
-    // Navigate to specific screen, etc.
-  } else if (linkData.linkType == ULinkType.unified) {
-    // Unified link was automatically redirected externally
-    print('Unified link was redirected to: ${linkData.fallbackUrl}');
-    // Optional: Show user feedback
-  }
-});
-```
+### Dynamic Links
+- Use `iosFallbackUrl`, `androidFallbackUrl`, `fallbackUrl` for when app is not installed
+- Include `parameters` for in-app navigation and tracking
+
+### Unified Links
+- Use `iosUrl`, `androidUrl` for direct platform-specific redirects
+- Use `fallbackUrl` for other platforms or web browsers
+- Include `parameters` for tracking and `metadata` for additional data
 
 ## Technical Implementation
 

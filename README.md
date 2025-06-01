@@ -178,17 +178,17 @@ For detailed information, see [UNIFIED_LINKS.md](UNIFIED_LINKS.md).
 ### Dynamic Links (In-App Handling)
 
 ```dart
-final response = await ULink.instance.createLink(
-  ULinkParameters(
-    slug: 'my-dynamic-link', // Optional
-    fallbackUrl: 'https://example.com/fallback',
+// Create a dynamic link (for in-app handling)
+final dynamicResponse = await ULink.instance.createLink(
+  ULinkParameters.dynamic(
+    slug: 'my-dynamic-link',
     iosFallbackUrl: 'https://apps.apple.com/app/myapp',
     androidFallbackUrl: 'https://play.google.com/store/apps/details?id=com.myapp',
-    // Will be handled in-app as dynamic link
+    fallbackUrl: 'https://example.com/profile',
     parameters: {
       'screen': 'profile',
       'userId': '12345',
-      'campaign': 'summer2023',
+      'utm_source': 'app',
     },
     socialMediaTags: SocialMediaTags(
       ogTitle: 'Check out this amazing app!',
@@ -198,32 +198,63 @@ final response = await ULink.instance.createLink(
   ),
 );
 
-if (response.success) {
-  print('Dynamic link created: ${response.url}');
+if (dynamicResponse.success) {
+  print('Dynamic link created: ${dynamicResponse.url}');
 } else {
-  print('Error: ${response.error}');
+  print('Error: ${dynamicResponse.error}');
 }
 ```
 
 ### Unified Links (External Redirect)
 
 ```dart
-final response = await ULink.instance.createLink(
-  ULinkParameters(
-    slug: 'my-simple-redirect',
-    fallbackUrl: 'https://example.com/landing',
-    iosFallbackUrl: 'https://apps.apple.com/app/myapp',
-    androidFallbackUrl: 'https://play.google.com/store/apps/details?id=com.myapp',
-    // Will be treated as unified link based on server response
+// Create a unified link (for external redirects)
+final unifiedResponse = await ULink.instance.createLink(
+  ULinkParameters.unified(
+    slug: 'my-unified-link',
+    iosUrl: 'https://apps.apple.com/app/my-app/id123456789',
+    androidUrl: 'https://play.google.com/store/apps/details?id=com.example.myapp',
+    fallbackUrl: 'https://myapp.com/product/123',
+    parameters: {
+      'utm_source': 'email',
+      'campaign': 'summer',
+    },
+    metadata: {
+      'custom_param': 'value',
+    },
   ),
 );
 
-if (response.success) {
-  print('Unified link created: ${response.url}');
+if (unifiedResponse.success) {
+  print('Unified link created: ${unifiedResponse.url}');
 } else {
-  print('Error: ${response.error}');
+  print('Error: ${unifiedResponse.error}');
 }
 ```
+
+## Factory Methods for Cleaner API
+
+The ULink SDK provides factory methods for creating different types of links, making the API more intuitive and type-safe:
+
+### ULinkParameters.dynamic()
+Creates dynamic links for in-app deep linking:
+- **Purpose**: In-app deep linking with parameters and smart app store redirects
+- **Required fields**: None (all optional)
+- **Fallback fields**: `iosFallbackUrl`, `androidFallbackUrl`, `fallbackUrl`
+- **Additional**: `parameters` for custom data, `socialMediaTags` for sharing
+
+### ULinkParameters.unified()
+Creates unified links for external redirects:
+- **Purpose**: Simple platform-based redirects for marketing campaigns
+- **Required fields**: `iosUrl`, `androidUrl`
+- **Platform URLs**: `iosUrl`, `androidUrl`, `fallbackUrl`
+- **Additional**: `parameters` for tracking, `metadata` for custom data
+
+### Benefits of Factory Methods
+- **Type Safety**: Ensures correct fields are used for each link type
+- **Cleaner Code**: No need to manually specify `type` parameter
+- **Better IDE Support**: Auto-completion shows only relevant parameters
+- **Reduced Errors**: Prevents mixing dynamic and unified link parameters
 
 ## Handling Dynamic Links
 
