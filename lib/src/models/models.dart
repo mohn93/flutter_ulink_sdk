@@ -1,5 +1,8 @@
 /// Models for the ULink SDK
 
+export 'installation.dart';
+export 'session.dart';
+
 /// Configuration for the ULink SDK
 class ULinkConfig {
   /// The API key for the ULink service

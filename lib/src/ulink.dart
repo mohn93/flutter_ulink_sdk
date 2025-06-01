@@ -8,6 +8,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:uuid/uuid.dart';
 
 import 'models/models.dart';
+import 'utils/device_info.dart';
 
 /// Main class for the ULink SDK
 class ULink {
@@ -34,6 +35,9 @@ class ULink {
 
   /// Installation ID for this app installation
   String? _installationId;
+  
+  /// Current active session ID
+  String? _currentSessionId;
 
   /// Private constructor
   ULink._({required this.config, http.Client? httpClient})
@@ -42,9 +46,34 @@ class ULink {
   }
 
   /// Initialize the SDK
+  /// 
+  /// This method initializes the ULink SDK and performs the following actions:
+  /// 1. Creates a singleton instance with the provided configuration
+  /// 2. Retrieves or generates a unique installation ID
+  /// 3. Tracks the installation with the server
+  /// 4. Starts a new session
+  /// 5. Initializes app links for deep linking
+  /// 
+  /// It should be called when your app starts, typically in your app's
+  /// initialization code or in the main widget's initState method.
+  /// 
+  /// Example:
+  /// ```dart
+  /// void main() async {
+  ///   WidgetsFlutterBinding.ensureInitialized();
+  ///   await ULink.initialize(
+  ///     config: ULinkConfig(
+  ///       apiKey: 'your_api_key',
+  ///       baseUrl: 'https://api.ulink.ly',
+  ///       debug: true,
+  ///     ),
+  ///   );
+  ///   runApp(MyApp());
+  /// }
+  /// ```
   static Future<ULink> initialize({ULinkConfig? config}) async {
     if (_instance == null) {
-      // Use provided config or create default with production settings
+      // Step 1: Create instance with provided config or default settings
       final effectiveConfig = config ??
           ULinkConfig(
             apiKey: 'ulk_default', // This should be overridden by the user
@@ -52,7 +81,25 @@ class ULink {
           );
 
       _instance = ULink._(config: effectiveConfig);
+      
+      // Step 2: Get or generate installation ID
       await _instance!._getInstallationId();
+      
+      // Step 3: Track installation with the server
+      await _instance!._trackInstallation();
+      
+      // Step 4: Start a new session
+      final sessionResponse = await _instance!._startSession();
+      if (_instance!.config.debug) {
+        if (sessionResponse.success) {
+          _instance!._log('Session started with ID: ${_instance!._currentSessionId}');
+        } else {
+          _instance!._log('Failed to start session: ${sessionResponse.error}');
+        }
+      }
+      
+      // Step 5: Initialize app links (happens in _init method)
+      _instance!._log('ULink SDK initialization complete');
     }
     return _instance!;
   }
@@ -288,6 +335,113 @@ class ULink {
   String? getInstallationId() {
     return _installationId;
   }
+  
+  /// Track the installation with the server
+  Future<ULinkInstallationResponse> _trackInstallation() async {
+    try {
+      _log('Tracking installation: $_installationId');
+      
+      if (_installationId == null) {
+        return ULinkInstallationResponse.error('Installation ID not available');
+      }
+      
+      // Get device information
+      final deviceInfo = await DeviceInfoHelper.getBasicDeviceInfo();
+      
+      // Create installation data
+      final installation = ULinkInstallation(
+        installationId: _installationId!,
+        deviceId: deviceInfo['deviceId'],
+        deviceModel: deviceInfo['deviceModel'],
+        deviceManufacturer: deviceInfo['deviceManufacturer'],
+        osName: deviceInfo['osName'],
+        osVersion: deviceInfo['osVersion'],
+        appVersion: deviceInfo['appVersion'],
+        appBuild: deviceInfo['appBuild'],
+        language: deviceInfo['language'],
+        timezone: deviceInfo['timezone'],
+      );
+      
+      // Send installation data to server
+      final response = await _httpClient.post(
+        Uri.parse('${config.baseUrl}/sdk/installations/track'),
+        headers: {
+          'Content-Type': 'application/json',
+          'X-App-Key': config.apiKey,
+        },
+        body: jsonEncode(installation.toJson()),
+      );
+      
+      final Map<String, dynamic> responseData = jsonDecode(response.body);
+      
+      if (response.statusCode >= 200 && response.statusCode < 300) {
+        _log('Installation tracked successfully');
+        return ULinkInstallationResponse.fromJson(responseData);
+      } else {
+        _log('Error tracking installation: ${response.statusCode}');
+        return ULinkInstallationResponse.error(
+          responseData['message'] ?? 'Error tracking installation: ${response.statusCode}',
+        );
+      }
+    } catch (e) {
+      _log('Error tracking installation: $e');
+      return ULinkInstallationResponse.error('Error tracking installation: $e');
+    }
+  }
+  
+  /// Track the installation with the server (public method)
+  Future<ULinkInstallationResponse> trackInstallation({Map<String, dynamic>? metadata}) async {
+    try {
+      _log('Tracking installation with metadata: $_installationId');
+      
+      if (_installationId == null) {
+        return ULinkInstallationResponse.error('Installation ID not available');
+      }
+      
+      // Get device information
+      final deviceInfo = await DeviceInfoHelper.getBasicDeviceInfo();
+      
+      // Create installation data
+      final installation = ULinkInstallation(
+        installationId: _installationId!,
+        deviceId: deviceInfo['deviceId'],
+        deviceModel: deviceInfo['deviceModel'],
+        deviceManufacturer: deviceInfo['deviceManufacturer'],
+        osName: deviceInfo['osName'],
+        osVersion: deviceInfo['osVersion'],
+        appVersion: deviceInfo['appVersion'],
+        appBuild: deviceInfo['appBuild'],
+        language: deviceInfo['language'],
+        timezone: deviceInfo['timezone'],
+        metadata: metadata,
+      );
+      
+      // Send installation data to server
+      final response = await _httpClient.post(
+        Uri.parse('${config.baseUrl}/sdk/installations/track'),
+        headers: {
+          'Content-Type': 'application/json',
+          'X-App-Key': config.apiKey,
+        },
+        body: jsonEncode(installation.toJson()),
+      );
+      
+      final Map<String, dynamic> responseData = jsonDecode(response.body);
+      
+      if (response.statusCode >= 200 && response.statusCode < 300) {
+        _log('Installation tracked successfully');
+        return ULinkInstallationResponse.fromJson(responseData);
+      } else {
+        _log('Error tracking installation: ${response.statusCode}');
+        return ULinkInstallationResponse.error(
+          responseData['message'] ?? 'Error tracking installation: ${response.statusCode}',
+        );
+      }
+    } catch (e) {
+      _log('Error tracking installation: $e');
+      return ULinkInstallationResponse.error('Error tracking installation: $e');
+    }
+  }
 
   /// Log a message if debug mode is enabled
   void _log(String message) {
@@ -296,8 +450,262 @@ class ULink {
     }
   }
 
+  /// Starts a new session with the ULink server
+  /// 
+  /// This method is called automatically during initialization
+  /// but can also be called manually to start a new session.
+  /// 
+  /// Returns a [ULinkSessionResponse] with the session ID if successful.
+  Future<ULinkSessionResponse> _startSession([Map<String, dynamic>? metadata]) async {
+    if (_installationId == null) {
+      _log('Cannot start session without installation ID');
+      return ULinkSessionResponse.error('Installation ID not available');
+    }
+    
+    try {
+      // End any existing session first
+      if (_currentSessionId != null) {
+        await endSession();
+      }
+      
+      // Collect device information automatically
+      final deviceInfo = await DeviceInfoHelper.getCompleteDeviceInfo();
+      _log('Collected device info for session: ${deviceInfo.keys.join(", ")}');
+      
+      // Extract device information
+      final String? networkType = deviceInfo['networkType'] as String?;
+      final String? deviceOrientation = deviceInfo['deviceOrientation'] as String?;
+      final double? batteryLevel = deviceInfo['batteryLevel'] as double?;
+      final bool? isCharging = deviceInfo['isCharging'] as bool?;
+      
+      // Merge provided metadata with device info
+      final Map<String, dynamic> sessionMetadata = {};
+      if (metadata != null) {
+        sessionMetadata.addAll(metadata);
+      }
+      
+      // Add basic device info to metadata if not explicitly provided
+      if (!sessionMetadata.containsKey('deviceInfo')) {
+        // Filter out properties that are already included in the session object
+        final Map<String, dynamic> filteredDeviceInfo = Map.from(deviceInfo);
+        filteredDeviceInfo.remove('networkType');
+        filteredDeviceInfo.remove('deviceOrientation');
+        filteredDeviceInfo.remove('batteryLevel');
+        filteredDeviceInfo.remove('isCharging');
+        
+        if (filteredDeviceInfo.isNotEmpty) {
+          sessionMetadata['deviceInfo'] = filteredDeviceInfo;
+        }
+      }
+      
+      // Create session data with all collected parameters
+      final ULinkSession sessionData = ULinkSession(
+        installationId: _installationId!,
+        networkType: networkType,
+        deviceOrientation: deviceOrientation,
+        batteryLevel: batteryLevel,
+        isCharging: isCharging,
+        metadata: sessionMetadata.isEmpty ? null : sessionMetadata,
+      );
+      
+      return await _sendSessionStartRequest(sessionData);
+    } catch (e) {
+      _log('Error starting session: $e');
+      return ULinkSessionResponse.error('Error starting session: $e');
+    }
+  }
+  
+  /// Helper method to send session start request to the server
+  Future<ULinkSessionResponse> _sendSessionStartRequest(ULinkSession session) async {
+    try {
+      // Send session data to server
+      final response = await _httpClient.post(
+        Uri.parse('${config.baseUrl}/sdk/sessions/start'),
+        headers: {
+          'Content-Type': 'application/json',
+          'X-App-Key': config.apiKey,
+        },
+        body: jsonEncode(session.toJson()),
+      );
+      
+      final Map<String, dynamic> responseData = jsonDecode(response.body);
+      
+      if (response.statusCode >= 200 && response.statusCode < 300) {
+        _log('Session started successfully');
+        _currentSessionId = responseData['sessionId'];
+        return ULinkSessionResponse.fromJson(responseData);
+      } else {
+        _log('Error starting session: ${response.statusCode}');
+        return ULinkSessionResponse.error(
+          responseData['message'] ?? 'Error starting session: ${response.statusCode}',
+        );
+      }
+    } catch (e) {
+      _log('Error sending session request: $e');
+      return ULinkSessionResponse.error('Error sending session request: $e');
+    }
+  }
+  
+  /// Start a new session with the server
+  /// 
+  /// This method allows you to start a new session with additional data.
+  /// If a session is already active, it will be ended before starting a new one.
+  /// 
+  /// Device information (battery level, network type, etc.) is automatically collected
+  /// when available, but you can also provide specific values to override the automatic collection.
+  /// 
+  /// Parameters:
+  /// - [networkType]: The type of network connection (e.g., 'wifi', 'cellular')
+  /// - [deviceOrientation]: The current device orientation (e.g., 'portrait', 'landscape')
+  /// - [batteryLevel]: The current battery level as a percentage (0.0 to 1.0)
+  /// - [isCharging]: Whether the device is currently charging
+  /// - [metadata]: Additional custom data to include with the session
+  Future<ULinkSessionResponse> startSession({
+    String? networkType,
+    String? deviceOrientation,
+    double? batteryLevel,
+    bool? isCharging,
+    Map<String, dynamic>? metadata,
+  }) async {
+    try {
+      _log('Starting session with metadata for installation: $_installationId');
+      
+      if (_installationId == null) {
+        return ULinkSessionResponse.error('Installation ID not available');
+      }
+      
+      // End any existing session first
+      if (_currentSessionId != null) {
+        await endSession();
+      }
+      
+      // Collect device information automatically
+      final deviceInfo = await DeviceInfoHelper.getCompleteDeviceInfo();
+      _log('Collected device info for session: ${deviceInfo.keys.join(', ')}');
+      
+      // Use provided values or fall back to automatically collected values
+      final String? sessionNetworkType = networkType ?? deviceInfo['networkType'] as String?;
+      final String? sessionDeviceOrientation = deviceOrientation ?? deviceInfo['deviceOrientation'] as String?;
+      final double? sessionBatteryLevel = batteryLevel ?? deviceInfo['batteryLevel'] as double?;
+      final bool? sessionIsCharging = isCharging ?? deviceInfo['isCharging'] as bool?;
+      
+      // Merge provided metadata with device info
+      final Map<String, dynamic> sessionMetadata = {};
+      if (metadata != null) {
+        sessionMetadata.addAll(metadata);
+      }
+      
+      // Add basic device info to metadata if not explicitly provided
+      if (!sessionMetadata.containsKey('deviceInfo')) {
+        // Filter out properties that are already included in the session object
+        final Map<String, dynamic> filteredDeviceInfo = Map.from(deviceInfo);
+        filteredDeviceInfo.remove('networkType');
+        filteredDeviceInfo.remove('deviceOrientation');
+        filteredDeviceInfo.remove('batteryLevel');
+        filteredDeviceInfo.remove('isCharging');
+        
+        if (filteredDeviceInfo.isNotEmpty) {
+          sessionMetadata['deviceInfo'] = filteredDeviceInfo;
+        }
+      }
+      
+      // Create session data with all collected and provided parameters
+      return await _sendSessionStartRequest(ULinkSession(
+        installationId: _installationId!,
+        networkType: sessionNetworkType,
+        deviceOrientation: sessionDeviceOrientation,
+        batteryLevel: sessionBatteryLevel,
+        isCharging: sessionIsCharging,
+        metadata: sessionMetadata.isEmpty ? null : sessionMetadata,
+      ));
+    } catch (e) {
+      _log('Error starting session: $e');
+      return ULinkSessionResponse.error('Error starting session: $e');
+    }
+  }
+  
+  /// End the current session
+  /// 
+  /// This method ends the active session and reports it to the server.
+  /// If no session is active, it returns an error response.
+  /// 
+  /// Returns a [ULinkResponse] indicating success or failure.
+  Future<ULinkResponse> endSession() async {
+    try {
+      final sessionId = _currentSessionId;
+      _log('Ending session: $sessionId');
+      
+      if (sessionId == null) {
+        return ULinkResponse.error('No active session to end');
+      }
+      
+      // Send end session request to server
+      final response = await _httpClient.post(
+        Uri.parse('${config.baseUrl}/sdk/sessions/$sessionId/end'),
+        headers: {
+          'Content-Type': 'application/json',
+          'X-App-Key': config.apiKey,
+        },
+      );
+      
+      // Clear the session ID immediately to prevent duplicate end requests
+      _currentSessionId = null;
+      
+      final Map<String, dynamic> responseData = jsonDecode(response.body);
+      
+      if (response.statusCode >= 200 && response.statusCode < 300) {
+        _log('Session ended successfully');
+        return ULinkResponse.success('Session ended successfully', responseData);
+      } else {
+        _log('Error ending session: ${response.statusCode}');
+        return ULinkResponse.error(
+          responseData['message'] ?? 'Error ending session: ${response.statusCode}',
+        );
+      }
+    } catch (e) {
+      // Clear the session ID even if there was an error
+      _currentSessionId = null;
+      _log('Error ending session: $e');
+      return ULinkResponse.error('Error ending session: $e');
+    }
+  }
+  
+  /// Get the current session ID
+  /// 
+  /// Returns the ID of the active session, or null if no session is active.
+  /// This can be used to check if a session is currently active.
+  String? getCurrentSessionId() {
+    return _currentSessionId;
+  }
+  
+  /// Check if a session is currently active
+  /// 
+  /// Returns true if there is an active session, false otherwise.
+  bool hasActiveSession() {
+    return _currentSessionId != null;
+  }
+  
   /// Dispose the SDK
+  /// 
+  /// This method cleans up resources used by the SDK and ends any active session.
+  /// It should be called when the app is closing or the SDK is no longer needed.
   void dispose() {
+    // End the current session if one exists
+    if (_currentSessionId != null) {
+      // Use a synchronous try-catch to ensure we don't miss any errors
+      try {
+        endSession().then((_) {
+          _log('Session ended during dispose');
+        }).catchError((e) {
+          _log('Error ending session during dispose: $e');
+        });
+      } catch (e) {
+        _log('Unexpected error during dispose: $e');
+      }
+    }
+    
+    // Close the stream controller
     _linkStreamController.close();
+    _log('SDK disposed');
   }
 }
