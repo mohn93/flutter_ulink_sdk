@@ -9,12 +9,7 @@
   - Improved type safety and developer experience
   - Better IDE support with parameter validation
   - More intuitive API for creating different link types
-* **Automatic Session Management**: Added automatic lifecycle-based session management for iOS and Android
-  - Sessions automatically start when app launches or resumes
-  - Sessions automatically end when app goes to background, pauses, or terminates
-  - Zero configuration required - works out of the box
-  - Cross-platform support using Flutter's WidgetsBindingObserver
-  - Manual session control still available for advanced use cases
+
 * **Path Structure Update**: Updated all examples and documentation to use slug on root path instead of `/d/slug` format
   - Updated link resolution examples to use direct slug paths
   - Simplified URL structure across all documentation
