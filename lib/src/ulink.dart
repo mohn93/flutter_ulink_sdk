@@ -1,11 +1,13 @@
 import 'dart:async';
 import 'dart:convert';
+import 'dart:io';
 
 import 'package:app_links/app_links.dart';
 import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:uuid/uuid.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import 'models/models.dart';
 import 'utils/device_info.dart';
@@ -23,12 +25,19 @@ class ULink {
   /// HTTP client for API requests
   final http.Client _httpClient;
 
-  /// Stream controller for link events
+  /// Stream controller for dynamic link events
   final StreamController<ULinkResolvedData> _linkStreamController =
       StreamController<ULinkResolvedData>.broadcast();
 
-  /// Stream of link events
+  /// Stream controller for unified link events
+  final StreamController<ULinkResolvedData> _unifiedLinkStreamController =
+      StreamController<ULinkResolvedData>.broadcast();
+
+  /// Stream of dynamic link events
   Stream<ULinkResolvedData> get onLink => _linkStreamController.stream;
+
+  /// Stream of unified link events (for external redirects)
+  Stream<ULinkResolvedData> get onUnifiedLink => _unifiedLinkStreamController.stream;
 
   /// Last received link data
   ULinkResolvedData? _lastLinkData;
@@ -138,6 +147,18 @@ class ULink {
           if (resolveResponse.success && resolveResponse.data != null) {
             final resolvedData =
                 ULinkResolvedData.fromJson(resolveResponse.data!);
+            
+            // Check if this is a simple/unified link that should be redirected externally
+            if (resolvedData.linkType == ULinkType.unified) {
+              _log('Detected simple/unified link - handling externally');
+              await _handleSimpleLinkInApp(resolvedData);
+              // Add to unified link stream for tracking purposes
+              _lastLinkData = resolvedData;
+              _unifiedLinkStreamController.add(resolvedData);
+              return;
+            }
+            
+            // Handle as normal dynamic link
             _lastLinkData = resolvedData;
             _linkStreamController.add(resolvedData);
             return; // Exit after processing
@@ -148,13 +169,18 @@ class ULink {
         }
 
       // Default handling if not a ULink dynamic link or if resolution fails
-      // Create a basic resolved data from the URI
+      // Treat as a unified link that should be redirected externally
       final basicData = ULinkResolvedData(
         fallbackUrl: uri.toString(),
-        rawData: {'uri': uri.toString()},
+        linkType: ULinkType.unified,
+        rawData: {'uri': uri.toString(), 'type': 'unified'},
       );
+      
+      _log('Treating unknown link as unified link - redirecting externally');
+      await _handleSimpleLinkInApp(basicData);
+      
       _lastLinkData = basicData;
-      _linkStreamController.add(basicData);
+      _unifiedLinkStreamController.add(basicData);
     });
 
     // Get the initial link if the app was opened with one
@@ -175,6 +201,18 @@ class ULink {
             if (resolveResponse.success && resolveResponse.data != null) {
               final resolvedData =
                   ULinkResolvedData.fromJson(resolveResponse.data!);
+              
+              // Check if this is a simple/unified link that should be redirected externally
+              if (resolvedData.linkType == ULinkType.unified) {
+                _log('Detected initial simple/unified link - handling externally');
+                await _handleSimpleLinkInApp(resolvedData);
+                // Add to unified link stream for tracking purposes
+                _lastLinkData = resolvedData;
+                _unifiedLinkStreamController.add(resolvedData);
+                return;
+              }
+              
+              // Handle as normal dynamic link
               _lastLinkData = resolvedData;
               _linkStreamController.add(resolvedData);
               return; // Exit after processing
@@ -184,13 +222,18 @@ class ULink {
             // Fall through to default handling if resolution fails
           }
         // Default handling if not a ULink dynamic link or if resolution fails
-        // Create a basic resolved data from the URI
+        // Treat as a unified link that should be redirected externally
         final basicData = ULinkResolvedData(
           fallbackUrl: initialLink.toString(),
-          rawData: {'uri': initialLink.toString()},
+          linkType: ULinkType.unified,
+          rawData: {'uri': initialLink.toString(), 'type': 'unified'},
         );
+        
+        _log('Treating unknown initial link as unified link - redirecting externally');
+        await _handleSimpleLinkInApp(basicData);
+        
         _lastLinkData = basicData;
-        _linkStreamController.add(basicData);
+        _unifiedLinkStreamController.add(basicData);
       }
     } catch (e) {
       _log('Error getting initial app link: $e');
@@ -201,6 +244,42 @@ class ULink {
   bool _isULinkDynamicLink(Uri uri) {
     final pathSegments = uri.pathSegments;
     return pathSegments.length >= 2 && pathSegments[0] == 'd';
+  }
+
+  /// Handle simple/unified links by redirecting them externally
+  Future<void> _handleSimpleLinkInApp(ULinkResolvedData linkData) async {
+    try {
+      _log('Handling simple/unified link - redirecting externally');
+      
+      // Determine the appropriate URL to redirect to based on platform
+      String? redirectUrl;
+      
+      if (Platform.isIOS && linkData.iosFallbackUrl != null) {
+        redirectUrl = linkData.iosFallbackUrl;
+      } else if (Platform.isAndroid && linkData.androidFallbackUrl != null) {
+        redirectUrl = linkData.androidFallbackUrl;
+      } else if (linkData.fallbackUrl != null) {
+        redirectUrl = linkData.fallbackUrl;
+      }
+      
+      if (redirectUrl != null) {
+        _log('Opening external URL: $redirectUrl');
+        final uri = Uri.parse(redirectUrl);
+        
+        if (await canLaunchUrl(uri)) {
+          await launchUrl(
+            uri,
+            mode: LaunchMode.externalApplication,
+          );
+        } else {
+          _log('Cannot launch URL: $redirectUrl');
+        }
+      } else {
+        _log('No appropriate redirect URL found for simple link');
+      }
+    } catch (e) {
+      _log('Error handling simple link: $e');
+    }
   }
 
   /// Get the last received link data
@@ -294,6 +373,19 @@ class ULink {
         if (resolveResponse.success && resolveResponse.data != null) {
           final resolvedData =
               ULinkResolvedData.fromJson(resolveResponse.data!);
+          
+          // Check if this is a simple/unified link that should be redirected externally
+          if (resolvedData.linkType == ULinkType.unified) {
+            _log('Detected test simple/unified link - handling externally');
+            await _handleSimpleLinkInApp(resolvedData);
+            // Add to unified link stream for tracking purposes
+            _lastLinkData = resolvedData;
+            _unifiedLinkStreamController.add(resolvedData);
+            _log('Successfully handled test simple link externally');
+            return;
+          }
+          
+          // Handle as normal dynamic link
           _lastLinkData = resolvedData;
           _linkStreamController.add(resolvedData);
           _log('Successfully resolved test link: ${resolvedData.rawData}');
@@ -304,14 +396,19 @@ class ULink {
       }
     }
 
-    // Default handling
+    // Default handling - treat as unified link
     final basicData = ULinkResolvedData(
       fallbackUrl: uri.toString(),
-      rawData: {'uri': uri.toString()},
+      linkType: ULinkType.unified,
+      rawData: {'uri': uri.toString(), 'type': 'unified'},
     );
+    
+    _log('Treating test link as unified link - redirecting externally');
+    await _handleSimpleLinkInApp(basicData);
+    
     _lastLinkData = basicData;
-    _linkStreamController.add(basicData);
-    _log('Added basic test link data to stream');
+    _unifiedLinkStreamController.add(basicData);
+    _log('Added test unified link data to stream');
   }
 
   /// Get a unique installation ID
@@ -704,8 +801,9 @@ class ULink {
       }
     }
     
-    // Close the stream controller
+    // Close the stream controllers
     _linkStreamController.close();
+    _unifiedLinkStreamController.close();
     _log('SDK disposed');
   }
 }

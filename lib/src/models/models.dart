@@ -3,6 +3,14 @@
 export 'installation.dart';
 export 'session.dart';
 
+/// Enumeration for different types of links
+enum ULinkType {
+  /// Dynamic links designed for app deep linking with parameters, fallback URLs, and smart app store redirects
+  dynamic,
+  /// Simple platform-based redirects (iOS URL, Android URL, fallback URL) intended for browser handling
+  unified,
+}
+
 /// Configuration for the ULink SDK
 class ULinkConfig {
   /// The API key for the ULink service
@@ -235,6 +243,9 @@ class ULinkResolvedData {
   /// Metadata containing social media data
   final Map<String, dynamic>? metadata;
 
+  /// The type of link (dynamic or unified)
+  final ULinkType linkType;
+
   /// Raw data from the response
   final Map<String, dynamic> rawData;
 
@@ -247,6 +258,7 @@ class ULinkResolvedData {
     this.parameters,
     this.socialMediaTags,
     this.metadata,
+    this.linkType = ULinkType.dynamic,
     required this.rawData,
   });
 
@@ -288,14 +300,19 @@ class ULinkResolvedData {
       }
     }
 
+    // Determine link type based on type field from rawData
+    final typeFromData = json['type'] as String?;
+    final linkType = typeFromData == 'dynamic' ? ULinkType.dynamic : ULinkType.unified;
+
     return ULinkResolvedData(
       slug: json['slug'],
-      iosFallbackUrl: json['iosFallbackUrl'],
-      androidFallbackUrl: json['androidFallbackUrl'],
+      iosFallbackUrl: json['iosUrl'] ?? json['iosFallbackUrl'],
+      androidFallbackUrl: json['androidUrl'] ?? json['androidFallbackUrl'],
       fallbackUrl: json['fallbackUrl'],
       parameters: parameters,
       socialMediaTags: socialMediaTags,
       metadata: metadata,
+      linkType: linkType,
       rawData: json,
     );
   }

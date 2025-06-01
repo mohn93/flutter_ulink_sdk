@@ -20,7 +20,12 @@ A Flutter SDK for creating and handling dynamic links with ULink, similar to Bra
 - Create dynamic links with custom slugs and parameters
 - Social media tag support for better link sharing
 - Automatic handling of dynamic links in your app
+- **Graceful handling of unified/simple links** with automatic external redirection
 - Resolve links to retrieve their data
+- Session tracking and analytics
+- Device information collection
+- Installation tracking
+- Clear distinction between dynamic and unified link types
 
 ## Installation
 
@@ -150,35 +155,73 @@ void main() async {
 }
 ```
 
-## Creating Dynamic Links
+## Link Types
 
-Create dynamic links with custom parameters:
+The ULink SDK supports two distinct types of links:
+
+### Dynamic Links
+- **Purpose**: App deep linking with parameters, fallback URLs, and smart app store redirects
+- **Handling**: Processed in-app with custom parameters and navigation logic
+- **Type**: Automatically determined as `dynamic` by server
+
+### Unified/Simple Links
+- **Purpose**: Simple platform-based redirects for browser handling
+- **Handling**: Automatically redirected externally when opened in-app
+- **Type**: Determined from server response `type` field
+
+> **Key Benefit**: Simple links maintain their browser-based behavior even when accidentally opened in your app, providing seamless user experience.
+
+For detailed information, see [UNIFIED_LINKS.md](UNIFIED_LINKS.md).
+
+## Creating Links
+
+### Dynamic Links (In-App Handling)
 
 ```dart
 final response = await ULink.instance.createLink(
   ULinkParameters(
-    slug: 'product-123',
-    iosFallbackUrl: 'yourappname://product/123',
-    androidFallbackUrl: 'yourappname://product/123',
-    fallbackUrl: 'https://myapp.com/product/123',
-    socialMediaTags: SocialMediaTags(
-      ogTitle: 'Check out this awesome product!',
-      ogDescription: 'This is a detailed description of the product.',
-      ogImage: 'https://example.com/product-image.jpg',
-    ),
+    slug: 'my-dynamic-link', // Optional
+    fallbackUrl: 'https://example.com/fallback',
+    iosFallbackUrl: 'https://apps.apple.com/app/myapp',
+    androidFallbackUrl: 'https://play.google.com/store/apps/details?id=com.myapp',
+    // Will be handled in-app as dynamic link
     parameters: {
-      'utm_source': 'share_button',
-      'campaign': 'summer_sale',
+      'screen': 'profile',
+      'userId': '12345',
+      'campaign': 'summer2023',
     },
+    socialMediaTags: SocialMediaTags(
+      ogTitle: 'Check out this amazing app!',
+      ogDescription: 'The best app for managing your tasks',
+      ogImage: 'https://example.com/image.jpg',
+    ),
   ),
 );
 
 if (response.success) {
-  final dynamicLinkUrl = response.url;
-  // Use the dynamic link URL
+  print('Dynamic link created: ${response.url}');
 } else {
-  final error = response.error;
-  // Handle error
+  print('Error: ${response.error}');
+}
+```
+
+### Unified Links (External Redirect)
+
+```dart
+final response = await ULink.instance.createLink(
+  ULinkParameters(
+    slug: 'my-simple-redirect',
+    fallbackUrl: 'https://example.com/landing',
+    iosFallbackUrl: 'https://apps.apple.com/app/myapp',
+    androidFallbackUrl: 'https://play.google.com/store/apps/details?id=com.myapp',
+    // Will be treated as unified link based on server response
+  ),
+);
+
+if (response.success) {
+  print('Unified link created: ${response.url}');
+} else {
+  print('Error: ${response.error}');
 }
 ```
 
@@ -191,7 +234,7 @@ Listen for dynamic links in your app:
 void initState() {
   super.initState();
   
-  // Listen for incoming links
+  // Listen for dynamic links (in-app handling)
   ULink.instance.onLink.listen((ULinkResolvedData data) {
     setState(() {
       // Access link data
@@ -200,7 +243,27 @@ void initState() {
       final parameters = data.parameters;
       final socialMediaTags = data.socialMediaTags;
       final rawData = data.rawData;
+      
+      print('Received dynamic link: ${data.rawData}');
+      print('Dynamic link parameters: ${data.parameters}');
+      // Handle dynamic link with custom logic
+      
+      // Navigate based on parameters
+      if (parameters != null) {
+        final screen = parameters['screen'];
+        final userId = parameters['userId'];
+        
+        if (screen == 'profile' && userId != null) {
+          // Navigate to profile screen
+        }
+      }
     });
+  });
+  
+  // Listen for unified links (external redirects)
+  ULink.instance.onUnifiedLink.listen((ULinkResolvedData data) {
+    print('Unified link received and redirected externally: ${data.rawData}');
+    // Optional: Track unified link events for analytics
   });
 }
 ```
