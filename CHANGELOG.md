@@ -1,5 +1,37 @@
 # Changelog
 
+## 0.1.1
+
+### 🔧 Improvements
+
+* **Removed deepLink Field**: Removed unused `deepLink` field from `ULinkParameters` class and all related documentation
+* **Factory Methods**: Added `ULinkParameters.dynamic()` and `ULinkParameters.unified()` factory constructors for cleaner API
+  - Improved type safety and developer experience
+  - Better IDE support with parameter validation
+  - More intuitive API for creating different link types
+* **Automatic Session Management**: Added automatic lifecycle-based session management for iOS and Android
+  - Sessions automatically start when app launches or resumes
+  - Sessions automatically end when app goes to background, pauses, or terminates
+  - Zero configuration required - works out of the box
+  - Cross-platform support using Flutter's WidgetsBindingObserver
+  - Manual session control still available for advanced use cases
+* **Path Structure Update**: Updated all examples and documentation to use slug on root path instead of `/d/slug` format
+  - Updated link resolution examples to use direct slug paths
+  - Simplified URL structure across all documentation
+  - Updated test files to reflect new path format
+
+### 📚 Documentation
+
+* Updated README.md with factory method examples and benefits
+* Updated UNIFIED_LINKS.md to use new factory constructors
+* Added comprehensive documentation for factory method usage
+* Updated all code examples to demonstrate cleaner API patterns
+
+### 🗂️ Breaking Changes
+
+* Removed `deepLink` field from `ULinkParameters` (was unused)
+* Updated URL path structure from `/d/slug` to `/slug` format
+
 ## 0.1.0
 
 ### ✨ New Features
@@ -40,7 +72,7 @@
 
 * Added resolveLink method to retrieve original data from dynamic links
 * Added ULinkResolvedData model for handling resolved link data
-* Added automatic resolution of ULink format links (d/[slug]) in link listeners
+* Added automatic resolution of ULink format links (slug on root path) in link listeners
 * Added comprehensive documentation for link resolution
 * Added example for resolving links in example/test/link_resolve_test.dart
 

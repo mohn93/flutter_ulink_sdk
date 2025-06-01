@@ -4,6 +4,7 @@ import 'dart:io';
 
 import 'package:app_links/app_links.dart';
 import 'package:flutter/foundation.dart';
+import 'package:flutter/widgets.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:uuid/uuid.dart';
@@ -13,7 +14,7 @@ import 'models/models.dart';
 import 'utils/device_info.dart';
 
 /// Main class for the ULink SDK
-class ULink {
+class ULink with WidgetsBindingObserver {
   static ULink? _instance;
 
   /// The configuration for the SDK
@@ -47,6 +48,9 @@ class ULink {
   
   /// Current active session ID
   String? _currentSessionId;
+
+  /// Flag to track if lifecycle observer is registered
+  bool _isLifecycleObserverRegistered = false;
 
   /// Private constructor
   ULink._({required this.config, http.Client? httpClient})
@@ -108,6 +112,8 @@ class ULink {
       }
       
       // Step 5: Initialize app links (happens in _init method)
+      // Step 6: Register lifecycle observer for automatic session management
+      _instance!._registerLifecycleObserver();
       _instance!._log('ULink SDK initialization complete');
     }
     return _instance!;
@@ -132,6 +138,87 @@ class ULink {
           'ULink SDK not initialized. Call ULink.initialize() first.');
     }
     return _instance!;
+  }
+
+  /// Register lifecycle observer for automatic session management
+  void _registerLifecycleObserver() {
+    if (!_isLifecycleObserverRegistered) {
+      WidgetsBinding.instance.addObserver(this);
+      _isLifecycleObserverRegistered = true;
+      _log('Lifecycle observer registered for automatic session management');
+    }
+  }
+
+  /// Unregister lifecycle observer
+  void _unregisterLifecycleObserver() {
+    if (_isLifecycleObserverRegistered) {
+      WidgetsBinding.instance.removeObserver(this);
+      _isLifecycleObserverRegistered = false;
+      _log('Lifecycle observer unregistered');
+    }
+  }
+
+  /// Handle app lifecycle state changes
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    super.didChangeAppLifecycleState(state);
+    _log('App lifecycle state changed to: $state');
+    
+    switch (state) {
+      case AppLifecycleState.resumed:
+        // App came to foreground - start new session if none exists
+        if (!hasActiveSession()) {
+          _log('App resumed - starting new session');
+          _startSession().then((response) {
+            if (config.debug) {
+              if (response.success) {
+                _log('New session started on app resume: $_currentSessionId');
+              } else {
+                _log('Failed to start session on app resume: ${response.error}');
+              }
+            }
+          }).catchError((e) {
+            _log('Error starting session on app resume: $e');
+          });
+        }
+        break;
+      case AppLifecycleState.paused:
+      case AppLifecycleState.inactive:
+      case AppLifecycleState.detached:
+        // App went to background or is being destroyed - end current session
+        if (hasActiveSession()) {
+          _log('App paused/inactive/detached - ending current session');
+          endSession().then((response) {
+            if (config.debug) {
+              if (response.success) {
+                _log('Session ended on app pause/inactive/detached');
+              } else {
+                _log('Failed to end session on app pause/inactive/detached: ${response.error}');
+              }
+            }
+          }).catchError((e) {
+            _log('Error ending session on app pause/inactive/detached: $e');
+          });
+        }
+        break;
+      case AppLifecycleState.hidden:
+        // App is hidden but still running - optionally end session
+        if (hasActiveSession()) {
+          _log('App hidden - ending current session');
+          endSession().then((response) {
+            if (config.debug) {
+              if (response.success) {
+                _log('Session ended on app hidden');
+              } else {
+                _log('Failed to end session on app hidden: ${response.error}');
+              }
+            }
+          }).catchError((e) {
+            _log('Error ending session on app hidden: $e');
+          });
+        }
+        break;
+    }
   }
 
   /// Initialize the SDK
@@ -787,6 +874,9 @@ class ULink {
   /// This method cleans up resources used by the SDK and ends any active session.
   /// It should be called when the app is closing or the SDK is no longer needed.
   void dispose() {
+    // Unregister lifecycle observer
+    _unregisterLifecycleObserver();
+    
     // End the current session if one exists
     if (_currentSessionId != null) {
       // Use a synchronous try-catch to ensure we don't miss any errors

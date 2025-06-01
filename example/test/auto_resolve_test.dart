@@ -3,7 +3,7 @@ import 'package:flutter_ulink_sdk/flutter_ulink_sdk.dart';
 
 /// A simple example to demonstrate automatic link resolution
 ///
-/// This simulates receiving a ULink format link with a path of d/[slug]
+/// This simulates receiving a ULink format link with a slug on the root path
 /// The SDK should automatically resolve this link and provide the resolved data
 void main() async {
   print('ULink SDK Automatic Link Resolution Example');
@@ -61,9 +61,9 @@ void main() async {
     // Step 2: Simulate receiving a ULink format link
     print('\nStep 2: Simulating receiving a ULink format link...');
 
-    // Construct a ULink format link (d/[slug])
+    // Construct a ULink format link (slug on root path)
     final baseUri = Uri.parse('https://example.com'); // Can be any domain
-    final ulinkFormatUri = baseUri.replace(pathSegments: ['d', slug]);
+    final ulinkFormatUri = baseUri.replace(pathSegments: [slug]);
 
     print('ULink format link: $ulinkFormatUri');
 
@@ -71,7 +71,7 @@ void main() async {
     print(
         '\nStep 3: Processing the link (this happens internally in the SDK)...');
     print('The SDK should automatically:');
-    print('1. Detect this is a ULink format link (path starts with d/)');
+    print('1. Detect this is a ULink format link (slug on root path)');
     print('2. Extract the slug ($slug)');
     print('3. Call resolveLink() internally');
     print('4. Get the resolved data from the API');

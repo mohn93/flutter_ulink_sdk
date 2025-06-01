@@ -132,7 +132,7 @@ class _UnifiedLinkExampleState extends State<UnifiedLinkExample> {
 
   Future<void> _testUnifiedLink() async {
     // Simulate receiving a unified link
-    await ULink.instance.testListener('https://ulink.ly/d/unified-test-link');
+    await ULink.instance.testListener('https://ulink.ly/unified-test-link');
   }
 
   @override

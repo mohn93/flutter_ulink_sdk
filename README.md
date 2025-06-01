@@ -256,6 +256,57 @@ Creates unified links for external redirects:
 - **Better IDE Support**: Auto-completion shows only relevant parameters
 - **Reduced Errors**: Prevents mixing dynamic and unified link parameters
 
+## Automatic Session Management
+
+The ULink SDK automatically manages user sessions based on your app's lifecycle states. **No manual session tracking is required** - the SDK handles this seamlessly for both iOS and Android.
+
+### How It Works
+
+- **App Launch**: A new session starts automatically when the SDK is initialized
+- **App Resume**: When your app comes to the foreground, a new session starts if none exists
+- **App Pause/Background**: When your app goes to the background, the current session ends automatically
+- **App Termination**: Sessions are properly ended when the app is destroyed
+
+### Automatic Lifecycle Events
+
+The SDK responds to these app lifecycle states:
+
+- `resumed` - Starts a new session if none exists
+- `paused` - Ends the current session
+- `inactive` - Ends the current session
+- `detached` - Ends the current session
+- `hidden` - Ends the current session
+
+### Manual Session Control (Optional)
+
+While automatic session management handles most use cases, you can still manually control sessions if needed:
+
+```dart
+// Check if a session is active
+if (ULink.instance.hasActiveSession()) {
+  print('Session ID: ${ULink.instance.getCurrentSessionId()}');
+}
+
+// Manually start a session with custom metadata
+final sessionResponse = await ULink.instance.startSession(
+  metadata: {
+    'user_type': 'premium',
+    'app_version': '1.2.0',
+  },
+);
+
+// Manually end the current session
+final endResponse = await ULink.instance.endSession();
+```
+
+### Benefits
+
+- **Zero Configuration**: Works out of the box without any setup
+- **Cross-Platform**: Consistent behavior on both iOS and Android
+- **Accurate Analytics**: Proper session tracking for better insights
+- **Battery Efficient**: Sessions end when app is not in use
+- **Developer Friendly**: No need to track app lifecycle manually
+
 ## Handling Dynamic Links
 
 Listen for dynamic links in your app:
@@ -304,8 +355,8 @@ void initState() {
 Resolve a dynamic link to get its data:
 
 ```dart
-// Resolve a ULink format URL (d/slug)
-final resolveResponse = await ULink.instance.resolveLink('https://ulink.shared.ly/d/your-slug');
+// Resolve a ULink format URL (slug)
+final resolveResponse = await ULink.instance.resolveLink('https://ulink.shared.ly/your-slug');
 
 if (resolveResponse.success) {
   final resolvedData = ULinkResolvedData.fromJson(resolveResponse.data!);

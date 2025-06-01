@@ -56,7 +56,7 @@ void main() {
 
     test('resolveLink correctly handles new API response format', () async {
       // Test resolving a link
-      final response = await ulink.resolveLink('https://ulink.ly/d/test-slug');
+      final response = await ulink.resolveLink('https://ulink.ly/test-slug');
 
       // Verify the response was successful
       expect(response.success, true);
