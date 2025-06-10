@@ -35,10 +35,10 @@ class HomePage extends StatefulWidget {
   const HomePage({super.key});
 
   @override
-  _HomePageState createState() => _HomePageState();
+  HomePageState createState() => HomePageState();
 }
 
-class _HomePageState extends State<HomePage> {
+class HomePageState extends State<HomePage> {
   final ULink _ulink = ULink.instance;
   String _lastLink = 'No link received yet';
   String _createdLink = 'No link created yet';

@@ -1,4 +1,4 @@
-import 'dart:io' show Platform;
+import 'dart:io';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -131,30 +131,37 @@ class DeviceInfoHelper {
     
     try {
       final Connectivity connectivity = Connectivity();
-      final connectivityResult = await connectivity.checkConnectivity();
+      final connectivityResults = await connectivity.checkConnectivity();
       
       String networkType;
-      switch (connectivityResult) {
-        case ConnectivityResult.wifi:
-          networkType = 'wifi';
-          break;
-        case ConnectivityResult.mobile:
-          networkType = 'mobile';
-          break;
-        case ConnectivityResult.ethernet:
-          networkType = 'ethernet';
-          break;
-        case ConnectivityResult.bluetooth:
-          networkType = 'bluetooth';
-          break;
-        case ConnectivityResult.vpn:
-          networkType = 'vpn';
-          break;
-        case ConnectivityResult.none:
-          networkType = 'none';
-          break;
-        default:
-          networkType = 'unknown';
+      // Handle the list of connectivity results
+      if (connectivityResults.isEmpty) {
+        networkType = 'none';
+      } else {
+        // Use the first connectivity result
+        final connectivityResult = connectivityResults.first;
+        switch (connectivityResult) {
+          case ConnectivityResult.wifi:
+            networkType = 'wifi';
+            break;
+          case ConnectivityResult.mobile:
+            networkType = 'mobile';
+            break;
+          case ConnectivityResult.ethernet:
+            networkType = 'ethernet';
+            break;
+          case ConnectivityResult.bluetooth:
+            networkType = 'bluetooth';
+            break;
+          case ConnectivityResult.vpn:
+            networkType = 'vpn';
+            break;
+          case ConnectivityResult.none:
+            networkType = 'none';
+            break;
+          default:
+            networkType = 'unknown';
+        }
       }
       
       networkData['networkType'] = networkType;
@@ -181,8 +188,8 @@ class DeviceInfoHelper {
       
       // If no context is provided, try to determine orientation from screen size
       if (!kIsWeb && (Platform.isAndroid || Platform.isIOS)) {
-        final window = WidgetsBinding.instance.window;
-        final size = window.physicalSize;
+        final view = PlatformDispatcher.instance.views.first;
+        final size = view.physicalSize;
         final orientation = size.width > size.height ? 'landscape' : 'portrait';
         return orientation;
       }
@@ -202,6 +209,12 @@ class DeviceInfoHelper {
     final Map<String, dynamic> completeInfo = {};
     
     try {
+      // Get orientation first (before any async operations to avoid BuildContext issues)
+      final orientation = getDeviceOrientation(context);
+      if (orientation != null) {
+        completeInfo['deviceOrientation'] = orientation;
+      }
+      
       // Get basic device info
       final basicInfo = await getBasicDeviceInfo();
       completeInfo.addAll(basicInfo);
@@ -219,12 +232,6 @@ class DeviceInfoHelper {
       final networkInfo = await getNetworkInfo();
       if (networkInfo['networkType'] != null) {
         completeInfo['networkType'] = networkInfo['networkType'];
-      }
-      
-      // Get orientation
-      final orientation = getDeviceOrientation(context);
-      if (orientation != null) {
-        completeInfo['deviceOrientation'] = orientation;
       }
       
     } catch (e) {
