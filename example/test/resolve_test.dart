@@ -9,7 +9,7 @@ import 'dart:async';
 void main() async {
   print('Starting ULink SDK dynamic link resolution test...');
 
-  await WidgetsFlutterBinding.ensureInitialized();
+  WidgetsFlutterBinding.ensureInitialized();
 
   // Initialize the SDK using example app's environment configuration
   print('Initializing ULink SDK...');

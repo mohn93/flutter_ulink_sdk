@@ -1,4 +1,5 @@
 /// Models for the ULink SDK
+library;
 
 export 'installation.dart';
 export 'session.dart';
@@ -163,8 +164,9 @@ class ULinkParameters {
     if (iosUrl != null) data['iosUrl'] = iosUrl;
     if (androidUrl != null) data['androidUrl'] = androidUrl;
     if (iosFallbackUrl != null) data['iosFallbackUrl'] = iosFallbackUrl;
-    if (androidFallbackUrl != null)
+    if (androidFallbackUrl != null) {
       data['androidFallbackUrl'] = androidFallbackUrl;
+    }
     if (fallbackUrl != null) data['fallbackUrl'] = fallbackUrl;
 
     // Handle regular parameters (non-social media)

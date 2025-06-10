@@ -6,7 +6,7 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
   // Initialize the SDK using example app's environment configuration
-  final _ulink = await ULink.initialize(
+  final ulink = await ULink.initialize(
     config: ULinkConfig(
       apiKey: Environment.apiKey,
       baseUrl: Environment.baseUrl,
@@ -16,7 +16,7 @@ void main() async {
 
   try {
     // Create a dynamic link with social media tags
-    final response = await _ulink.createLink(
+    final response = await ulink.createLink(
       ULinkParameters(
         slug: 'product-123',
         iosFallbackUrl: 'myapp://product/123',
@@ -51,7 +51,7 @@ void main() async {
 }
 
 class MyApp extends StatelessWidget {
-  const MyApp({Key? key}) : super(key: key);
+  const MyApp({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -66,7 +66,7 @@ class MyApp extends StatelessWidget {
 }
 
 class HomePage extends StatefulWidget {
-  const HomePage({Key? key}) : super(key: key);
+  const HomePage({super.key});
 
   @override
   _HomePageState createState() => _HomePageState();

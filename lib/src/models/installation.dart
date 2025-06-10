@@ -1,4 +1,5 @@
 /// Models for installation tracking
+library;
 
 /// Installation data for tracking app installations
 class ULinkInstallation {

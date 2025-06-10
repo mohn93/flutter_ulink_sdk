@@ -5,7 +5,7 @@ import 'package:flutter_ulink_sdk/flutter_ulink_sdk.dart';
 /// Run with: dart example/test/typed_link_test.dart
 void main() async {
   print('Starting strongly typed ULink SDK test...');
-  await WidgetsFlutterBinding.ensureInitialized();
+  WidgetsFlutterBinding.ensureInitialized();
   // Initialize the SDK
   print('Initializing ULink SDK...');
   final ulink = await ULink.initialize(

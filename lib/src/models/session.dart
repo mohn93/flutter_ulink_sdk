@@ -1,4 +1,5 @@
 /// Models for session management
+library;
 
 /// Session data for tracking user sessions
 class ULinkSession {

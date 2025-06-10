@@ -2,6 +2,7 @@
 ///
 /// Copy this file to `env.dart` and replace the values with your own.
 /// Do NOT commit the `env.dart` file to version control.
+library;
 
 class Environment {
   /// API key for the ULink service

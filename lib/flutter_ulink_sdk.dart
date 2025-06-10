@@ -1,4 +1,4 @@
-library flutter_ulink_sdk;
+library;
 
 export 'src/models/models.dart';
 export 'src/ulink.dart';
