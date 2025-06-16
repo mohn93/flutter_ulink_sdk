@@ -1,5 +1,10 @@
 # Changelog
 
+
+## 0.1.2
+
+  - changed package_info to package_info_plus
+
 ## 0.1.1
 
 ### 🔧 Improvements
