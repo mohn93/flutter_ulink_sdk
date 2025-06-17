@@ -6,6 +6,7 @@ import 'package:battery_plus/battery_plus.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:device_info_plus/device_info_plus.dart';
 import 'package:package_info_plus/package_info_plus.dart';
+import 'package:flutter_udid/flutter_udid.dart';
 
 /// Helper class for gathering device information
 class DeviceInfoHelper {
@@ -25,8 +26,6 @@ class DeviceInfoHelper {
       final packageInfo = await PackageInfo.fromPlatform();
       deviceData['appVersion'] = packageInfo.version;
       deviceData['appBuild'] = packageInfo.buildNumber;
-      
-
       
       // Get locale information
       deviceData['language'] = PlatformDispatcher.instance.locale.toString();
@@ -48,9 +47,18 @@ class DeviceInfoHelper {
         deviceData['androidVersion'] = androidInfo.version.release;
         deviceData['sdkVersion'] = androidInfo.version.sdkInt.toString();
         deviceData['brand'] = androidInfo.brand;
-        deviceData['deviceId'] = androidInfo.id;
         deviceData['device'] = androidInfo.device;
         deviceData['isPhysicalDevice'] = androidInfo.isPhysicalDevice;
+        
+        // Use flutter_udid package for getting device ID
+        try {
+          final String udid = await FlutterUdid.udid;
+          deviceData['deviceId'] = udid;
+        } catch (e) {
+          debugPrint('Error getting UDID: $e');
+          // Fallback to the old method if flutter_udid package fails
+          deviceData['deviceId'] = androidInfo.id;
+        }
       } else if (Platform.isIOS) {
         final iosInfo = await deviceInfoPlugin.iosInfo;
         deviceData['deviceModel'] = iosInfo.model;

@@ -1,5 +1,8 @@
 # Changelog
 
+## 0.1.3
+
+  - Changed dependecies
 
 ## 0.1.2
 
