@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.1.4
+
+  - Fixed issue with unified links and added getInitialLink method
+
 ## 0.1.3
 
   - Changed dependecies
