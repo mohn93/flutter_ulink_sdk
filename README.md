@@ -169,7 +169,7 @@ The ULink SDK supports two distinct types of links:
 - **Handling**: Automatically redirected externally when opened in-app
 - **Type**: Determined from server response `type` field
 
-> **Key Benefit**: Simple links maintain their browser-based behavior even when accidentally opened in your app, providing seamless user experience.
+> **Please Note**: If users open a unified link on a device that has the app installed, it might not open in the browser and will open the app instead.
 
 For detailed information, see [UNIFIED_LINKS.md](UNIFIED_LINKS.md).
 
@@ -256,57 +256,6 @@ Creates unified links for external redirects:
 - **Better IDE Support**: Auto-completion shows only relevant parameters
 - **Reduced Errors**: Prevents mixing dynamic and unified link parameters
 
-## Automatic Session Management
-
-The ULink SDK automatically manages user sessions based on your app's lifecycle states. **No manual session tracking is required** - the SDK handles this seamlessly for both iOS and Android.
-
-### How It Works
-
-- **App Launch**: A new session starts automatically when the SDK is initialized
-- **App Resume**: When your app comes to the foreground, a new session starts if none exists
-- **App Pause/Background**: When your app goes to the background, the current session ends automatically
-- **App Termination**: Sessions are properly ended when the app is destroyed
-
-### Automatic Lifecycle Events
-
-The SDK responds to these app lifecycle states:
-
-- `resumed` - Starts a new session if none exists
-- `paused` - Ends the current session
-- `inactive` - Ends the current session
-- `detached` - Ends the current session
-- `hidden` - Ends the current session
-
-### Manual Session Control (Optional)
-
-While automatic session management handles most use cases, you can still manually control sessions if needed:
-
-```dart
-// Check if a session is active
-if (ULink.instance.hasActiveSession()) {
-  print('Session ID: ${ULink.instance.getCurrentSessionId()}');
-}
-
-// Manually start a session with custom metadata
-final sessionResponse = await ULink.instance.startSession(
-  metadata: {
-    'user_type': 'premium',
-    'app_version': '1.2.0',
-  },
-);
-
-// Manually end the current session
-final endResponse = await ULink.instance.endSession();
-```
-
-### Benefits
-
-- **Zero Configuration**: Works out of the box without any setup
-- **Cross-Platform**: Consistent behavior on both iOS and Android
-- **Accurate Analytics**: Proper session tracking for better insights
-- **Battery Efficient**: Sessions end when app is not in use
-- **Developer Friendly**: No need to track app lifecycle manually
-
 ## Handling Dynamic Links
 
 Listen for dynamic links in your app:
@@ -370,9 +319,220 @@ if (resolveResponse.success) {
 }
 ```
 
+## AutoRoute Integration
+
+The ULink SDK provides seamless integration with AutoRoute for automatic deep link handling. This allows you to map ULink deep links directly to your app's routes without manual navigation logic.
+
+### Setup
+
+1. Add AutoRoute to your `pubspec.yaml`:
+
+```yaml
+dependencies:
+  auto_route: ^7.8.4
+  
+dev_dependencies:
+  auto_route_generator: ^7.3.2
+  build_runner: ^2.4.9
+```
+
+2. Import the ULink AutoRoute transformer:
+
+```dart
+import 'package:flutter_ulink_sdk/flutter_ulink_sdk.dart';
+import 'package:auto_route/auto_route.dart';
+```
+
+### Basic Usage
+
+```dart
+@AutoRouterConfig()
+class AppRouter extends _$AppRouter {
+  @override
+  RouteInformation get initialRoute => const HomeRoute();
+
+  @override
+  List<AutoRoute> get routes => [
+    AutoRoute(
+      page: HomeRoute.page,
+      path: '/',
+      initial: true,
+    ),
+    AutoRoute(
+      page: ProfileRoute.page,
+      path: '/profile/:userId',
+    ),
+    AutoRoute(
+      page: ProductRoute.page,
+      path: '/product/:productId',
+    ),
+    // Add more routes as needed
+  ];
+}
+
+class MyApp extends StatelessWidget {
+  final _appRouter = AppRouter();
+
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp.router(
+      title: 'ULink AutoRoute Demo',
+      routerConfig: _appRouter.config(
+        // Add ULink deep link transformer
+        deepLinkTransformer: ULinkAutoRouteTransformer(
+          routeResolver: (ULinkResolvedData data) {
+            // Map ULink data to route paths
+            final params = data.parameters ?? {};
+            
+            switch (params['screen']) {
+              case 'profile':
+                final userId = params['userId'];
+                return userId != null ? '/profile/$userId' : null;
+                
+              case 'product':
+                final productId = params['productId'];
+                return productId != null ? '/product/$productId' : null;
+                
+              default:
+                return null; // Will use fallback URL or stay on current route
+            }
+          },
+        ),
+      ),
+    );
+  }
+}
+```
+
+### Advanced Route Resolver
+
+For more complex routing logic with validation and error handling:
+
+```dart
+ULinkAutoRouteTransformer(
+  routeResolver: (ULinkResolvedData data) {
+    try {
+      final params = data.parameters ?? {};
+      final metadata = data.metadata ?? {};
+      
+      // Validate required parameters
+      if (!params.containsKey('screen')) {
+        print('ULink: Missing screen parameter');
+        return null;
+      }
+      
+      final screen = params['screen'] as String;
+      
+      switch (screen) {
+        case 'profile':
+          final userId = params['userId'] as String?;
+          if (userId == null || userId.isEmpty) {
+            print('ULink: Invalid userId for profile screen');
+            return null;
+          }
+          
+          // Optional: Add query parameters
+          final tab = params['tab'] as String?;
+          final queryParams = tab != null ? '?tab=$tab' : '';
+          
+          return '/profile/$userId$queryParams';
+          
+        case 'product':
+          final productId = params['productId'] as String?;
+          final category = params['category'] as String?;
+          
+          if (productId == null) {
+            return null;
+          }
+          
+          // Build route with optional category
+          if (category != null) {
+            return '/category/$category/product/$productId';
+          }
+          return '/product/$productId';
+          
+        case 'search':
+          final query = params['query'] as String?;
+          if (query != null && query.isNotEmpty) {
+            return '/search?q=${Uri.encodeComponent(query)}';
+          }
+          return '/search';
+          
+        case 'settings':
+          final section = params['section'] as String?;
+          return section != null ? '/settings/$section' : '/settings';
+          
+        default:
+          print('ULink: Unknown screen type: $screen');
+          return null;
+      }
+    } catch (e) {
+      print('ULink: Error processing route: $e');
+      return null;
+    }
+  },
+)
+```
+
+### Creating ULink Parameters for AutoRoute
+
+When creating ULink dynamic links that work with AutoRoute:
+
+```dart
+// Create a link that navigates to profile screen
+final profileLinkResponse = await ULink.instance.createLink(
+  ULinkParameters.dynamic(
+    slug: 'user-profile-123',
+    parameters: {
+      'screen': 'profile',
+      'userId': '123',
+      'tab': 'settings', // Optional query parameter
+    },
+    iosFallbackUrl: 'https://apps.apple.com/app/myapp',
+    androidFallbackUrl: 'https://play.google.com/store/apps/details?id=com.myapp',
+    fallbackUrl: 'https://myapp.com/profile/123',
+    socialMediaTags: SocialMediaTags(
+      ogTitle: 'Check out this user profile',
+      ogDescription: 'View user profile and settings',
+    ),
+  ),
+);
+
+// Create a link for product page
+final productLinkResponse = await ULink.instance.createLink(
+  ULinkParameters.dynamic(
+    slug: 'product-awesome-widget',
+    parameters: {
+      'screen': 'product',
+      'productId': 'awesome-widget',
+      'category': 'electronics',
+      'utm_source': 'share',
+    },
+    fallbackUrl: 'https://myapp.com/product/awesome-widget',
+  ),
+);
+```
+
+### How It Works
+
+1. **Deep Link Detection**: AutoRoute automatically detects incoming deep links
+2. **ULink Resolution**: The transformer resolves ULink URLs to get parameters
+3. **Route Mapping**: Your `routeResolver` function maps ULink data to route paths
+4. **Navigation**: AutoRoute navigates to the resolved route automatically
+5. **Fallback Handling**: If route resolution fails, the app uses fallback URLs or stays on current route
+
+### Benefits
+
+- **Automatic Handling**: No manual link listening or navigation code needed
+- **Type Safety**: Leverage AutoRoute's type-safe routing with ULink parameters
+- **Flexible Mapping**: Custom logic to map any ULink data to routes
+- **Error Resilience**: Graceful fallback when route resolution fails
+- **Clean Architecture**: Separation of link handling from UI code
+
+
 ## Example Project
 
-Check out the example project in the `example` directory for a complete implementation.
+Check out the example project in the `example` directory for a complete implementation, including AutoRoute integration examples.
 
 ## License
 

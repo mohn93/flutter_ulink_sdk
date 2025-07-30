@@ -225,48 +225,7 @@ class ULink with WidgetsBindingObserver {
     // Listen for app links while the app is in the foreground
     _appLinks.uriLinkStream.listen((Uri uri) async {
       _log('App link received: $uri');
-
-        _log('Processing ULink dynamic link: $uri');
-        try {
-          // Resolve the URI to get the dynamic link data
-          final resolveResponse = await resolveLink(uri.toString());
-          if (resolveResponse.success && resolveResponse.data != null) {
-            final resolvedData =
-                ULinkResolvedData.fromJson(resolveResponse.data!);
-            
-            // Check if this is a simple/unified link that should be redirected externally
-            if (resolvedData.linkType == ULinkType.unified) {
-              _log('Detected simple/unified link - handling externally');
-              await _handleSimpleLinkInApp(resolvedData);
-              // Add to unified link stream for tracking purposes
-              _lastLinkData = resolvedData;
-              _unifiedLinkStreamController.add(resolvedData);
-              return;
-            }
-            
-            // Handle as normal dynamic link
-            _lastLinkData = resolvedData;
-            _linkStreamController.add(resolvedData);
-            return; // Exit after processing
-          }
-        } catch (e) {
-          _log('Error resolving dynamic link: $e');
-          // Fall through to default handling if resolution fails
-        }
-
-      // Default handling if not a ULink dynamic link or if resolution fails
-      // Treat as a unified link that should be redirected externally
-      final basicData = ULinkResolvedData(
-        fallbackUrl: uri.toString(),
-        linkType: ULinkType.unified,
-        rawData: {'uri': uri.toString(), 'type': 'unified'},
-      );
-      
-      _log('Treating unknown link as unified link - redirecting externally');
-      await _handleSimpleLinkInApp(basicData);
-      
-      _lastLinkData = basicData;
-      _unifiedLinkStreamController.add(basicData);
+      await _handleUri(uri, context: '');
     });
 
     // Get the initial link if the app was opened with one
@@ -279,90 +238,104 @@ class ULink with WidgetsBindingObserver {
       final Uri? initialLink = await _appLinks.getInitialLink();
       if (initialLink != null) {
         _log('Initial app link: $initialLink');
-
-          _log('Processing initial ULink dynamic link: $initialLink');
-          try {
-            // Resolve the URI to get the dynamic link data
-            final resolveResponse = await resolveLink(initialLink.toString());
-            if (resolveResponse.success && resolveResponse.data != null) {
-              final resolvedData =
-                  ULinkResolvedData.fromJson(resolveResponse.data!);
-              
-              // Check if this is a simple/unified link that should be redirected externally
-              if (resolvedData.linkType == ULinkType.unified) {
-                _log('Detected initial simple/unified link - handling externally');
-                await _handleSimpleLinkInApp(resolvedData);
-                // Add to unified link stream for tracking purposes
-                _lastLinkData = resolvedData;
-                _unifiedLinkStreamController.add(resolvedData);
-                return;
-              }
-              
-              // Handle as normal dynamic link
-              _lastLinkData = resolvedData;
-              _linkStreamController.add(resolvedData);
-              return; // Exit after processing
-            }
-          } catch (e) {
-            _log('Error resolving initial dynamic link: $e');
-            // Fall through to default handling if resolution fails
-          }
-        // Default handling if not a ULink dynamic link or if resolution fails
-        // Treat as a unified link that should be redirected externally
-        final basicData = ULinkResolvedData(
-          fallbackUrl: initialLink.toString(),
-          linkType: ULinkType.unified,
-          rawData: {'uri': initialLink.toString(), 'type': 'unified'},
-        );
-        
-        _log('Treating unknown initial link as unified link - redirecting externally');
-        await _handleSimpleLinkInApp(basicData);
-        
-        _lastLinkData = basicData;
-        _unifiedLinkStreamController.add(basicData);
+        await _handleUri(initialLink, context: 'initial ');
       }
     } catch (e) {
       _log('Error getting initial app link: $e');
     }
   }
 
-  /// Check if a URI is a ULink dynamic link
-  bool _isULinkDynamicLink(Uri uri) {
-    final pathSegments = uri.pathSegments;
-    return pathSegments.length >= 2 && pathSegments[0] == 'd';
+
+
+  /// Process a URI and resolve ULink data by querying the server
+  /// This unified method is used by both internal link handling and external components
+  /// Returns null if the URI cannot be resolved or is not a ULink
+  Future<ULinkResolvedData?> processULinkUri(Uri uri) async {
+    try {
+      _log('Processing URI: ${uri.toString()}');
+      
+      // Always try to resolve the URI with the server to determine if it's a ULink
+      _log('Querying server to resolve URI...');
+      final resolveResponse = await resolveLink(uri.toString());
+      
+      if (resolveResponse.success && resolveResponse.data != null) {
+        final resolvedData = ULinkResolvedData.fromJson(resolveResponse.data!);
+        _log('Successfully resolved ULink data: ${resolvedData.rawData}');
+        return resolvedData;
+      } else {
+        // Differentiate between network errors and non-ULink responses
+        if (resolveResponse.error != null) {
+          if (resolveResponse.error!.contains('network') || 
+              resolveResponse.error!.contains('timeout') ||
+              resolveResponse.error!.contains('connection')) {
+            _log('Network error while resolving URI: ${resolveResponse.error}');
+          } else {
+            _log('URI is not a ULink: ${resolveResponse.error}');
+          }
+        } else {
+          _log('Server responded but URI is not a ULink');
+        }
+      }
+      
+      return null;
+    } catch (e) {
+      _log('Exception while processing ULink URI: $e');
+      return null;
+    }
   }
 
-  /// Handle simple/unified links by redirecting them externally
+  /// Handle resolved ULink data by determining the appropriate action
+  /// This unified method handles both dynamic and unified links
+  Future<void> _handleResolvedULinkData(ULinkResolvedData resolvedData, {String context = ''}) async {
+    // Check if this is a simple/unified link that should be handled internally
+    if (resolvedData.linkType == ULinkType.unified) {
+      _log('Detected ${context}simple/unified link - handling internally');
+      await _handleSimpleLinkInApp(resolvedData);
+      return;
+    }
+    
+    // Handle as normal dynamic link
+    _lastLinkData = resolvedData;
+    _linkStreamController.add(resolvedData);
+  }
+
+  /// Handle a URI by processing it and taking appropriate action
+  /// This unified method handles the complete flow for any URI
+  Future<void> _handleUri(Uri uri, {String context = ''}) async {
+    // Try to process as ULink dynamic link
+    final resolvedData = await processULinkUri(uri);
+    
+    if (resolvedData != null) {
+      await _handleResolvedULinkData(resolvedData, context: context);
+      return;
+    }
+    
+    // If processULinkUri returns null, it means either:
+    // 1. Network error occurred while trying to resolve
+    // 2. The URI is not a ULink (server responded but it's not a ULink)
+    // 
+    // For now, we'll treat all non-ULink URIs as regular deep links
+    // and let the app handle them normally (don't redirect externally)
+    _log('${context}URI is not a ULink or failed to resolve - treating as regular deep link');
+    
+    // Don't create ULinkResolvedData for non-ULink URIs
+    // Just log and let the app handle the URI normally
+  }
+
+  /// Handle simple/unified links by calling the listener internally
   Future<void> _handleSimpleLinkInApp(ULinkResolvedData linkData) async {
     try {
-      _log('Handling simple/unified link - redirecting externally');
+      _log('Handling simple/unified link - calling listener internally');
       
-      // Determine the appropriate URL to redirect to based on platform
-      String? redirectUrl;
+      // Instead of opening externally (which would cause infinite loops),
+      // we call the listener internally to handle the unified link
+      // This allows the app to process the link without system redirection
       
-      if (Platform.isIOS && linkData.iosFallbackUrl != null) {
-        redirectUrl = linkData.iosFallbackUrl;
-      } else if (Platform.isAndroid && linkData.androidFallbackUrl != null) {
-        redirectUrl = linkData.androidFallbackUrl;
-      } else if (linkData.fallbackUrl != null) {
-        redirectUrl = linkData.fallbackUrl;
-      }
+      // Add to unified link stream for the app to handle
+      _lastLinkData = linkData;
+      _unifiedLinkStreamController.add(linkData);
       
-      if (redirectUrl != null) {
-        _log('Opening external URL: $redirectUrl');
-        final uri = Uri.parse(redirectUrl);
-        
-        if (await canLaunchUrl(uri)) {
-          await launchUrl(
-            uri,
-            mode: LaunchMode.externalApplication,
-          );
-        } else {
-          _log('Cannot launch URL: $redirectUrl');
-        }
-      } else {
-        _log('No appropriate redirect URL found for simple link');
-      }
+      _log('Unified link added to stream for app handling');
     } catch (e) {
       _log('Error handling simple link: $e');
     }
@@ -371,6 +344,93 @@ class ULink with WidgetsBindingObserver {
   /// Get the last received link data
   ULinkResolvedData? getLastLinkData() {
     return _lastLinkData;
+  }
+
+  /// Get the initial deep link URI that opened the app (raw URI)
+  /// 
+  /// This method retrieves the raw initial deep link URI if the app was opened with one.
+  /// Unlike the stream-based approach, this method returns the URI synchronously
+  /// and can be called at any time after SDK initialization.
+  /// 
+  /// This method returns the raw URI without processing it through ULink,
+  /// allowing you to handle both ULink and non-ULink deep links.
+  /// 
+  /// Returns null if:
+  /// - The app was not opened with a deep link
+  /// - An error occurred while retrieving the initial link
+  /// 
+  /// Example:
+  /// ```dart
+  /// final initialUri = await ULink.instance.getInitialUri();
+  /// if (initialUri != null) {
+  ///   print('App opened with URI: $initialUri');
+  ///   // Handle the URI as needed
+  /// }
+  /// ```
+  Future<Uri?> getInitialUri() async {
+    try {
+      _log('Getting initial URI...');
+      final Uri? initialLink = await _appLinks.getInitialLink();
+      
+      if (initialLink != null) {
+        _log('Found initial URI: $initialLink');
+        return initialLink;
+      } else {
+        _log('No initial URI found');
+        return null;
+      }
+    } catch (e) {
+      _log('Error getting initial URI: $e');
+      return null;
+    }
+  }
+
+  /// Get the initial deep link that opened the app (processed ULink data)
+  /// 
+  /// This method retrieves the initial deep link if the app was opened with one
+  /// and processes it through ULink to resolve the data.
+  /// Unlike the stream-based approach, this method returns the link synchronously
+  /// and can be called at any time after SDK initialization.
+  /// 
+  /// Returns null if:
+  /// - The app was not opened with a deep link
+  /// - An error occurred while retrieving the initial link
+  /// - The initial link is not a ULink
+  /// 
+  /// Example:
+  /// ```dart
+  /// final initialLink = await ULink.instance.getInitialDeepLink();
+  /// if (initialLink != null) {
+  ///   // Handle the initial deep link
+  ///   print('App opened with: ${initialLink.fallbackUrl}');
+  /// }
+  /// ```
+  Future<ULinkResolvedData?> getInitialDeepLink() async {
+    try {
+      _log('Getting initial deep link...');
+      final Uri? initialLink = await _appLinks.getInitialLink();
+      
+      if (initialLink != null) {
+        _log('Found initial link: $initialLink');
+        
+        // Process the initial link to check if it's a ULink
+        final resolvedData = await processULinkUri(initialLink);
+        
+        if (resolvedData != null) {
+          _log('Initial link is a ULink: ${resolvedData.rawData}');
+          return resolvedData;
+        } else {
+          _log('Initial link is not a ULink');
+          return null;
+        }
+      } else {
+        _log('No initial link found');
+        return null;
+      }
+    } catch (e) {
+      _log('Error getting initial deep link: $e');
+      return null;
+    }
   }
 
   /// Create a dynamic link
@@ -450,51 +510,9 @@ class ULink with WidgetsBindingObserver {
     // Create a test URI
     final uri = Uri.parse(testUrl);
 
-    // Manually process as if it came from an app link
-    if (_isULinkDynamicLink(uri)) {
-      _log('Processing test ULink dynamic link: $uri');
-      try {
-        // Resolve the URI to get the dynamic link data
-        final resolveResponse = await resolveLink(uri.toString());
-        if (resolveResponse.success && resolveResponse.data != null) {
-          final resolvedData =
-              ULinkResolvedData.fromJson(resolveResponse.data!);
-          
-          // Check if this is a simple/unified link that should be redirected externally
-          if (resolvedData.linkType == ULinkType.unified) {
-            _log('Detected test simple/unified link - handling externally');
-            await _handleSimpleLinkInApp(resolvedData);
-            // Add to unified link stream for tracking purposes
-            _lastLinkData = resolvedData;
-            _unifiedLinkStreamController.add(resolvedData);
-            _log('Successfully handled test simple link externally');
-            return;
-          }
-          
-          // Handle as normal dynamic link
-          _lastLinkData = resolvedData;
-          _linkStreamController.add(resolvedData);
-          _log('Successfully resolved test link: ${resolvedData.rawData}');
-          return;
-        }
-      } catch (e) {
-        _log('Error resolving test dynamic link: $e');
-      }
-    }
-
-    // Default handling - treat as unified link
-    final basicData = ULinkResolvedData(
-      fallbackUrl: uri.toString(),
-      linkType: ULinkType.unified,
-      rawData: {'uri': uri.toString(), 'type': 'unified'},
-    );
-    
-    _log('Treating test link as unified link - redirecting externally');
-    await _handleSimpleLinkInApp(basicData);
-    
-    _lastLinkData = basicData;
-    _unifiedLinkStreamController.add(basicData);
-    _log('Added test unified link data to stream');
+    // Use the unified handler
+    await _handleUri(uri, context: 'test ');
+    _log('Successfully processed test link');
   }
 
   /// Get a unique installation ID
