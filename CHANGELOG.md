@@ -1,10 +1,14 @@
 # Changelog
 
+## 0.1.7
+
+- Chores to enhance code quality and maintainability
 
 ## 0.1.6
 
 - Chores to enhance code quality and maintainability
-- 
+
+
 ## 0.1.5
 
 - Chores to enhance code quality and maintainability
