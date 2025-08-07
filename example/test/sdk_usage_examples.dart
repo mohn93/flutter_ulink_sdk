@@ -1,11 +1,12 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter_ulink_sdk/flutter_ulink_sdk.dart';
 
 /// A comprehensive example of using the ULink SDK with strongly typed code
 /// This file demonstrates different ways to use the SDK
 /// Run with: dart example/test/sdk_usage_examples.dart
 void main() async {
-  print('ULink SDK Usage Examples');
-  print('=======================');
+  debugPrint('ULink SDK Usage Examples');
+  debugPrint('=======================');
 
   // Initialize the SDK
   final ulink = await ULink.initialize(
@@ -21,36 +22,36 @@ void main() async {
 
   try {
     // Example 1: Basic link creation
-    print('\nExample 1: Basic link creation');
+    debugPrint('\nExample 1: Basic link creation');
     await createBasicLink(ulink, timestamp);
 
     // Example 2: Using SocialMediaTags class
-    print('\nExample 2: Using SocialMediaTags class');
+    debugPrint('\nExample 2: Using SocialMediaTags class');
     await createLinkWithSocialMediaTags(ulink, timestamp);
 
     // Example 3: Using parameters map
-    print('\nExample 3: Using parameters map');
+    debugPrint('\nExample 3: Using parameters map');
     await createLinkWithParametersMap(ulink, timestamp);
 
     // Example 4: Using both SocialMediaTags and parameters
-    print('\nExample 4: Using both SocialMediaTags and parameters');
+    debugPrint('\nExample 4: Using both SocialMediaTags and parameters');
     await createLinkWithBoth(ulink, timestamp);
 
     // Example 5: Minimal required parameters
-    print('\nExample 5: Minimal required parameters');
+    debugPrint('\nExample 5: Minimal required parameters');
     await createMinimalLink(ulink, timestamp);
 
     // Example 6: Full featured link
-    print('\nExample 6: Full featured link');
+    debugPrint('\nExample 6: Full featured link');
     await createFullFeaturedLink(ulink, timestamp);
 
     // Example 7: Resolving links
-    print('\nExample 7: Resolving links');
+    debugPrint('\nExample 7: Resolving links');
     await resolveLinkExample(ulink, timestamp);
 
-    print('\nAll examples completed successfully!');
+    debugPrint('\nAll examples completed successfully!');
   } catch (e) {
-    print('\nError during examples: $e');
+    debugPrint('\nError during examples: $e');
   }
 }
 
@@ -65,7 +66,7 @@ Future<void> createBasicLink(ULink ulink, int timestamp) async {
     ),
   );
 
-  printResponse('Basic link', response);
+  debugPrintResponse('Basic link', response);
 }
 
 /// Example 2: Using SocialMediaTags class
@@ -85,7 +86,7 @@ Future<void> createLinkWithSocialMediaTags(ULink ulink, int timestamp) async {
     ),
   );
 
-  printResponse('Link with SocialMediaTags', response);
+  debugPrintResponse('Link with SocialMediaTags', response);
 }
 
 /// Example 3: Using parameters map
@@ -106,7 +107,7 @@ Future<void> createLinkWithParametersMap(ULink ulink, int timestamp) async {
     ),
   );
 
-  printResponse('Link with parameters map', response);
+  debugPrintResponse('Link with parameters map', response);
 }
 
 /// Example 4: Using both SocialMediaTags and parameters
@@ -131,7 +132,7 @@ Future<void> createLinkWithBoth(ULink ulink, int timestamp) async {
     ),
   );
 
-  printResponse('Link with both approaches', response);
+  debugPrintResponse('Link with both approaches', response);
 }
 
 /// Example 5: Minimal required parameters
@@ -146,7 +147,7 @@ Future<void> createMinimalLink(ULink ulink, int timestamp) async {
     ),
   );
 
-  printResponse('Minimal link', response);
+  debugPrintResponse('Minimal link', response);
 }
 
 /// Example 6: Full featured link
@@ -177,13 +178,13 @@ Future<void> createFullFeaturedLink(ULink ulink, int timestamp) async {
     ),
   );
 
-  printResponse('Full featured link', response);
+  debugPrintResponse('Full featured link', response);
 }
 
 /// Example 7: Resolving links
 Future<void> resolveLinkExample(ULink ulink, int timestamp) async {
   // First create a link to resolve
-  print('Creating a link to resolve...');
+  debugPrint('Creating a link to resolve...');
   final createSlug = 'resolve-example-$timestamp';
 
   final createResponse = await ulink.createLink(
@@ -206,93 +207,93 @@ Future<void> resolveLinkExample(ULink ulink, int timestamp) async {
   );
 
   if (!createResponse.success) {
-    print('Error creating link to resolve: ${createResponse.error}');
+    debugPrint('Error creating link to resolve: ${createResponse.error}');
     return;
   }
 
   final createdUrl = createResponse.url;
-  print('Created link to resolve: $createdUrl');
+  debugPrint('Created link to resolve: $createdUrl');
 
   // Now resolve the link using the full URL
-  print('\nResolving link using full URL...');
+  debugPrint('\nResolving link using full URL...');
   var resolveResponse = await ulink.resolveLink(createdUrl!);
-  printResolveResponse('Full URL resolution', resolveResponse);
+  debugPrintResolveResponse('Full URL resolution', resolveResponse);
 
   // Resolve using just the slug
-  print('\nResolving link using just the slug...');
+  debugPrint('\nResolving link using just the slug...');
   resolveResponse = await ulink.resolveLink(createSlug);
-  printResolveResponse('Slug resolution', resolveResponse);
+  debugPrintResolveResponse('Slug resolution', resolveResponse);
 }
 
-/// Helper function to print response details
-void printResponse(String testName, ULinkResponse response) {
-  print('$testName result:');
-  print('  Success: ${response.success}');
+/// Helper function to debugPrint response details
+void debugPrintResponse(String testName, ULinkResponse response) {
+  debugPrint('$testName result:');
+  debugPrint('  Success: ${response.success}');
 
   if (response.success) {
-    print('  URL: ${response.url}');
+    debugPrint('  URL: ${response.url}');
 
-    // Print social media parameters if they exist
+    // debugPrint social media parameters if they exist
     if (response.data != null && response.data!.containsKey('parameters')) {
       final params = response.data!['parameters'];
       if (params != null) {
-        print('  Social Media Parameters:');
+        debugPrint('  Social Media Parameters:');
         if (params is Map) {
           final Map<String, dynamic> paramsMap = params as Map<String, dynamic>;
           paramsMap.forEach((key, value) {
             if (key.startsWith('og')) {
-              print('    $key: $value');
+              debugPrint('    $key: $value');
             }
           });
         }
       }
     }
   } else {
-    print('  Error: ${response.error}');
+    debugPrint('  Error: ${response.error}');
   }
 }
 
-/// Helper function to print resolve response details
-void printResolveResponse(String testName, ULinkResponse response) {
-  print('$testName result:');
-  print('  Success: ${response.success}');
+/// Helper function to debugPrint resolve response details
+void debugPrintResolveResponse(String testName, ULinkResponse response) {
+  debugPrint('$testName result:');
+  debugPrint('  Success: ${response.success}');
 
   if (response.success) {
-    print('  Resolved URL: ${response.url}');
+    debugPrint('  Resolved URL: ${response.url}');
 
     if (response.data != null) {
-      print('  Link Details:');
+      debugPrint('  Link Details:');
 
-      // Print fallback URLs
+      // debugPrint fallback URLs
       if (response.data!.containsKey('iosFallbackUrl')) {
-        print('    iOS Fallback URL: ${response.data!['iosFallbackUrl']}');
+        debugPrint('    iOS Fallback URL: ${response.data!['iosFallbackUrl']}');
       }
 
       if (response.data!.containsKey('androidFallbackUrl')) {
-        print(
+        debugPrint(
             '    Android Fallback URL: ${response.data!['androidFallbackUrl']}');
       }
 
       if (response.data!.containsKey('fallbackUrl')) {
-        print('    Fallback URL: ${response.data!['fallbackUrl']}');
+        debugPrint('    Fallback URL: ${response.data!['fallbackUrl']}');
       }
 
-      // Print parameters if they exist
+      // debugPrint parameters if they exist
       if (response.data!.containsKey('parameters')) {
         final params = response.data!['parameters'];
         if (params != null) {
-          print('    Parameters:');
+          debugPrint('    Parameters:');
           if (params is Map) {
             final Map<String, dynamic> paramsMap =
                 params as Map<String, dynamic>;
             paramsMap.forEach((key, value) {
-              print('      $key: $value');
+              debugPrint('      $key: $value');
             });
           }
         }
       }
     }
   } else {
-    print('  Error: ${response.error}');
+    debugPrint('  Error: ${response.error}');
   }
 }

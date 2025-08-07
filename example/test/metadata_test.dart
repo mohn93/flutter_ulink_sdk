@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_ulink_sdk/flutter_ulink_sdk.dart';
 
@@ -44,8 +45,8 @@ void main() {
         ),
       );
 
-      // Print the response for debugging
-      print('Metadata test response: ${response.data}');
+      // debugPrint the response for debugging
+      debugPrint('Metadata test response: ${response.data}');
 
       // Verify the response
       expect(response.success, isTrue);
@@ -100,8 +101,8 @@ void main() {
         ),
       );
 
-      // Print the response for debugging
-      print('Social in parameters test response: ${response.data}');
+      // debugPrint the response for debugging
+      debugPrint('Social in parameters test response: ${response.data}');
 
       // Verify the response
       expect(response.success, isTrue);
@@ -160,8 +161,8 @@ void main() {
         ),
       );
 
-      // Print the response for debugging
-      print('Combined metadata test response: ${response.data}');
+      // debugPrint the response for debugging
+      debugPrint('Combined metadata test response: ${response.data}');
 
       // Verify the response
       expect(response.success, isTrue);

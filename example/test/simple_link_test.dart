@@ -1,10 +1,11 @@
 import 'dart:convert';
+import 'package:flutter/cupertino.dart';
 import 'package:http/http.dart' as http;
 
 /// A simple script to test the link creation API directly
 /// Run with: dart example/test/simple_link_test.dart
 void main() async {
-  print('Starting simple ULink API test...');
+  debugPrint('Starting simple ULink API test...');
 
   const String apiKey = 'ulk_839405e4d92e04109829a3d0fafc24b78f6aef0d062a38cb';
   const String baseUrl = 'http://localhost:3000';
@@ -91,7 +92,7 @@ void main() async {
     },
   );
 
-  print('\nAll tests completed!');
+  debugPrint('\nAll tests completed!');
 }
 
 /// Test link creation with the given payload
@@ -101,8 +102,8 @@ Future<void> testLinkCreation({
   required String testName,
   required Map<String, dynamic> payload,
 }) async {
-  print('\nTest: $testName');
-  print('Payload: ${jsonEncode(payload)}');
+  debugPrint('\nTest: $testName');
+  debugPrint('Payload: ${jsonEncode(payload)}');
 
   try {
     final response = await http.post(
@@ -114,23 +115,23 @@ Future<void> testLinkCreation({
       body: jsonEncode(payload),
     );
 
-    print('Status code: ${response.statusCode}');
+    debugPrint('Status code: ${response.statusCode}');
 
     if (response.statusCode >= 200 && response.statusCode < 300) {
       final Map<String, dynamic> responseData = jsonDecode(response.body);
-      print('Success! Response: ${jsonEncode(responseData)}');
+      debugPrint('Success! Response: ${jsonEncode(responseData)}');
 
-      // Print social media parameters if they exist
+      // debugPrint social media parameters if they exist
       if (responseData.containsKey('parameters')) {
         final params = responseData['parameters'];
         if (params != null) {
-          print('Social Media Parameters:');
+          debugPrint('Social Media Parameters:');
           if (params is Map) {
             final Map<String, dynamic> paramsMap =
                 params as Map<String, dynamic>;
             paramsMap.forEach((key, value) {
               if (key.startsWith('og')) {
-                print('  $key: $value');
+                debugPrint('  $key: $value');
               }
             });
           }
@@ -138,14 +139,14 @@ Future<void> testLinkCreation({
       }
 
       if (responseData.containsKey('url')) {
-        print('Generated URL: ${responseData['url']}');
+        debugPrint('Generated URL: ${responseData['url']}');
       } else if (responseData.containsKey('shortUrl')) {
-        print('Generated URL: ${responseData['shortUrl']}');
+        debugPrint('Generated URL: ${responseData['shortUrl']}');
       }
     } else {
-      print('Error: ${response.body}');
+      debugPrint('Error: ${response.body}');
     }
   } catch (e) {
-    print('Exception: $e');
+    debugPrint('Exception: $e');
   }
 }

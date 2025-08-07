@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.1.5
+
+- Chores to enhance code quality and maintainability
+
 ## 0.1.4
 
   - Fixed issue with unified links and added getInitialLink method

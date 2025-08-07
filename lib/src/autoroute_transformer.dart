@@ -1,6 +1,8 @@
 import 'dart:async';
 // Note: auto_route package is required to use this transformer
 // Add to your pubspec.yaml: auto_route: ^latest_version
+import 'package:flutter/foundation.dart';
+
 import 'models/models.dart';
 import 'ulink.dart';
 
@@ -159,7 +161,7 @@ class ULinkAutoRouteTransformer {
   /// Log debug messages if debug mode is enabled
   void _log(String message) {
     if (_debug) {
-      print('[ULinkAutoRouteTransformer] $message');
+      debugPrint('[ULinkAutoRouteTransformer] $message');
     }
   }
 }

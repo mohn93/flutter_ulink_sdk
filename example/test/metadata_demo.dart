@@ -1,13 +1,15 @@
+import 'package:flutter/foundation.dart';
+
 /// Demo script showing the new metadata functionality
 /// This shows the JSON structure that will be sent to the API
 /// Run with: dart example/test/metadata_demo.dart
 void main() {
-  print('ULink SDK Metadata Functionality Demo');
-  print('=====================================\n');
+  debugPrint('ULink SDK Metadata Functionality Demo');
+  debugPrint('=====================================\n');
 
   // Example showing the JSON structure that gets generated
-  print('Example 1: JSON structure with metadata separation');
-  print('-------------------------------------------------');
+  debugPrint('Example 1: JSON structure with metadata separation');
+  debugPrint('-------------------------------------------------');
 
   final json1 = {
     'slug': 'product-123',
@@ -31,16 +33,16 @@ void main() {
     },
   };
 
-  print('Generated JSON structure:');
-  _prettyPrintJson(json1);
-  print(
+  debugPrint('Generated JSON structure:');
+  _prettydebugPrintJson(json1);
+  debugPrint(
       '\n✅ Notice: Social media data is in "metadata", business data is in "parameters"\n');
 
   // Example 2: Before vs After comparison
-  print('Example 2: Before vs After - Parameter separation');
-  print('-----------------------------------------------');
+  debugPrint('Example 2: Before vs After - Parameter separation');
+  debugPrint('-----------------------------------------------');
 
-  print('BEFORE (old approach - all in parameters):');
+  debugPrint('BEFORE (old approach - all in parameters):');
   final beforeJson = {
     'slug': 'product-456',
     'fallbackUrl': 'https://myapp.com/product/456',
@@ -53,9 +55,9 @@ void main() {
       'ogImage': 'https://example.com/product-456.jpg',
     },
   };
-  _prettyPrintJson(beforeJson);
+  _prettydebugPrintJson(beforeJson);
 
-  print('\nAFTER (new approach - separated):');
+  debugPrint('\nAFTER (new approach - separated):');
   final afterJson = {
     'slug': 'product-456',
     'fallbackUrl': 'https://myapp.com/product/456',
@@ -70,13 +72,13 @@ void main() {
       'ogImage': 'https://example.com/product-456.jpg',
     },
   };
-  _prettyPrintJson(afterJson);
+  _prettydebugPrintJson(afterJson);
 
-  print('\n✅ Notice: Much cleaner separation of concerns!\n');
+  debugPrint('\n✅ Notice: Much cleaner separation of concerns!\n');
 
   // Example 3: API Response structure
-  print('Example 3: API Response with metadata');
-  print('------------------------------------');
+  debugPrint('Example 3: API Response with metadata');
+  debugPrint('------------------------------------');
 
   final responseJson = {
     'slug': 'resolved-link',
@@ -96,52 +98,52 @@ void main() {
     },
   };
 
-  print('API Response JSON:');
-  _prettyPrintJson(responseJson);
+  debugPrint('API Response JSON:');
+  _prettydebugPrintJson(responseJson);
 
-  print('\n✅ All examples demonstrate the new metadata functionality!');
-  print('📋 Summary of changes:');
-  print('   • Added "metadata" field to ULinkParameters and ULinkResolvedData');
-  print(
+  debugPrint('\n✅ All examples demonstrate the new metadata functionality!');
+  debugPrint('📋 Summary of changes:');
+  debugPrint('   • Added "metadata" field to ULinkParameters and ULinkResolvedData');
+  debugPrint(
       '   • Social media parameters (og*, twitter*) are automatically moved to metadata');
-  print('   • Regular business/tracking parameters stay in parameters');
-  print('   • Backward compatibility maintained for existing code');
-  print(
+  debugPrint('   • Regular business/tracking parameters stay in parameters');
+  debugPrint('   • Backward compatibility maintained for existing code');
+  debugPrint(
       '   • SocialMediaTags class now populates metadata instead of parameters');
 
-  print('\n🚀 Usage Examples:');
-  print('   // New metadata field:');
-  print('   ULinkParameters(metadata: {"ogTitle": "Title", "ogImage": "url"})');
-  print('   ');
-  print('   // Auto-separation from parameters:');
-  print(
+  debugPrint('\n🚀 Usage Examples:');
+  debugPrint('   // New metadata field:');
+  debugPrint('   ULinkParameters(metadata: {"ogTitle": "Title", "ogImage": "url"})');
+  debugPrint('   ');
+  debugPrint('   // Auto-separation from parameters:');
+  debugPrint(
       '   ULinkParameters(parameters: {"utm_source": "app", "ogTitle": "Title"})');
-  print(
+  debugPrint(
       '   // Result: {"parameters": {"utm_source": "app"}, "metadata": {"ogTitle": "Title"}}');
-  print('   ');
-  print('   // SocialMediaTags class (now goes to metadata):');
-  print(
+  debugPrint('   ');
+  debugPrint('   // SocialMediaTags class (now goes to metadata):');
+  debugPrint(
       '   ULinkParameters(socialMediaTags: SocialMediaTags(ogTitle: "Title"))');
-  print('   // Result: {"metadata": {"ogTitle": "Title"}}');
+  debugPrint('   // Result: {"metadata": {"ogTitle": "Title"}}');
 }
 
-void _prettyPrintJson(Map<String, dynamic> json, [int indent = 0]) {
+void _prettydebugPrintJson(Map<String, dynamic> json, [int indent = 0]) {
   final spaces = '  ' * indent;
-  print('$spaces{');
+  debugPrint('$spaces{');
 
   json.forEach((key, value) {
     if (value is Map<String, dynamic>) {
-      print('$spaces  "$key": {');
+      debugPrint('$spaces  "$key": {');
       value.forEach((subKey, subValue) {
-        print('$spaces    "$subKey": ${_formatValue(subValue)},');
+        debugPrint('$spaces    "$subKey": ${_formatValue(subValue)},');
       });
-      print('$spaces  },');
+      debugPrint('$spaces  },');
     } else {
-      print('$spaces  "$key": ${_formatValue(value)},');
+      debugPrint('$spaces  "$key": ${_formatValue(value)},');
     }
   });
 
-  print('$spaces}');
+  debugPrint('$spaces}');
 }
 
 String _formatValue(dynamic value) {

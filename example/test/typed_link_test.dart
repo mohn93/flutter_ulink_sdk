@@ -4,10 +4,10 @@ import 'package:flutter_ulink_sdk/flutter_ulink_sdk.dart';
 /// A strongly typed test for the ULink SDK
 /// Run with: dart example/test/typed_link_test.dart
 void main() async {
-  print('Starting strongly typed ULink SDK test...');
+  debugPrint('Starting strongly typed ULink SDK test...');
   WidgetsFlutterBinding.ensureInitialized();
   // Initialize the SDK
-  print('Initializing ULink SDK...');
+  debugPrint('Initializing ULink SDK...');
   final ulink = await ULink.initialize(
     config: ULinkConfig(
       apiKey: 'ulk_839405e4d92e04109829a3d0fafc24b78f6aef0d062a38cb',
@@ -16,14 +16,14 @@ void main() async {
     ),
   );
 
-  print('ULink SDK initialized successfully.');
+  debugPrint('ULink SDK initialized successfully.');
 
   // Generate a timestamp to make slugs unique
   final timestamp = DateTime.now().millisecondsSinceEpoch;
 
   try {
     // Test 1: Basic link creation with social media tags
-    print('\nTest 1: Creating a basic link with social media tags...');
+    debugPrint('\nTest 1: Creating a basic link with social media tags...');
     var response = await ulink.createLink(
       ULinkParameters(
         slug: 'typed-basic-$timestamp',
@@ -38,10 +38,10 @@ void main() async {
       ),
     );
 
-    _printResponse('Basic link with social media tags', response);
+    _debugPrintResponse('Basic link with social media tags', response);
 
     // Test 2: Link with detailed social media tags and additional parameters
-    print(
+    debugPrint(
         '\nTest 2: Creating a link with detailed social media tags and additional parameters...');
     response = await ulink.createLink(
       ULinkParameters(
@@ -62,10 +62,10 @@ void main() async {
       ),
     );
 
-    _printResponse('Detailed social media tags', response);
+    _debugPrintResponse('Detailed social media tags', response);
 
     // Test 3: Link with social media tags and UTM parameters
-    print(
+    debugPrint(
         '\nTest 3: Creating a link with social media tags and UTM parameters...');
     response = await ulink.createLink(
       ULinkParameters(
@@ -89,10 +89,10 @@ void main() async {
       ),
     );
 
-    _printResponse('Social media tags with UTM parameters', response);
+    _debugPrintResponse('Social media tags with UTM parameters', response);
 
     // Test 4: Link with minimal required parameters
-    print('\nTest 4: Creating a link with minimal required parameters...');
+    debugPrint('\nTest 4: Creating a link with minimal required parameters...');
     response = await ulink.createLink(
       ULinkParameters(
         slug: 'typed-minimal-$timestamp',
@@ -105,40 +105,40 @@ void main() async {
       ),
     );
 
-    _printResponse('Minimal parameters', response);
+    _debugPrintResponse('Minimal parameters', response);
 
-    print('\nAll tests completed successfully!');
+    debugPrint('\nAll tests completed successfully!');
   } catch (e) {
-    print('\nError during testing: $e');
+    debugPrint('\nError during testing: $e');
   }
 }
 
-/// Helper function to print response details
-void _printResponse(String testName, ULinkResponse response) {
-  print('$testName test result:');
-  print('  Success: ${response.success}');
+/// Helper function to debugPrint response details
+void _debugPrintResponse(String testName, ULinkResponse response) {
+  debugPrint('$testName test result:');
+  debugPrint('  Success: ${response.success}');
 
   if (response.success) {
-    print('  URL: ${response.url}');
+    debugPrint('  URL: ${response.url}');
 
-    // Print social media parameters if they exist
+    // debugPrint social media parameters if they exist
     if (response.data != null && response.data!.containsKey('parameters')) {
       final params = response.data!['parameters'];
       if (params != null) {
-        print('  Social Media Parameters:');
+        debugPrint('  Social Media Parameters:');
         if (params is Map) {
           final Map<String, dynamic> paramsMap = params as Map<String, dynamic>;
           paramsMap.forEach((key, value) {
             if (key.startsWith('og')) {
-              print('    $key: $value');
+              debugPrint('    $key: $value');
             }
           });
         }
       }
     }
 
-    print('  Raw data: ${response.data}');
+    debugPrint('  Raw data: ${response.data}');
   } else {
-    print('  Error: ${response.error}');
+    debugPrint('  Error: ${response.error}');
   }
 }

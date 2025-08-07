@@ -1,13 +1,11 @@
 import 'dart:async';
 import 'dart:convert';
-import 'dart:io';
 
 import 'package:app_links/app_links.dart';
 import 'package:flutter/widgets.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:uuid/uuid.dart';
-import 'package:url_launcher/url_launcher.dart';
 
 import 'models/models.dart';
 import 'utils/device_info.dart';
@@ -235,13 +233,27 @@ class ULink with WidgetsBindingObserver {
   /// Get the initial link if the app was opened with one
   Future<void> _getInitialLink() async {
     try {
-      final Uri? initialLink = await _appLinks.getInitialLink();
-      if (initialLink != null) {
-        _log('Initial app link: $initialLink');
-        await _handleUri(initialLink, context: 'initial ');
+      _log('Checking for initial deep link...');
+      final ULinkResolvedData? initialLinkData = await getInitialDeepLink();
+      
+      if (initialLinkData != null) {
+        _log('Found initial ULink: ${initialLinkData.rawData}');
+        
+        // Route to appropriate stream based on link type
+        if (initialLinkData.linkType == ULinkType.unified) {
+          _log('Initial link is unified - adding to unified stream');
+          _lastLinkData = initialLinkData;
+          _unifiedLinkStreamController.add(initialLinkData);
+        } else {
+          _log('Initial link is dynamic - adding to dynamic stream');
+          _lastLinkData = initialLinkData;
+          _linkStreamController.add(initialLinkData);
+        }
+      } else {
+        _log('No initial ULink found');
       }
     } catch (e) {
-      _log('Error getting initial app link: $e');
+      _log('Error getting initial deep link: $e');
     }
   }
 

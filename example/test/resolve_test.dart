@@ -7,12 +7,12 @@ import 'dart:async';
 /// This test verifies that the updated SDK correctly handles the new API endpoints
 /// Run with: flutter run -t example/test/resolve_test.dart
 void main() async {
-  print('Starting ULink SDK dynamic link resolution test...');
+  debugPrint('Starting ULink SDK dynamic link resolution test...');
 
   WidgetsFlutterBinding.ensureInitialized();
 
   // Initialize the SDK using example app's environment configuration
-  print('Initializing ULink SDK...');
+  debugPrint('Initializing ULink SDK...');
   final ulink = await ULink.initialize(
     config: ULinkConfig(
       apiKey: Environment.apiKey,
@@ -20,13 +20,13 @@ void main() async {
       debug: true,
     ),
   );
-  print(
+  debugPrint(
       'ULink SDK initialized successfully. Using base URL: ${ulink.config.baseUrl}');
 
   // Set up a listener for link events
   final completer = Completer<ULinkResolvedData>();
   final subscription = ulink.onLink.listen((ULinkResolvedData data) {
-    print('Link received in listener: ${data.rawData}');
+    debugPrint('Link received in listener: ${data.rawData}');
     if (!completer.isCompleted) {
       completer.complete(data);
     }
@@ -37,7 +37,7 @@ void main() async {
 
   try {
     // Test 1: Create a test link
-    print('\nTest 1: Creating a test link...');
+    debugPrint('\nTest 1: Creating a test link...');
     final createResponse = await ulink.createLink(
       ULinkParameters(
         slug: 'resolve-api-test-$timestamp',
@@ -60,128 +60,128 @@ void main() async {
     );
 
     if (!createResponse.success) {
-      print('Error creating test link: ${createResponse.error}');
+      debugPrint('Error creating test link: ${createResponse.error}');
       return;
     }
 
     final createdUrl = createResponse.url;
-    print('Created test link: $createdUrl');
+    debugPrint('Created test link: $createdUrl');
 
     // Test 1: Resolve using the full URL with the updated endpoint
-    print(
+    debugPrint(
         '\nTest 1: Resolving link using the full URL with updated endpoint...');
-    print('Using endpoint: /sdk/resolve?url=...');
+    debugPrint('Using endpoint: /sdk/resolve?url=...');
     var resolveResponse = await ulink.resolveLink(createdUrl!);
-    _printResolveResponse('Full URL resolution', resolveResponse);
+    _debugPrintResolveResponse('Full URL resolution', resolveResponse);
 
 
     // Test 3: Use the testListener method to simulate a link click
-    print('\nTest 3: Testing link listener...');
+    debugPrint('\nTest 3: Testing link listener...');
     await ulink.testListener(createdUrl);
 
     // Wait for the listener to receive the link
-    print('Waiting for link handler to process the link...');
+    debugPrint('Waiting for link handler to process the link...');
     final receivedData = await completer.future.timeout(
       const Duration(seconds: 5),
       onTimeout: () {
-        print('Timeout waiting for link handler');
+        debugPrint('Timeout waiting for link handler');
         return ULinkResolvedData(
           rawData: {'error': 'Timeout waiting for link handler'},
         );
       },
     );
 
-    print('\nLink handler received data:');
-    _printResolvedData(receivedData);
+    debugPrint('\nLink handler received data:');
+    _debugPrintResolvedData(receivedData);
 
-    print('\nAll tests completed!');
+    debugPrint('\nAll tests completed!');
   } catch (e) {
-    print('\nError during testing: $e');
+    debugPrint('\nError during testing: $e');
   } finally {
     // Clean up
     subscription.cancel();
   }
 }
 
-/// Helper function to print resolve response details
-void _printResolveResponse(String testName, ULinkResponse response) {
-  print('$testName test result:');
-  print('  Success: ${response.success}');
+/// Helper function to debugPrint resolve response details
+void _debugPrintResolveResponse(String testName, ULinkResponse response) {
+  debugPrint('$testName test result:');
+  debugPrint('  Success: ${response.success}');
 
   if (response.success) {
-    print('  Resolved URL: ${response.url}');
+    debugPrint('  Resolved URL: ${response.url}');
 
     if (response.data != null) {
-      print('  Link Details:');
+      debugPrint('  Link Details:');
 
-      // Print fallback URLs
+      // debugPrint fallback URLs
       if (response.data!.containsKey('iosFallbackUrl')) {
-        print('    iOS Fallback URL: ${response.data!['iosFallbackUrl']}');
+        debugPrint('    iOS Fallback URL: ${response.data!['iosFallbackUrl']}');
       }
 
       if (response.data!.containsKey('androidFallbackUrl')) {
-        print(
+        debugPrint(
             '    Android Fallback URL: ${response.data!['androidFallbackUrl']}');
       }
 
       if (response.data!.containsKey('fallbackUrl')) {
-        print('    Fallback URL: ${response.data!['fallbackUrl']}');
+        debugPrint('    Fallback URL: ${response.data!['fallbackUrl']}');
       }
 
-      // Print slug information
+      // debugPrint slug information
       if (response.data!.containsKey('slug')) {
-        print('    Slug: ${response.data!['slug']}');
+        debugPrint('    Slug: ${response.data!['slug']}');
       }
 
       if (response.data!.containsKey('id')) {
-        print('    ID: ${response.data!['id']}');
+        debugPrint('    ID: ${response.data!['id']}');
       }
 
-      // Print parameters if they exist
+      // debugPrint parameters if they exist
       if (response.data!.containsKey('parameters')) {
         final params = response.data!['parameters'];
         if (params != null) {
-          print('    Parameters:');
+          debugPrint('    Parameters:');
           if (params is Map) {
             final Map<String, dynamic> paramsMap =
                 params as Map<String, dynamic>;
             paramsMap.forEach((key, value) {
-              print('      $key: $value');
+              debugPrint('      $key: $value');
             });
           }
         }
       }
 
-      // Print all other fields for debugging
-      print('    All response data:');
+      // debugPrint all other fields for debugging
+      debugPrint('    All response data:');
       response.data!.forEach((key, value) {
         if (key != 'parameters') {
-          print('      $key: $value');
+          debugPrint('      $key: $value');
         }
       });
     }
   } else {
-    print('  Error: ${response.error}');
+    debugPrint('  Error: ${response.error}');
   }
 }
 
-/// Helper function to print resolved data details
-void _printResolvedData(ULinkResolvedData data) {
-  print('  Resolved Data Details:');
-  print('    Slug: ${data.slug}');
-  print('    Fallback URL: ${data.fallbackUrl}');
-  print('    iOS Fallback URL: ${data.iosFallbackUrl}');
-  print('    Android Fallback URL: ${data.androidFallbackUrl}');
+/// Helper function to debugPrint resolved data details
+void _debugPrintResolvedData(ULinkResolvedData data) {
+  debugPrint('  Resolved Data Details:');
+  debugPrint('    Slug: ${data.slug}');
+  debugPrint('    Fallback URL: ${data.fallbackUrl}');
+  debugPrint('    iOS Fallback URL: ${data.iosFallbackUrl}');
+  debugPrint('    Android Fallback URL: ${data.androidFallbackUrl}');
 
   if (data.parameters != null) {
-    print('    Parameters:');
+    debugPrint('    Parameters:');
     data.parameters!.forEach((key, value) {
-      print('      $key: $value');
+      debugPrint('      $key: $value');
     });
   }
 
-  print('    Raw Data:');
+  debugPrint('    Raw Data:');
   data.rawData.forEach((key, value) {
-    print('      $key: $value');
+    debugPrint('      $key: $value');
   });
 }

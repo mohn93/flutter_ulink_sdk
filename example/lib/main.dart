@@ -6,41 +6,42 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
   // Initialize the SDK using example app's environment configuration
-  final ulink = await ULink.initialize(
+  await ULink.initialize(
     config: ULinkConfig(
       apiKey: Environment.apiKey,
-      baseUrl: Environment.baseUrl,
+      // baseUrl: Environment.baseUrl,
       debug: true,
     ),
   );
 
+
   try {
     // Create a dynamic link with social media tags
-    final response = await ulink.createLink(
-      ULinkParameters(
-        slug: 'product-123',
-        iosFallbackUrl: 'myapp://product/123',
-        androidFallbackUrl: 'myapp://product/123',
-        fallbackUrl: 'https://myapp.com/product/123',
-        socialMediaTags: SocialMediaTags(
-          ogTitle: 'Check out this awesome product!',
-          ogDescription: 'This is a detailed description of the product.',
-          ogImage: 'https://example.com/product-image.jpg',
-        ),
-        // You can still include other parameters
-        parameters: {
-          'utm_source': 'share_button',
-          'campaign': 'summer_sale',
-        },
-      ),
-    );
+    // final response = await ulink.createLink(
+    //   ULinkParameters(
+    //     slug: 'product-123',
+    //     iosFallbackUrl: 'myapp://product/123',
+    //     androidFallbackUrl: 'myapp://product/123',
+    //     fallbackUrl: 'https://myapp.com/product/123',
+    //     socialMediaTags: SocialMediaTags(
+    //       ogTitle: 'Check out this awesome product!',
+    //       ogDescription: 'This is a detailed description of the product.',
+    //       ogImage: 'https://example.com/product-image.jpg',
+    //     ),
+    //     // You can still include other parameters
+    //     parameters: {
+    //       'utm_source': 'share_button',
+    //       'campaign': 'summer_sale',
+    //     },
+    //   ),
+    // );
 
     // setState(() {
-    if (response.success) {
+    // if (response.success) {
       // _createdLink = response.url!;
-    } else {
+    // } else {
       // _createdLink = 'Error: ${response.error}';
-    }
+    // }
     // });
   } finally {
     // setState(() {
@@ -82,6 +83,17 @@ class _HomePageState extends State<HomePage> {
   void initState() {
     super.initState();
 
+     _ulink.getInitialDeepLink().then((data){
+      setState(() {
+        _lastLinkData = data;
+      });
+
+      // Process the initial link parameters
+      if (data != null) {
+        final params = data.parameters;
+        debugPrint('Initial link parameters: $params');
+      }
+     });
     // Listen for incoming links
     _ulink.onLink.listen((ULinkResolvedData data) {
       setState(() {
@@ -91,6 +103,15 @@ class _HomePageState extends State<HomePage> {
       // Process the link parameters
       final params = data.parameters;
       debugPrint('Link parameters: $params');
+    });
+    _ulink.onUnifiedLink.listen((ULinkResolvedData data) {
+      setState(() {
+        _lastLinkData = data;
+      });
+
+      // Process the unified link parameters
+      final params = data.parameters;
+      debugPrint('Unified link parameters: $params');
     });
   }
 

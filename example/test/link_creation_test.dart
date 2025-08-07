@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_ulink_sdk/flutter_ulink_sdk.dart';
 
@@ -27,8 +28,8 @@ void main() {
         ),
       );
 
-      // Print the response for debugging
-      print('Basic link response: ${response.data}');
+      // debugPrint the response for debugging
+      debugPrint('Basic link response: ${response.data}');
 
       // Verify the response
       expect(response.success, isTrue);
@@ -52,8 +53,8 @@ void main() {
         ),
       );
 
-      // Print the response for debugging
-      print('Social media tags response: ${response.data}');
+      // debugPrint the response for debugging
+      debugPrint('Social media tags response: ${response.data}');
 
       // Verify the response
       expect(response.success, isTrue);
@@ -78,8 +79,8 @@ void main() {
         ),
       );
 
-      // Print the response for debugging
-      print('Parameters tags response: ${response.data}');
+      // debugPrint the response for debugging
+      debugPrint('Parameters tags response: ${response.data}');
 
       // Verify the response
       expect(response.success, isTrue);
@@ -107,8 +108,8 @@ void main() {
         ),
       );
 
-      // Print the response for debugging
-      print('Combined approach response: ${response.data}');
+      // debugPrint the response for debugging
+      debugPrint('Combined approach response: ${response.data}');
 
       // Verify the response
       expect(response.success, isTrue);

@@ -1,13 +1,14 @@
 import 'dart:io';
+import 'package:flutter/foundation.dart' show debugPrint;
 import 'package:flutter_ulink_sdk/flutter_ulink_sdk.dart';
 
 /// A simple script to test the link creation functionality
 /// Run this with: dart example/test/link_creation_script.dart
 void main() async {
-  print('Starting ULink SDK test script...');
+  debugPrint('Starting ULink SDK test script...');
 
   // Initialize the SDK
-  print('Initializing ULink SDK...');
+  debugPrint('Initializing ULink SDK...');
   final ulink = await ULink.initialize(
     config: ULinkConfig(
       apiKey: 'ulk_839405e4d92e04109829a3d0fafc24b78f6aef0d062a38cb',
@@ -16,11 +17,11 @@ void main() async {
     ),
   );
 
-  print('ULink SDK initialized successfully.');
+  debugPrint('ULink SDK initialized successfully.');
 
   try {
     // Test 1: Basic link creation
-    print('\nTest 1: Creating a basic link...');
+    debugPrint('\nTest 1: Creating a basic link...');
     var response = await ulink.createLink(
       ULinkParameters(
         slug: 'script-test-basic',
@@ -30,10 +31,10 @@ void main() async {
       ),
     );
 
-    _printResponse('Basic link', response);
+    _debugPrintResponse('Basic link', response);
 
     // Test 2: Link with social media tags
-    print('\nTest 2: Creating a link with social media tags...');
+    debugPrint('\nTest 2: Creating a link with social media tags...');
     response = await ulink.createLink(
       ULinkParameters(
         slug: 'script-test-social',
@@ -48,10 +49,10 @@ void main() async {
       ),
     );
 
-    _printResponse('Social media tags link', response);
+    _debugPrintResponse('Social media tags link', response);
 
     // Test 3: Link with parameters including social media tags
-    print(
+    debugPrint(
         '\nTest 3: Creating a link with parameters including social media tags...');
     response = await ulink.createLink(
       ULinkParameters(
@@ -69,10 +70,10 @@ void main() async {
       ),
     );
 
-    _printResponse('Parameters with social media tags', response);
+    _debugPrintResponse('Parameters with social media tags', response);
 
     // Test 4: Link with both social media tags and parameters
-    print(
+    debugPrint(
         '\nTest 4: Creating a link with both social media tags and parameters...');
     response = await ulink.createLink(
       ULinkParameters(
@@ -93,26 +94,26 @@ void main() async {
       ),
     );
 
-    _printResponse('Combined approach', response);
+    _debugPrintResponse('Combined approach', response);
 
-    print('\nAll tests completed successfully!');
+    debugPrint('\nAll tests completed successfully!');
   } catch (e) {
-    print('\nError during testing: $e');
+    debugPrint('\nError during testing: $e');
   }
 
   // Exit the script
   exit(0);
 }
 
-/// Helper function to print response details
-void _printResponse(String testName, ULinkResponse response) {
-  print('$testName test result:');
-  print('  Success: ${response.success}');
+/// Helper function to debugPrint response details
+void _debugPrintResponse(String testName, ULinkResponse response) {
+  debugPrint('$testName test result:');
+  debugPrint('  Success: ${response.success}');
 
   if (response.success) {
-    print('  URL: ${response.url}');
-    print('  Data: ${response.data}');
+    debugPrint('  URL: ${response.url}');
+    debugPrint('  Data: ${response.data}');
   } else {
-    print('  Error: ${response.error}');
+    debugPrint('  Error: ${response.error}');
   }
 }

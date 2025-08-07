@@ -6,13 +6,13 @@ import 'package:flutter_ulink_sdk/flutter_ulink_sdk.dart';
 /// This simulates receiving a ULink format link with a slug on the root path
 /// The SDK should automatically resolve this link and provide the resolved data
 void main() async {
-  print('ULink SDK Automatic Link Resolution Example');
-  print('===========================================');
+  debugPrint('ULink SDK Automatic Link Resolution Example');
+  debugPrint('===========================================');
 
   WidgetsFlutterBinding.ensureInitialized();
 
   // Initialize the SDK
-  print('Initializing ULink SDK...');
+  debugPrint('Initializing ULink SDK...');
   final ulink = await ULink.initialize(
     config: ULinkConfig(
       apiKey: 'ulk_839405e4d92e04109829a3d0fafc24b78f6aef0d062a38cb',
@@ -20,7 +20,7 @@ void main() async {
       debug: true, // Enable debug logging
     ),
   );
-  print('ULink SDK initialized successfully.');
+  debugPrint('ULink SDK initialized successfully.');
 
   // Create a timestamp for a unique slug
   final timestamp = DateTime.now().millisecondsSinceEpoch;
@@ -28,15 +28,15 @@ void main() async {
 
   // Set up a link listener to demonstrate automatic resolution
   ulink.onLink.listen((ULinkResolvedData resolvedData) {
-    print('\nLink received in listener: ${resolvedData.fallbackUrl}');
-    print(
+    debugPrint('\nLink received in listener: ${resolvedData.fallbackUrl}');
+    debugPrint(
         'This should be the resolved data, not the original ULink format link');
-    print('Query parameters: ${resolvedData.parameters}');
+    debugPrint('Query parameters: ${resolvedData.parameters}');
   });
 
   try {
     // Step 1: Create a test link with a unique slug
-    print('\nStep 1: Creating a test link...');
+    debugPrint('\nStep 1: Creating a test link...');
     final createResponse = await ulink.createLink(
       ULinkParameters(
         slug: slug,
@@ -52,41 +52,41 @@ void main() async {
     );
 
     if (!createResponse.success) {
-      print('Error creating test link: ${createResponse.error}');
+      debugPrint('Error creating test link: ${createResponse.error}');
       return;
     }
 
-    print('Created link: ${createResponse.url}');
+    debugPrint('Created link: ${createResponse.url}');
 
     // Step 2: Simulate receiving a ULink format link
-    print('\nStep 2: Simulating receiving a ULink format link...');
+    debugPrint('\nStep 2: Simulating receiving a ULink format link...');
 
     // Construct a ULink format link (slug on root path)
     final baseUri = Uri.parse('https://example.com'); // Can be any domain
     final ulinkFormatUri = baseUri.replace(pathSegments: [slug]);
 
-    print('ULink format link: $ulinkFormatUri');
+    debugPrint('ULink format link: $ulinkFormatUri');
 
     // Simulate processing the link as if it came from the OS
-    print(
+    debugPrint(
         '\nStep 3: Processing the link (this happens internally in the SDK)...');
-    print('The SDK should automatically:');
-    print('1. Detect this is a ULink format link (slug on root path)');
-    print('2. Extract the slug ($slug)');
-    print('3. Call resolveLink() internally');
-    print('4. Get the resolved data from the API');
-    print('5. Pass the resolved data to our listener');
+    debugPrint('The SDK should automatically:');
+    debugPrint('1. Detect this is a ULink format link (slug on root path)');
+    debugPrint('2. Extract the slug ($slug)');
+    debugPrint('3. Call resolveLink() internally');
+    debugPrint('4. Get the resolved data from the API');
+    debugPrint('5. Pass the resolved data to our listener');
 
     // This would normally be called by the OS, but we'll call it manually for testing
     // In a real app, this happens automatically when a link is clicked
     // We're using a method from the private API surface for testing purposes
     await _simulateReceivingLink(ulink, ulinkFormatUri);
 
-    print('\nTest completed! Check the listener output above.');
-    print('If everything worked correctly, you should see the resolved data,');
-    print('not the original ULink format link.');
+    debugPrint('\nTest completed! Check the listener output above.');
+    debugPrint('If everything worked correctly, you should see the resolved data,');
+    debugPrint('not the original ULink format link.');
   } catch (e) {
-    print('\nError during test: $e');
+    debugPrint('\nError during test: $e');
   }
 }
 
@@ -102,13 +102,13 @@ Future<void> _simulateReceivingLink(ULink ulink, Uri uri) async {
 
   // Manually trigger the link processing logic by checking if it's a ULink format link
   if (_isULinkDynamicLink(uri)) {
-    print('Detected ULink format link: $uri');
+    debugPrint('Detected ULink format link: $uri');
     try {
       // Resolve using the full URL (simulating what happens internally)
       final resolveResponse = await ulink.resolveLink(uri.toString());
       if (resolveResponse.success && resolveResponse.data != null) {
         final resolvedData = ULinkResolvedData.fromJson(resolveResponse.data!);
-        print('Resolved to fallbackUrl: ${resolvedData.fallbackUrl}');
+        debugPrint('Resolved to fallbackUrl: ${resolvedData.fallbackUrl}');
 
         // Simulate passing the resolved data to the listener
         // This is normally done by the SDK internally
@@ -116,7 +116,7 @@ Future<void> _simulateReceivingLink(ULink ulink, Uri uri) async {
         return;
       }
     } catch (e) {
-      print('Error resolving dynamic link: $e');
+      debugPrint('Error resolving dynamic link: $e');
     }
   }
 
