@@ -11,11 +11,11 @@ import 'ulink.dart';
 typedef ULinkRouteResolver = String? Function(ULinkResolvedData ulinkData);
 
 /// AutoRoute transformer for ULink deep links
-/// 
+///
 /// This transformer integrates ULink SDK with AutoRoute to handle deep links.
 /// It automatically resolves ULink URLs and allows custom route mapping through
 /// a user-provided resolver function.
-/// 
+///
 /// Example usage:
 /// ```dart
 /// MaterialApp.router(
@@ -38,10 +38,10 @@ typedef ULinkRouteResolver = String? Function(ULinkResolvedData ulinkData);
 class ULinkAutoRouteTransformer {
   /// The ULink SDK instance
   final ULink _ulink;
-  
+
   /// User-provided function to resolve ULink data to route paths
   final ULinkRouteResolver _routeResolver;
-  
+
   /// Whether to enable debug logging
   final bool _debug;
 
@@ -52,10 +52,10 @@ class ULinkAutoRouteTransformer {
   );
 
   /// Creates a deep link transformer for AutoRoute
-  /// 
+  ///
   /// [routeResolver] - Function that maps ULinkResolvedData to route paths
   /// [debug] - Whether to enable debug logging (defaults to ULink config debug setting)
-  /// 
+  ///
   /// Returns a function that can be used as AutoRoute's deepLinkTransformer
   static Future<Uri> Function(Uri) create({
     required ULinkRouteResolver routeResolver,
@@ -69,7 +69,7 @@ class ULinkAutoRouteTransformer {
           routeResolver,
           debug ?? ulink.config.debug,
         );
-        
+
         return await transformer._transformUri(uri);
       } catch (e) {
         // If ULink is not initialized or any error occurs, return original URI
@@ -82,43 +82,45 @@ class ULinkAutoRouteTransformer {
   Future<Uri> _transformUri(Uri uri) async {
     try {
       _log('Processing deep link: ${uri.toString()}');
-      
+
       // Use the unified ULink processing method
       final ulinkData = await _ulink.processULinkUri(uri);
-      
+
       if (ulinkData != null) {
         _log('Successfully resolved ULink data: ${ulinkData.rawData}');
-        
+
         // Check if this is a unified link (should be handled externally)
         if (ulinkData.linkType == ULinkType.unified) {
-          _log('Unified link detected - will be handled externally by ULink SDK');
+          _log(
+              'Unified link detected - will be handled externally by ULink SDK');
           // Return original URI, let ULink SDK handle the external redirect
           return uri;
         }
-        
+
         // Try to resolve to a route path using the user-provided resolver
         final routePath = _routeResolver(ulinkData);
-        
+
         if (routePath != null && routePath.isNotEmpty) {
           _log('Resolved to route path: $routePath');
-          
+
           // Parse the route path and preserve any existing query parameters
           final routeUri = Uri.parse(routePath);
           final combinedQueryParams = <String, String>{
             ...uri.queryParameters,
             ...routeUri.queryParameters,
           };
-          
+
           // Create the final URI with combined query parameters
           final finalUri = routeUri.replace(
-            queryParameters: combinedQueryParams.isNotEmpty ? combinedQueryParams : null,
+            queryParameters:
+                combinedQueryParams.isNotEmpty ? combinedQueryParams : null,
           );
-          
+
           _log('Final transformed URI: ${finalUri.toString()}');
           return finalUri;
         } else {
           _log('Route resolver returned null/empty, checking for fallback URL');
-          
+
           // If no route path is provided, try to use fallback URL as a path
           final fallbackUrl = ulinkData.fallbackUrl;
           if (fallbackUrl != null) {
@@ -148,7 +150,7 @@ class ULinkAutoRouteTransformer {
       } else {
         _log('Not a ULink dynamic link, passing through unchanged');
       }
-      
+
       // Return original URI if no transformation was applied
       return uri;
     } catch (e) {
@@ -172,17 +174,17 @@ extension ULinkResolvedDataExtension on ULinkResolvedData {
   T? getParameter<T>(String key) {
     return parameters?[key] as T?;
   }
-  
+
   /// Get a parameter value by key with a default value
   T getParameterOrDefault<T>(String key, T defaultValue) {
     return parameters?[key] as T? ?? defaultValue;
   }
-  
+
   /// Check if a parameter exists
   bool hasParameter(String key) {
     return parameters?.containsKey(key) ?? false;
   }
-  
+
   /// Get all parameter keys
   Iterable<String> get parameterKeys {
     return parameters?.keys ?? <String>[];

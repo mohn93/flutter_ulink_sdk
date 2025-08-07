@@ -22,8 +22,8 @@ class _UnifiedLinkExampleState extends State<UnifiedLinkExample> {
   Future<void> _initializeULink() async {
     try {
       // Initialize ULink with your API key
-      await ULink.initialize(config: 
-        ULinkConfig(
+      await ULink.initialize(
+        config: ULinkConfig(
           apiKey: 'your-api-key-here',
           debug: true,
         ),
@@ -65,7 +65,8 @@ class _UnifiedLinkExampleState extends State<UnifiedLinkExample> {
         ULinkParameters.dynamic(
           slug: 'dynamic-example-${DateTime.now().millisecondsSinceEpoch}',
           iosFallbackUrl: 'https://apps.apple.com/app/example',
-          androidFallbackUrl: 'https://play.google.com/store/apps/details?id=com.example',
+          androidFallbackUrl:
+              'https://play.google.com/store/apps/details?id=com.example',
           fallbackUrl: 'https://example.com/dynamic',
           parameters: {
             'screen': 'home',
@@ -102,7 +103,8 @@ class _UnifiedLinkExampleState extends State<UnifiedLinkExample> {
         ULinkParameters.unified(
           slug: 'unified-example-${DateTime.now().millisecondsSinceEpoch}',
           iosUrl: 'https://apps.apple.com/app/my-app/id123456789',
-          androidUrl: 'https://play.google.com/store/apps/details?id=com.example.myapp',
+          androidUrl:
+              'https://play.google.com/store/apps/details?id=com.example.myapp',
           fallbackUrl: 'https://myapp.com/product/123',
           parameters: {
             'utm_source': 'email',

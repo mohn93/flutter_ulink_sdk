@@ -14,7 +14,6 @@ void main() async {
     ),
   );
 
-
   try {
     // Create a dynamic link with social media tags
     // final response = await ulink.createLink(
@@ -38,9 +37,9 @@ void main() async {
 
     // setState(() {
     // if (response.success) {
-      // _createdLink = response.url!;
+    // _createdLink = response.url!;
     // } else {
-      // _createdLink = 'Error: ${response.error}';
+    // _createdLink = 'Error: ${response.error}';
     // }
     // });
   } finally {
@@ -83,7 +82,7 @@ class _HomePageState extends State<HomePage> {
   void initState() {
     super.initState();
 
-     _ulink.getInitialDeepLink().then((data){
+    _ulink.getInitialDeepLink().then((data) {
       setState(() {
         _lastLinkData = data;
       });
@@ -93,7 +92,7 @@ class _HomePageState extends State<HomePage> {
         final params = data.parameters;
         debugPrint('Initial link parameters: $params');
       }
-     });
+    });
     // Listen for incoming links
     _ulink.onLink.listen((ULinkResolvedData data) {
       setState(() {

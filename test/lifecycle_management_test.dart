@@ -8,7 +8,8 @@ class MockClient extends http.BaseClient {
   Future<http.StreamedResponse> send(http.BaseRequest request) async {
     // Return a successful response for any request
     return http.StreamedResponse(
-      Stream.fromIterable(['{"success": true, "sessionId": "test-session-123"}'.codeUnits]),
+      Stream.fromIterable(
+          ['{"success": true, "sessionId": "test-session-123"}'.codeUnits]),
       200,
       headers: {'content-type': 'application/json'},
     );
@@ -22,9 +23,9 @@ void main() {
 
     setUp(() {
       TestWidgetsFlutterBinding.ensureInitialized();
-      
+
       mockClient = MockClient();
-      
+
       // Create ULink instance for testing
       ulink = ULink.forTesting(
         config: ULinkConfig(
@@ -53,7 +54,7 @@ void main() {
     test('should handle session lifecycle', () async {
       // Test basic session functionality
       expect(ulink.hasActiveSession(), isFalse);
-      
+
       // Test ending a non-existent session
       final endResult = await ulink.endSession();
       expect(endResult.success, isFalse);

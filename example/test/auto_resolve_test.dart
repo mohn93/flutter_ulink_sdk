@@ -83,7 +83,8 @@ void main() async {
     await _simulateReceivingLink(ulink, ulinkFormatUri);
 
     debugPrint('\nTest completed! Check the listener output above.');
-    debugPrint('If everything worked correctly, you should see the resolved data,');
+    debugPrint(
+        'If everything worked correctly, you should see the resolved data,');
     debugPrint('not the original ULink format link.');
   } catch (e) {
     debugPrint('\nError during test: $e');

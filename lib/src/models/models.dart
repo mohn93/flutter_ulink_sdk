@@ -8,6 +8,7 @@ export 'session.dart';
 enum ULinkType {
   /// Dynamic links designed for app deep linking with parameters, fallback URLs, and smart app store redirects
   dynamic,
+
   /// Simple platform-based redirects (iOS URL, Android URL, fallback URL) intended for browser handling
   unified,
 }
@@ -68,8 +69,6 @@ class ULinkParameters {
 
   /// Optional custom slug for the link
   final String? slug;
-
-
 
   /// iOS URL for unified links (direct iOS app store or web URL)
   final String? iosUrl;
@@ -367,7 +366,8 @@ class ULinkResolvedData {
 
     // Determine link type based on type field from rawData
     final typeFromData = json['type'] as String?;
-    final linkType = typeFromData == 'dynamic' ? ULinkType.dynamic : ULinkType.unified;
+    final linkType =
+        typeFromData == 'dynamic' ? ULinkType.dynamic : ULinkType.unified;
 
     return ULinkResolvedData(
       slug: json['slug'],

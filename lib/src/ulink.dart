@@ -35,14 +35,15 @@ class ULink with WidgetsBindingObserver {
   Stream<ULinkResolvedData> get onLink => _linkStreamController.stream;
 
   /// Stream of unified link events (for external redirects)
-  Stream<ULinkResolvedData> get onUnifiedLink => _unifiedLinkStreamController.stream;
+  Stream<ULinkResolvedData> get onUnifiedLink =>
+      _unifiedLinkStreamController.stream;
 
   /// Last received link data
   ULinkResolvedData? _lastLinkData;
 
   /// Installation ID for this app installation
   String? _installationId;
-  
+
   /// Current active session ID
   String? _currentSessionId;
 
@@ -56,17 +57,17 @@ class ULink with WidgetsBindingObserver {
   }
 
   /// Initialize the SDK
-  /// 
+  ///
   /// This method initializes the ULink SDK and performs the following actions:
   /// 1. Creates a singleton instance with the provided configuration
   /// 2. Retrieves or generates a unique installation ID
   /// 3. Tracks the installation with the server
   /// 4. Starts a new session
   /// 5. Initializes app links for deep linking
-  /// 
+  ///
   /// It should be called when your app starts, typically in your app's
   /// initialization code or in the main widget's initState method.
-  /// 
+  ///
   /// Example:
   /// ```dart
   /// void main() async {
@@ -91,23 +92,24 @@ class ULink with WidgetsBindingObserver {
           );
 
       _instance = ULink._(config: effectiveConfig);
-      
+
       // Step 2: Get or generate installation ID
       await _instance!._getInstallationId();
-      
+
       // Step 3: Track installation with the server
       await _instance!._trackInstallation();
-      
+
       // Step 4: Start a new session
       final sessionResponse = await _instance!._startSession();
       if (_instance!.config.debug) {
         if (sessionResponse.success) {
-          _instance!._log('Session started with ID: ${_instance!._currentSessionId}');
+          _instance!
+              ._log('Session started with ID: ${_instance!._currentSessionId}');
         } else {
           _instance!._log('Failed to start session: ${sessionResponse.error}');
         }
       }
-      
+
       // Step 5: Initialize app links (happens in _init method)
       // Step 6: Register lifecycle observer for automatic session management
       _instance!._registerLifecycleObserver();
@@ -160,7 +162,7 @@ class ULink with WidgetsBindingObserver {
   void didChangeAppLifecycleState(AppLifecycleState state) {
     super.didChangeAppLifecycleState(state);
     _log('App lifecycle state changed to: $state');
-    
+
     switch (state) {
       case AppLifecycleState.resumed:
         // App came to foreground - start new session if none exists
@@ -171,7 +173,8 @@ class ULink with WidgetsBindingObserver {
               if (response.success) {
                 _log('New session started on app resume: $_currentSessionId');
               } else {
-                _log('Failed to start session on app resume: ${response.error}');
+                _log(
+                    'Failed to start session on app resume: ${response.error}');
               }
             }
           }).catchError((e) {
@@ -190,7 +193,8 @@ class ULink with WidgetsBindingObserver {
               if (response.success) {
                 _log('Session ended on app pause/inactive/detached');
               } else {
-                _log('Failed to end session on app pause/inactive/detached: ${response.error}');
+                _log(
+                    'Failed to end session on app pause/inactive/detached: ${response.error}');
               }
             }
           }).catchError((e) {
@@ -235,10 +239,10 @@ class ULink with WidgetsBindingObserver {
     try {
       _log('Checking for initial deep link...');
       final ULinkResolvedData? initialLinkData = await getInitialDeepLink();
-      
+
       if (initialLinkData != null) {
         _log('Found initial ULink: ${initialLinkData.rawData}');
-        
+
         // Route to appropriate stream based on link type
         if (initialLinkData.linkType == ULinkType.unified) {
           _log('Initial link is unified - adding to unified stream');
@@ -257,19 +261,17 @@ class ULink with WidgetsBindingObserver {
     }
   }
 
-
-
   /// Process a URI and resolve ULink data by querying the server
   /// This unified method is used by both internal link handling and external components
   /// Returns null if the URI cannot be resolved or is not a ULink
   Future<ULinkResolvedData?> processULinkUri(Uri uri) async {
     try {
       _log('Processing URI: ${uri.toString()}');
-      
+
       // Always try to resolve the URI with the server to determine if it's a ULink
       _log('Querying server to resolve URI...');
       final resolveResponse = await resolveLink(uri.toString());
-      
+
       if (resolveResponse.success && resolveResponse.data != null) {
         final resolvedData = ULinkResolvedData.fromJson(resolveResponse.data!);
         _log('Successfully resolved ULink data: ${resolvedData.rawData}');
@@ -277,7 +279,7 @@ class ULink with WidgetsBindingObserver {
       } else {
         // Differentiate between network errors and non-ULink responses
         if (resolveResponse.error != null) {
-          if (resolveResponse.error!.contains('network') || 
+          if (resolveResponse.error!.contains('network') ||
               resolveResponse.error!.contains('timeout') ||
               resolveResponse.error!.contains('connection')) {
             _log('Network error while resolving URI: ${resolveResponse.error}');
@@ -288,7 +290,7 @@ class ULink with WidgetsBindingObserver {
           _log('Server responded but URI is not a ULink');
         }
       }
-      
+
       return null;
     } catch (e) {
       _log('Exception while processing ULink URI: $e');
@@ -298,14 +300,15 @@ class ULink with WidgetsBindingObserver {
 
   /// Handle resolved ULink data by determining the appropriate action
   /// This unified method handles both dynamic and unified links
-  Future<void> _handleResolvedULinkData(ULinkResolvedData resolvedData, {String context = ''}) async {
+  Future<void> _handleResolvedULinkData(ULinkResolvedData resolvedData,
+      {String context = ''}) async {
     // Check if this is a simple/unified link that should be handled internally
     if (resolvedData.linkType == ULinkType.unified) {
       _log('Detected ${context}simple/unified link - handling internally');
       await _handleSimpleLinkInApp(resolvedData);
       return;
     }
-    
+
     // Handle as normal dynamic link
     _lastLinkData = resolvedData;
     _linkStreamController.add(resolvedData);
@@ -316,20 +319,21 @@ class ULink with WidgetsBindingObserver {
   Future<void> _handleUri(Uri uri, {String context = ''}) async {
     // Try to process as ULink dynamic link
     final resolvedData = await processULinkUri(uri);
-    
+
     if (resolvedData != null) {
       await _handleResolvedULinkData(resolvedData, context: context);
       return;
     }
-    
+
     // If processULinkUri returns null, it means either:
     // 1. Network error occurred while trying to resolve
     // 2. The URI is not a ULink (server responded but it's not a ULink)
-    // 
+    //
     // For now, we'll treat all non-ULink URIs as regular deep links
     // and let the app handle them normally (don't redirect externally)
-    _log('${context}URI is not a ULink or failed to resolve - treating as regular deep link');
-    
+    _log(
+        '${context}URI is not a ULink or failed to resolve - treating as regular deep link');
+
     // Don't create ULinkResolvedData for non-ULink URIs
     // Just log and let the app handle the URI normally
   }
@@ -338,15 +342,15 @@ class ULink with WidgetsBindingObserver {
   Future<void> _handleSimpleLinkInApp(ULinkResolvedData linkData) async {
     try {
       _log('Handling simple/unified link - calling listener internally');
-      
+
       // Instead of opening externally (which would cause infinite loops),
       // we call the listener internally to handle the unified link
       // This allows the app to process the link without system redirection
-      
+
       // Add to unified link stream for the app to handle
       _lastLinkData = linkData;
       _unifiedLinkStreamController.add(linkData);
-      
+
       _log('Unified link added to stream for app handling');
     } catch (e) {
       _log('Error handling simple link: $e');
@@ -359,18 +363,18 @@ class ULink with WidgetsBindingObserver {
   }
 
   /// Get the initial deep link URI that opened the app (raw URI)
-  /// 
+  ///
   /// This method retrieves the raw initial deep link URI if the app was opened with one.
   /// Unlike the stream-based approach, this method returns the URI synchronously
   /// and can be called at any time after SDK initialization.
-  /// 
+  ///
   /// This method returns the raw URI without processing it through ULink,
   /// allowing you to handle both ULink and non-ULink deep links.
-  /// 
+  ///
   /// Returns null if:
   /// - The app was not opened with a deep link
   /// - An error occurred while retrieving the initial link
-  /// 
+  ///
   /// Example:
   /// ```dart
   /// final initialUri = await ULink.instance.getInitialUri();
@@ -383,7 +387,7 @@ class ULink with WidgetsBindingObserver {
     try {
       _log('Getting initial URI...');
       final Uri? initialLink = await _appLinks.getInitialLink();
-      
+
       if (initialLink != null) {
         _log('Found initial URI: $initialLink');
         return initialLink;
@@ -398,17 +402,17 @@ class ULink with WidgetsBindingObserver {
   }
 
   /// Get the initial deep link that opened the app (processed ULink data)
-  /// 
+  ///
   /// This method retrieves the initial deep link if the app was opened with one
   /// and processes it through ULink to resolve the data.
   /// Unlike the stream-based approach, this method returns the link synchronously
   /// and can be called at any time after SDK initialization.
-  /// 
+  ///
   /// Returns null if:
   /// - The app was not opened with a deep link
   /// - An error occurred while retrieving the initial link
   /// - The initial link is not a ULink
-  /// 
+  ///
   /// Example:
   /// ```dart
   /// final initialLink = await ULink.instance.getInitialDeepLink();
@@ -421,13 +425,13 @@ class ULink with WidgetsBindingObserver {
     try {
       _log('Getting initial deep link...');
       final Uri? initialLink = await _appLinks.getInitialLink();
-      
+
       if (initialLink != null) {
         _log('Found initial link: $initialLink');
-        
+
         // Process the initial link to check if it's a ULink
         final resolvedData = await processULinkUri(initialLink);
-        
+
         if (resolvedData != null) {
           _log('Initial link is a ULink: ${resolvedData.rawData}');
           return resolvedData;
@@ -548,19 +552,19 @@ class ULink with WidgetsBindingObserver {
   String? getInstallationId() {
     return _installationId;
   }
-  
+
   /// Track the installation with the server
   Future<ULinkInstallationResponse> _trackInstallation() async {
     try {
       _log('Tracking installation: $_installationId');
-      
+
       if (_installationId == null) {
         return ULinkInstallationResponse.error('Installation ID not available');
       }
-      
+
       // Get device information
       final deviceInfo = await DeviceInfoHelper.getBasicDeviceInfo();
-      
+
       // Create installation data
       final installation = ULinkInstallation(
         installationId: _installationId!,
@@ -574,7 +578,7 @@ class ULink with WidgetsBindingObserver {
         language: deviceInfo['language'],
         timezone: deviceInfo['timezone'],
       );
-      
+
       // Send installation data to server
       final response = await _httpClient.post(
         Uri.parse('${config.baseUrl}/sdk/installations/track'),
@@ -584,16 +588,17 @@ class ULink with WidgetsBindingObserver {
         },
         body: jsonEncode(installation.toJson()),
       );
-      
+
       final Map<String, dynamic> responseData = jsonDecode(response.body);
-      
+
       if (response.statusCode >= 200 && response.statusCode < 300) {
         _log('Installation tracked successfully');
         return ULinkInstallationResponse.fromJson(responseData);
       } else {
         _log('Error tracking installation: ${response.statusCode}');
         return ULinkInstallationResponse.error(
-          responseData['message'] ?? 'Error tracking installation: ${response.statusCode}',
+          responseData['message'] ??
+              'Error tracking installation: ${response.statusCode}',
         );
       }
     } catch (e) {
@@ -601,19 +606,20 @@ class ULink with WidgetsBindingObserver {
       return ULinkInstallationResponse.error('Error tracking installation: $e');
     }
   }
-  
+
   /// Track the installation with the server (public method)
-  Future<ULinkInstallationResponse> trackInstallation({Map<String, dynamic>? metadata}) async {
+  Future<ULinkInstallationResponse> trackInstallation(
+      {Map<String, dynamic>? metadata}) async {
     try {
       _log('Tracking installation with metadata: $_installationId');
-      
+
       if (_installationId == null) {
         return ULinkInstallationResponse.error('Installation ID not available');
       }
-      
+
       // Get device information
       final deviceInfo = await DeviceInfoHelper.getBasicDeviceInfo();
-      
+
       // Create installation data
       final installation = ULinkInstallation(
         installationId: _installationId!,
@@ -628,7 +634,7 @@ class ULink with WidgetsBindingObserver {
         timezone: deviceInfo['timezone'],
         metadata: metadata,
       );
-      
+
       // Send installation data to server
       final response = await _httpClient.post(
         Uri.parse('${config.baseUrl}/sdk/installations/track'),
@@ -638,16 +644,17 @@ class ULink with WidgetsBindingObserver {
         },
         body: jsonEncode(installation.toJson()),
       );
-      
+
       final Map<String, dynamic> responseData = jsonDecode(response.body);
-      
+
       if (response.statusCode >= 200 && response.statusCode < 300) {
         _log('Installation tracked successfully');
         return ULinkInstallationResponse.fromJson(responseData);
       } else {
         _log('Error tracking installation: ${response.statusCode}');
         return ULinkInstallationResponse.error(
-          responseData['message'] ?? 'Error tracking installation: ${response.statusCode}',
+          responseData['message'] ??
+              'Error tracking installation: ${response.statusCode}',
         );
       }
     } catch (e) {
@@ -664,39 +671,41 @@ class ULink with WidgetsBindingObserver {
   }
 
   /// Starts a new session with the ULink server
-  /// 
+  ///
   /// This method is called automatically during initialization
   /// but can also be called manually to start a new session.
-  /// 
+  ///
   /// Returns a [ULinkSessionResponse] with the session ID if successful.
-  Future<ULinkSessionResponse> _startSession([Map<String, dynamic>? metadata]) async {
+  Future<ULinkSessionResponse> _startSession(
+      [Map<String, dynamic>? metadata]) async {
     if (_installationId == null) {
       _log('Cannot start session without installation ID');
       return ULinkSessionResponse.error('Installation ID not available');
     }
-    
+
     try {
       // End any existing session first
       if (_currentSessionId != null) {
         await endSession();
       }
-      
+
       // Collect device information automatically
       final deviceInfo = await DeviceInfoHelper.getCompleteDeviceInfo();
       _log('Collected device info for session: ${deviceInfo.keys.join(", ")}');
-      
+
       // Extract device information
       final String? networkType = deviceInfo['networkType'] as String?;
-      final String? deviceOrientation = deviceInfo['deviceOrientation'] as String?;
+      final String? deviceOrientation =
+          deviceInfo['deviceOrientation'] as String?;
       final double? batteryLevel = deviceInfo['batteryLevel'] as double?;
       final bool? isCharging = deviceInfo['isCharging'] as bool?;
-      
+
       // Merge provided metadata with device info
       final Map<String, dynamic> sessionMetadata = {};
       if (metadata != null) {
         sessionMetadata.addAll(metadata);
       }
-      
+
       // Add basic device info to metadata if not explicitly provided
       if (!sessionMetadata.containsKey('deviceInfo')) {
         // Filter out properties that are already included in the session object
@@ -705,12 +714,12 @@ class ULink with WidgetsBindingObserver {
         filteredDeviceInfo.remove('deviceOrientation');
         filteredDeviceInfo.remove('batteryLevel');
         filteredDeviceInfo.remove('isCharging');
-        
+
         if (filteredDeviceInfo.isNotEmpty) {
           sessionMetadata['deviceInfo'] = filteredDeviceInfo;
         }
       }
-      
+
       // Create session data with all collected parameters
       final ULinkSession sessionData = ULinkSession(
         installationId: _installationId!,
@@ -720,16 +729,17 @@ class ULink with WidgetsBindingObserver {
         isCharging: isCharging,
         metadata: sessionMetadata.isEmpty ? null : sessionMetadata,
       );
-      
+
       return await _sendSessionStartRequest(sessionData);
     } catch (e) {
       _log('Error starting session: $e');
       return ULinkSessionResponse.error('Error starting session: $e');
     }
   }
-  
+
   /// Helper method to send session start request to the server
-  Future<ULinkSessionResponse> _sendSessionStartRequest(ULinkSession session) async {
+  Future<ULinkSessionResponse> _sendSessionStartRequest(
+      ULinkSession session) async {
     try {
       // Send session data to server
       final response = await _httpClient.post(
@@ -740,9 +750,9 @@ class ULink with WidgetsBindingObserver {
         },
         body: jsonEncode(session.toJson()),
       );
-      
+
       final Map<String, dynamic> responseData = jsonDecode(response.body);
-      
+
       if (response.statusCode >= 200 && response.statusCode < 300) {
         _log('Session started successfully');
         _currentSessionId = responseData['sessionId'];
@@ -750,7 +760,8 @@ class ULink with WidgetsBindingObserver {
       } else {
         _log('Error starting session: ${response.statusCode}');
         return ULinkSessionResponse.error(
-          responseData['message'] ?? 'Error starting session: ${response.statusCode}',
+          responseData['message'] ??
+              'Error starting session: ${response.statusCode}',
         );
       }
     } catch (e) {
@@ -758,15 +769,15 @@ class ULink with WidgetsBindingObserver {
       return ULinkSessionResponse.error('Error sending session request: $e');
     }
   }
-  
+
   /// Start a new session with the server
-  /// 
+  ///
   /// This method allows you to start a new session with additional data.
   /// If a session is already active, it will be ended before starting a new one.
-  /// 
+  ///
   /// Device information (battery level, network type, etc.) is automatically collected
   /// when available, but you can also provide specific values to override the automatic collection.
-  /// 
+  ///
   /// Parameters:
   /// - [networkType]: The type of network connection (e.g., 'wifi', 'cellular')
   /// - [deviceOrientation]: The current device orientation (e.g., 'portrait', 'landscape')
@@ -782,32 +793,36 @@ class ULink with WidgetsBindingObserver {
   }) async {
     try {
       _log('Starting session with metadata for installation: $_installationId');
-      
+
       if (_installationId == null) {
         return ULinkSessionResponse.error('Installation ID not available');
       }
-      
+
       // End any existing session first
       if (_currentSessionId != null) {
         await endSession();
       }
-      
+
       // Collect device information automatically
       final deviceInfo = await DeviceInfoHelper.getCompleteDeviceInfo();
       _log('Collected device info for session: ${deviceInfo.keys.join(', ')}');
-      
+
       // Use provided values or fall back to automatically collected values
-      final String? sessionNetworkType = networkType ?? deviceInfo['networkType'] as String?;
-      final String? sessionDeviceOrientation = deviceOrientation ?? deviceInfo['deviceOrientation'] as String?;
-      final double? sessionBatteryLevel = batteryLevel ?? deviceInfo['batteryLevel'] as double?;
-      final bool? sessionIsCharging = isCharging ?? deviceInfo['isCharging'] as bool?;
-      
+      final String? sessionNetworkType =
+          networkType ?? deviceInfo['networkType'] as String?;
+      final String? sessionDeviceOrientation =
+          deviceOrientation ?? deviceInfo['deviceOrientation'] as String?;
+      final double? sessionBatteryLevel =
+          batteryLevel ?? deviceInfo['batteryLevel'] as double?;
+      final bool? sessionIsCharging =
+          isCharging ?? deviceInfo['isCharging'] as bool?;
+
       // Merge provided metadata with device info
       final Map<String, dynamic> sessionMetadata = {};
       if (metadata != null) {
         sessionMetadata.addAll(metadata);
       }
-      
+
       // Add basic device info to metadata if not explicitly provided
       if (!sessionMetadata.containsKey('deviceInfo')) {
         // Filter out properties that are already included in the session object
@@ -816,12 +831,12 @@ class ULink with WidgetsBindingObserver {
         filteredDeviceInfo.remove('deviceOrientation');
         filteredDeviceInfo.remove('batteryLevel');
         filteredDeviceInfo.remove('isCharging');
-        
+
         if (filteredDeviceInfo.isNotEmpty) {
           sessionMetadata['deviceInfo'] = filteredDeviceInfo;
         }
       }
-      
+
       // Create session data with all collected and provided parameters
       return await _sendSessionStartRequest(ULinkSession(
         installationId: _installationId!,
@@ -836,22 +851,22 @@ class ULink with WidgetsBindingObserver {
       return ULinkSessionResponse.error('Error starting session: $e');
     }
   }
-  
+
   /// End the current session
-  /// 
+  ///
   /// This method ends the active session and reports it to the server.
   /// If no session is active, it returns an error response.
-  /// 
+  ///
   /// Returns a [ULinkResponse] indicating success or failure.
   Future<ULinkResponse> endSession() async {
     try {
       final sessionId = _currentSessionId;
       _log('Ending session: $sessionId');
-      
+
       if (sessionId == null) {
         return ULinkResponse.error('No active session to end');
       }
-      
+
       // Send end session request to server
       final response = await _httpClient.post(
         Uri.parse('${config.baseUrl}/sdk/sessions/$sessionId/end'),
@@ -860,19 +875,21 @@ class ULink with WidgetsBindingObserver {
           'X-App-Key': config.apiKey,
         },
       );
-      
+
       // Clear the session ID immediately to prevent duplicate end requests
       _currentSessionId = null;
-      
+
       final Map<String, dynamic> responseData = jsonDecode(response.body);
-      
+
       if (response.statusCode >= 200 && response.statusCode < 300) {
         _log('Session ended successfully');
-        return ULinkResponse.success('Session ended successfully', responseData);
+        return ULinkResponse.success(
+            'Session ended successfully', responseData);
       } else {
         _log('Error ending session: ${response.statusCode}');
         return ULinkResponse.error(
-          responseData['message'] ?? 'Error ending session: ${response.statusCode}',
+          responseData['message'] ??
+              'Error ending session: ${response.statusCode}',
         );
       }
     } catch (e) {
@@ -882,30 +899,30 @@ class ULink with WidgetsBindingObserver {
       return ULinkResponse.error('Error ending session: $e');
     }
   }
-  
+
   /// Get the current session ID
-  /// 
+  ///
   /// Returns the ID of the active session, or null if no session is active.
   /// This can be used to check if a session is currently active.
   String? getCurrentSessionId() {
     return _currentSessionId;
   }
-  
+
   /// Check if a session is currently active
-  /// 
+  ///
   /// Returns true if there is an active session, false otherwise.
   bool hasActiveSession() {
     return _currentSessionId != null;
   }
-  
+
   /// Dispose the SDK
-  /// 
+  ///
   /// This method cleans up resources used by the SDK and ends any active session.
   /// It should be called when the app is closing or the SDK is no longer needed.
   void dispose() {
     // Unregister lifecycle observer
     _unregisterLifecycleObserver();
-    
+
     // End the current session if one exists
     if (_currentSessionId != null) {
       // Use a synchronous try-catch to ensure we don't miss any errors
@@ -919,7 +936,7 @@ class ULink with WidgetsBindingObserver {
         _log('Unexpected error during dispose: $e');
       }
     }
-    
+
     // Close the stream controllers
     _linkStreamController.close();
     _unifiedLinkStreamController.close();

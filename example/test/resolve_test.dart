@@ -74,7 +74,6 @@ void main() async {
     var resolveResponse = await ulink.resolveLink(createdUrl!);
     _debugPrintResolveResponse('Full URL resolution', resolveResponse);
 
-
     // Test 3: Use the testListener method to simulate a link click
     debugPrint('\nTest 3: Testing link listener...');
     await ulink.testListener(createdUrl);

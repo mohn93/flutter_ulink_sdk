@@ -59,7 +59,8 @@ class ULinkInstallation {
 
     if (deviceId != null) data['deviceId'] = deviceId;
     if (deviceModel != null) data['deviceModel'] = deviceModel;
-    if (deviceManufacturer != null) data['deviceManufacturer'] = deviceManufacturer;
+    if (deviceManufacturer != null)
+      data['deviceManufacturer'] = deviceManufacturer;
     if (osName != null) data['osName'] = osName;
     if (osVersion != null) data['osVersion'] = osVersion;
     if (appVersion != null) data['appVersion'] = appVersion;

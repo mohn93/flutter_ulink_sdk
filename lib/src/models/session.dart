@@ -38,7 +38,8 @@ class ULinkSession {
     };
 
     if (networkType != null) data['networkType'] = networkType;
-    if (deviceOrientation != null) data['deviceOrientation'] = deviceOrientation;
+    if (deviceOrientation != null)
+      data['deviceOrientation'] = deviceOrientation;
     if (batteryLevel != null) data['batteryLevel'] = batteryLevel;
     if (isCharging != null) data['isCharging'] = isCharging;
     if (metadata != null) data['metadata'] = metadata;

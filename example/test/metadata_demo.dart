@@ -103,7 +103,8 @@ void main() {
 
   debugPrint('\n✅ All examples demonstrate the new metadata functionality!');
   debugPrint('📋 Summary of changes:');
-  debugPrint('   • Added "metadata" field to ULinkParameters and ULinkResolvedData');
+  debugPrint(
+      '   • Added "metadata" field to ULinkParameters and ULinkResolvedData');
   debugPrint(
       '   • Social media parameters (og*, twitter*) are automatically moved to metadata');
   debugPrint('   • Regular business/tracking parameters stay in parameters');
@@ -113,7 +114,8 @@ void main() {
 
   debugPrint('\n🚀 Usage Examples:');
   debugPrint('   // New metadata field:');
-  debugPrint('   ULinkParameters(metadata: {"ogTitle": "Title", "ogImage": "url"})');
+  debugPrint(
+      '   ULinkParameters(metadata: {"ogTitle": "Title", "ogImage": "url"})');
   debugPrint('   ');
   debugPrint('   // Auto-separation from parameters:');
   debugPrint(
