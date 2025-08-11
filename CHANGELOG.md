@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.1.8
+
+- Add support for more configurations in ULinkConfig
+- Widened some dependencies to allow for more flexibility in versions
+- 
 ## 0.1.7
 
 - Chores to enhance code quality and maintainability
