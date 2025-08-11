@@ -41,6 +41,10 @@ class ULink with WidgetsBindingObserver {
   /// Last received link data
   ULinkResolvedData? _lastLinkData;
 
+  // Persistence keys for last link data
+  static const String _prefsKeyLastLinkData = 'ulink_last_link_data';
+  static const String _prefsKeyLastLinkSavedAt = 'ulink_last_link_saved_at';
+
   /// Installation ID for this app installation
   String? _installationId;
 
@@ -224,6 +228,9 @@ class ULink with WidgetsBindingObserver {
 
   /// Initialize the SDK
   void _init() {
+    // Load any previously persisted last link data (applies TTL if configured)
+    _loadLastLinkData();
+
     // Listen for app links while the app is in the foreground
     _appLinks.uriLinkStream.listen((Uri uri) async {
       _log('App link received: $uri');
@@ -247,10 +254,12 @@ class ULink with WidgetsBindingObserver {
         if (initialLinkData.linkType == ULinkType.unified) {
           _log('Initial link is unified - adding to unified stream');
           _lastLinkData = initialLinkData;
+          await _saveLastLinkData(initialLinkData);
           _unifiedLinkStreamController.add(initialLinkData);
         } else {
           _log('Initial link is dynamic - adding to dynamic stream');
           _lastLinkData = initialLinkData;
+          await _saveLastLinkData(initialLinkData);
           _linkStreamController.add(initialLinkData);
         }
       } else {
@@ -311,6 +320,7 @@ class ULink with WidgetsBindingObserver {
 
     // Handle as normal dynamic link
     _lastLinkData = resolvedData;
+    await _saveLastLinkData(resolvedData);
     _linkStreamController.add(resolvedData);
   }
 
@@ -349,6 +359,7 @@ class ULink with WidgetsBindingObserver {
 
       // Add to unified link stream for the app to handle
       _lastLinkData = linkData;
+      await _saveLastLinkData(linkData);
       _unifiedLinkStreamController.add(linkData);
 
       _log('Unified link added to stream for app handling');
@@ -359,7 +370,99 @@ class ULink with WidgetsBindingObserver {
 
   /// Get the last received link data
   ULinkResolvedData? getLastLinkData() {
-    return _lastLinkData;
+    final result = _lastLinkData;
+    if (result != null && config.clearLastLinkOnRead) {
+      _clearPersistedLastLink();
+      _lastLinkData = null;
+    }
+    return result;
+  }
+
+  Future<void> _saveLastLinkData(ULinkResolvedData data) async {
+    if (!config.persistLastLinkData) return;
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final Map<String, dynamic> sanitized = _sanitizeLastLinkData(data);
+      await prefs.setString(_prefsKeyLastLinkData, jsonEncode(sanitized));
+      await prefs.setInt(
+        _prefsKeyLastLinkSavedAt,
+        DateTime.now().millisecondsSinceEpoch,
+      );
+      _log('Persisted last link data');
+    } catch (e) {
+      _log('Failed to persist last link data: $e');
+    }
+  }
+
+  Future<void> _loadLastLinkData() async {
+    if (!config.persistLastLinkData) return;
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final jsonStr = prefs.getString(_prefsKeyLastLinkData);
+      if (jsonStr == null) return;
+
+      final savedAtMs = prefs.getInt(_prefsKeyLastLinkSavedAt) ?? 0;
+      final ttl = config.lastLinkTimeToLive;
+      if (ttl != null && ttl.inMilliseconds > 0 && savedAtMs > 0) {
+        final ageMs = DateTime.now().millisecondsSinceEpoch - savedAtMs;
+        if (ageMs > ttl.inMilliseconds) {
+          _clearPersistedLastLink();
+          _log('Expired persisted last link data cleared');
+          return;
+        }
+      }
+
+      final Map<String, dynamic> map = jsonDecode(jsonStr);
+      _lastLinkData = ULinkResolvedData.fromJson(map);
+      _log('Loaded persisted last link data');
+    } catch (e) {
+      _log('Failed to load persisted last link data: $e');
+    }
+  }
+
+  void _clearPersistedLastLink() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.remove(_prefsKeyLastLinkData);
+      await prefs.remove(_prefsKeyLastLinkSavedAt);
+    } catch (e) {
+      _log('Failed to clear persisted last link data: $e');
+    }
+  }
+
+  Map<String, dynamic> _sanitizeLastLinkData(ULinkResolvedData data) {
+    final dropAll = config.redactAllParametersInLastLink;
+    // Start from rawData to preserve all server-provided fields
+    final Map<String, dynamic> base = Map<String, dynamic>.from(data.rawData);
+
+    Map<String, dynamic>? redactMap(
+      Map<String, dynamic>? src,
+      List<String> keys,
+    ) {
+      if (src == null) return null;
+      if (keys.isEmpty) return Map<String, dynamic>.from(src);
+      final copy = <String, dynamic>{};
+      src.forEach((k, v) {
+        if (!keys.contains(k)) copy[k] = v;
+      });
+      return copy;
+    }
+
+    final redactedParams = dropAll
+        ? null
+        : redactMap(data.parameters, config.redactedParameterKeysInLastLink);
+    final redactedMeta = dropAll
+        ? null
+        : redactMap(data.metadata, config.redactedParameterKeysInLastLink);
+
+    // Rebuild final map ensuring parameters/metadata are applied per redaction
+    final result = <String, dynamic>{...base};
+    result.remove('parameters');
+    result.remove('metadata');
+    if (redactedParams != null) result['parameters'] = redactedParams;
+    if (redactedMeta != null) result['metadata'] = redactedMeta;
+
+    return result;
   }
 
   /// Get the initial deep link URI that opened the app (raw URI)
@@ -503,9 +606,10 @@ class ULink with WidgetsBindingObserver {
       final Map<String, dynamic> responseData = jsonDecode(response.body);
 
       if (response.statusCode >= 200 && response.statusCode < 300) {
-        // Return a successful response with the resolved data
+        // Use fallbackUrl as the canonical resolved URL as per endpoint contract
+        final resolvedUrl = (responseData['fallbackUrl'] as String?) ?? url;
         return ULinkResponse.success(
-          responseData['fallbackUrl'] ?? '',
+          resolvedUrl,
           responseData,
         );
       } else {

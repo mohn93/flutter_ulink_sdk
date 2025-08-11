@@ -20,7 +20,7 @@ A Flutter SDK for creating and handling dynamic links with ULink, similar to Bra
 - Create dynamic links with custom slugs and parameters
 - Social media tag support for better link sharing
 - Automatic handling of dynamic links in your app
-- **Graceful handling of unified/simple links** with automatic external redirection
+- **Graceful handling of unified/simple links** via `onUnifiedLink` stream (no automatic external redirect)
 - Resolve links to retrieve their data
 - Session tracking and analytics
 - Device information collection
@@ -166,10 +166,10 @@ The ULink SDK supports two distinct types of links:
 
 ### Unified/Simple Links
 - **Purpose**: Simple platform-based redirects for browser handling
-- **Handling**: Automatically redirected externally when opened in-app
+- **Handling**: Delivered on the `onUnifiedLink` stream for app-controlled handling; optionally open externally (e.g., with `url_launcher`)
 - **Type**: Determined from server response `type` field
 
-> **Please Note**: If users open a unified link on a device that has the app installed, it might not open in the browser and will open the app instead.
+> **Please Note**: If users open a unified link on a device that has the app installed, it might open the app instead of the browser. The SDK does not auto-redirect; decide in your app whether to open the external URL.
 
 For detailed information, see [UNIFIED_LINKS.md](UNIFIED_LINKS.md).
 
@@ -291,10 +291,15 @@ void initState() {
     });
   });
   
-  // Listen for unified links (external redirects)
-  ULink.instance.onUnifiedLink.listen((ULinkResolvedData data) {
-    print('Unified link received and redirected externally: ${data.rawData}');
-    // Optional: Track unified link events for analytics
+  // Listen for unified links (in-app; no automatic external redirect)
+  ULink.instance.onUnifiedLink.listen((ULinkResolvedData data) async {
+    print('Unified link received: ${data.rawData}');
+    // Optionally open externally using url_launcher, or handle in-app
+    // Example:
+    // final url = data.iosFallbackUrl ?? data.androidFallbackUrl ?? data.fallbackUrl;
+    // if (url != null && await canLaunchUrl(Uri.parse(url))) {
+    //   await launchUrl(Uri.parse(url), mode: LaunchMode.externalApplication);
+    // }
   });
 }
 ```

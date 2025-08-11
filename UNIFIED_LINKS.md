@@ -29,11 +29,11 @@ When a user clicks a unified/simple link on mobile, it may open your app instead
 When your app receives a simple redirect link, the SDK automatically:
 
 1. **Detects the link type** based on the server response `type` field
-2. **Shows a brief log message**: "Opening [destination]..." before external redirect
-3. **Redirects externally** using the appropriate platform-specific URL:
-   - iOS: Uses `iosFallbackUrl` if available
-   - Android: Uses `androidFallbackUrl` if available
-   - Fallback: Uses `fallbackUrl` for other platforms
+2. **Emits the link data** on the `onUnifiedLink` stream for your app to decide next steps
+3. You can optionally **open externally** using the appropriate platform-specific URL:
+   - iOS: Use `iosFallbackUrl` if available
+   - Android: Use `androidFallbackUrl` if available
+   - Fallback: Use `fallbackUrl` for other platforms
 4. **Maintains tracking** by adding the link data to the dedicated unified link stream
 
 ### Clear Link Type Distinction
@@ -41,8 +41,8 @@ When your app receives a simple redirect link, the SDK automatically:
 The SDK automatically distinguishes between link types:
 
 - **Dynamic links** have `type: 'dynamic'` in server response and are handled in-app
-- **Simple links** have `type: 'unified'` in server response and are redirected externally
-- **Unknown links** are treated as unified links and redirected externally
+- **Simple links** have `type: 'unified'` in server response and are delivered to `onUnifiedLink`; your app decides whether to open externally
+- **Unknown links** are treated as non-ULink and passed through unchanged
 
 ## Usage Examples
 
@@ -108,11 +108,14 @@ ULink.instance.onLink.listen((linkData) {
   // Navigate to specific screens based on parameters
 });
 
-// Listen for unified links (external redirects)
-ULink.instance.onUnifiedLink.listen((linkData) {
-  // Unified links are automatically redirected externally
-  print('Unified link redirected to: ${linkData.fallbackUrl}');
-  // Optional: Track for analytics or show user feedback
+// Listen for unified links (no automatic external redirect)
+ULink.instance.onUnifiedLink.listen((linkData) async {
+  print('Unified link received: ${linkData.rawData}');
+  // Optionally open externally
+  // final url = linkData.iosFallbackUrl ?? linkData.androidFallbackUrl ?? linkData.fallbackUrl;
+  // if (url != null && await canLaunchUrl(Uri.parse(url))) {
+  //   await launchUrl(Uri.parse(url), mode: LaunchMode.externalApplication);
+  // }
 });
 ```
 
@@ -121,14 +124,14 @@ ULink.instance.onUnifiedLink.listen((linkData) {
 The SDK provides two separate streams to avoid confusion:
 
 - **`onLink` stream**: Only receives dynamic links intended for in-app handling
-- **`onUnifiedLink` stream**: Only receives unified/simple links that are redirected externally
+- **`onUnifiedLink` stream**: Only receives unified/simple links. Decide in your app whether to open externally
 
 This separation ensures developers don't accidentally handle unified links as if they were dynamic links, preventing confusion and improving code clarity.
 
 ## Key Benefits
 
-1. **Maintains Original Behavior**: Simple links maintain their browser-based platform detection behavior even when opened in-app
-2. **Seamless User Experience**: Users are automatically redirected to the intended destination without confusion
+1. **Maintains Original Behavior**: Simple links can still lead to browser-based destinations when your app chooses to open externally
+2. **Seamless User Experience**: Apps can choose whether to open externally or handle in-app, avoiding redirect loops
 3. **Clear Distinction**: Developers can clearly distinguish between app-intended and browser-intended links through separate streams
 4. **Backward Compatibility**: Existing dynamic links continue to work as expected
 5. **Flexible Tracking**: All link interactions are tracked through appropriate streams

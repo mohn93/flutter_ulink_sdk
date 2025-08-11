@@ -24,11 +24,23 @@ class ULinkConfig {
   /// Whether to use debug mode
   final bool debug;
 
+  // Persistence controls for last link data (parity with Android)
+  final bool persistLastLinkData;
+  final Duration? lastLinkTimeToLive;
+  final bool clearLastLinkOnRead;
+  final bool redactAllParametersInLastLink;
+  final List<String> redactedParameterKeysInLastLink;
+
   /// Creates a new ULink configuration
   ULinkConfig({
     required this.apiKey,
     this.baseUrl = 'https://api.ulink.ly',
     this.debug = false,
+    this.persistLastLinkData = true,
+    this.lastLinkTimeToLive,
+    this.clearLastLinkOnRead = false,
+    this.redactAllParametersInLastLink = false,
+    this.redactedParameterKeysInLastLink = const [],
   });
 }
 
