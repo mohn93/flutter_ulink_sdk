@@ -36,9 +36,9 @@ class ULinkConfig {
     required this.apiKey,
     this.baseUrl = 'https://api.ulink.ly',
     this.debug = false,
-    this.persistLastLinkData = true,
+    this.persistLastLinkData = false,
     this.lastLinkTimeToLive,
-    this.clearLastLinkOnRead = false,
+    this.clearLastLinkOnRead = true,
     this.redactAllParametersInLastLink = false,
     this.redactedParameterKeysInLastLink = const [],
   });

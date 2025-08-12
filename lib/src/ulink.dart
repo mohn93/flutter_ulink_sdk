@@ -4,11 +4,15 @@ import 'dart:convert';
 import 'package:app_links/app_links.dart';
 import 'package:flutter/widgets.dart';
 import 'package:http/http.dart' as http;
+import 'package:package_info_plus/package_info_plus.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:uuid/uuid.dart';
+import 'package:flutter/foundation.dart'
+    show defaultTargetPlatform, kIsWeb, TargetPlatform;
 
 import 'models/models.dart';
 import 'utils/device_info.dart';
+import 'version.dart';
 
 /// Main class for the ULink SDK
 class ULink with WidgetsBindingObserver {
@@ -44,9 +48,22 @@ class ULink with WidgetsBindingObserver {
   // Persistence keys for last link data
   static const String _prefsKeyLastLinkData = 'ulink_last_link_data';
   static const String _prefsKeyLastLinkSavedAt = 'ulink_last_link_saved_at';
+  static const String _prefsKeyInstallationToken = 'ulink_installation_token';
+  static const String _prefsKeyLastInstallTrackAt =
+      'ulink_last_install_track_at';
+  static const String _prefsKeyLastAppVersion = 'ulink_last_app_version';
 
   /// Installation ID for this app installation
   String? _installationId;
+
+  /// Installation token issued by backend (JWT)
+  String? _installationToken;
+
+  /// SDK-resolved device identifier (best-effort)
+  String? _deviceId;
+
+  /// Cached platform string
+  late final String _clientPlatform = _detectClientPlatform();
 
   /// Current active session ID
   String? _currentSessionId;
@@ -97,11 +114,16 @@ class ULink with WidgetsBindingObserver {
 
       _instance = ULink._(config: effectiveConfig);
 
+      // Preload any persisted installation token
+      await _instance!._loadInstallationToken();
+
       // Step 2: Get or generate installation ID
       await _instance!._getInstallationId();
 
-      // Step 3: Track installation with the server
-      await _instance!._trackInstallation();
+      // Step 3: Track installation with the server if needed
+      if (await _instance!._shouldTrackInstallation()) {
+        await _instance!._trackInstallation();
+      }
 
       // Step 4: Start a new session
       final sessionResponse = await _instance!._startSession();
@@ -230,6 +252,11 @@ class ULink with WidgetsBindingObserver {
   void _init() {
     // Load any previously persisted last link data (applies TTL if configured)
     _loadLastLinkData();
+
+    // Initialize device id best-effort
+    DeviceInfoHelper.getBasicDeviceInfo().then((info) {
+      _deviceId = info['deviceId'] as String?;
+    }).catchError((_) {});
 
     // Listen for app links while the app is in the foreground
     _appLinks.uriLinkStream.listen((Uri uri) async {
@@ -600,12 +627,25 @@ class ULink with WidgetsBindingObserver {
         headers: {
           'Content-Type': 'application/json',
           'X-App-Key': config.apiKey,
+          if (_installationToken != null)
+            'X-Installation-Token': _installationToken!
+          else if (_installationId != null)
+            'X-Installation-Id': _installationId!,
+          if (_deviceId != null) 'X-Device-Id': _deviceId!,
+          'X-ULink-Client': 'sdk-flutter',
+          'X-ULink-Client-Version': ulinkSdkVersion,
+          'X-ULink-Client-Platform': _clientPlatform,
         },
       );
 
       final Map<String, dynamic> responseData = jsonDecode(response.body);
 
       if (response.statusCode >= 200 && response.statusCode < 300) {
+        // Capture updated installation token if provided
+        final tokenHeader = response.headers['x-installation-token'];
+        if (tokenHeader != null && tokenHeader.isNotEmpty) {
+          await _saveInstallationToken(tokenHeader);
+        }
         // Use fallbackUrl as the canonical resolved URL as per endpoint contract
         final resolvedUrl = (responseData['fallbackUrl'] as String?) ?? url;
         return ULinkResponse.success(
@@ -689,6 +729,11 @@ class ULink with WidgetsBindingObserver {
         headers: {
           'Content-Type': 'application/json',
           'X-App-Key': config.apiKey,
+          if (_installationToken != null)
+            'X-Installation-Token': _installationToken!,
+          'X-ULink-Client': 'sdk-flutter',
+          'X-ULink-Client-Version': ulinkSdkVersion,
+          'X-ULink-Client-Platform': _clientPlatform,
         },
         body: jsonEncode(installation.toJson()),
       );
@@ -697,6 +742,20 @@ class ULink with WidgetsBindingObserver {
 
       if (response.statusCode >= 200 && response.statusCode < 300) {
         _log('Installation tracked successfully');
+        final tokenHeader = response.headers['x-installation-token'];
+        final jsonToken = (responseData)['installationToken'] as String?;
+        final token = tokenHeader ?? jsonToken;
+        if (token != null && token.isNotEmpty) {
+          await _saveInstallationToken(token);
+        }
+        // Persist last track time and app version for refresh heuristics
+        try {
+          final prefs = await SharedPreferences.getInstance();
+          await prefs.setInt(_prefsKeyLastInstallTrackAt,
+              DateTime.now().millisecondsSinceEpoch);
+          final packageInfo = await PackageInfo.fromPlatform();
+          await prefs.setString(_prefsKeyLastAppVersion, packageInfo.version);
+        } catch (_) {}
         return ULinkInstallationResponse.fromJson(responseData);
       } else {
         _log('Error tracking installation: ${response.statusCode}');
@@ -745,6 +804,11 @@ class ULink with WidgetsBindingObserver {
         headers: {
           'Content-Type': 'application/json',
           'X-App-Key': config.apiKey,
+          if (_installationToken != null)
+            'X-Installation-Token': _installationToken!,
+          'X-ULink-Client': 'sdk-flutter',
+          'X-ULink-Client-Version': ulinkSdkVersion,
+          'X-ULink-Client-Platform': _clientPlatform,
         },
         body: jsonEncode(installation.toJson()),
       );
@@ -753,6 +817,20 @@ class ULink with WidgetsBindingObserver {
 
       if (response.statusCode >= 200 && response.statusCode < 300) {
         _log('Installation tracked successfully');
+        final tokenHeader = response.headers['x-installation-token'];
+        final jsonToken = (responseData)['installationToken'] as String?;
+        final token = tokenHeader ?? jsonToken;
+        if (token != null && token.isNotEmpty) {
+          await _saveInstallationToken(token);
+        }
+        // Persist last track time and app version for refresh heuristics
+        try {
+          final prefs = await SharedPreferences.getInstance();
+          await prefs.setInt(_prefsKeyLastInstallTrackAt,
+              DateTime.now().millisecondsSinceEpoch);
+          final packageInfo = await PackageInfo.fromPlatform();
+          await prefs.setString(_prefsKeyLastAppVersion, packageInfo.version);
+        } catch (_) {}
         return ULinkInstallationResponse.fromJson(responseData);
       } else {
         _log('Error tracking installation: ${response.statusCode}');
@@ -771,6 +849,102 @@ class ULink with WidgetsBindingObserver {
   void _log(String message) {
     if (config.debug) {
       debugPrint('ULink: $message');
+    }
+  }
+
+  String _detectClientPlatform() {
+    if (kIsWeb) return 'web';
+    switch (defaultTargetPlatform) {
+      case TargetPlatform.android:
+        return 'android';
+      case TargetPlatform.iOS:
+        return 'ios';
+      case TargetPlatform.macOS:
+        return 'macos';
+      case TargetPlatform.windows:
+        return 'windows';
+      case TargetPlatform.linux:
+        return 'linux';
+      case TargetPlatform.fuchsia:
+        return 'fuchsia';
+    }
+  }
+
+  Future<void> _loadInstallationToken() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      _installationToken = prefs.getString(_prefsKeyInstallationToken);
+    } catch (_) {}
+  }
+
+  Future<void> _saveInstallationToken(String token) async {
+    _installationToken = token;
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString(_prefsKeyInstallationToken, token);
+    } catch (_) {}
+  }
+
+  Future<bool> _shouldTrackInstallation() async {
+    try {
+      // If we have no token, we should track to mint one
+      if (_installationToken == null || _installationToken!.isEmpty) {
+        return true;
+      }
+
+      // If token has an exp claim and is expired or near-expiry, refresh
+      final exp = _parseJwtExp(_installationToken!);
+      if (exp != null) {
+        final nowSeconds = DateTime.now().millisecondsSinceEpoch ~/ 1000;
+        // Refresh if exp within 7 days
+        if (exp - nowSeconds < 7 * 24 * 60 * 60) {
+          return true;
+        }
+      }
+
+      // Refresh on app version change
+      final prefs = await SharedPreferences.getInstance();
+      final lastVersion = prefs.getString(_prefsKeyLastAppVersion);
+      final packageInfo = await PackageInfo.fromPlatform();
+      if (lastVersion == null || lastVersion != packageInfo.version) {
+        return true;
+      }
+
+      // Refresh after 30 days regardless
+      final lastTrackMs = prefs.getInt(_prefsKeyLastInstallTrackAt) ?? 0;
+      if (lastTrackMs == 0) return true;
+      final daysSince = (DateTime.now().millisecondsSinceEpoch - lastTrackMs) /
+          (1000 * 60 * 60 * 24);
+      if (daysSince >= 30) return true;
+
+      return false;
+    } catch (_) {
+      return true;
+    }
+  }
+
+  int? _parseJwtExp(String token) {
+    try {
+      final parts = token.split('.');
+      if (parts.length != 3) return null;
+      final payload = parts[1].replaceAll('-', '+').replaceAll('_', '/');
+      var normalized = payload;
+      switch (payload.length % 4) {
+        case 2:
+          normalized += '==';
+          break;
+        case 3:
+          normalized += '=';
+          break;
+      }
+      final decoded = utf8.decode(base64.decode(normalized));
+      final map = jsonDecode(decoded) as Map<String, dynamic>;
+      final exp = map['exp'];
+      if (exp is int) return exp;
+      if (exp is String) return int.tryParse(exp);
+      return null;
+    } catch (_) {
+      return null;
     }
   }
 
