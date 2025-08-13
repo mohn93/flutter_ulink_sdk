@@ -14,6 +14,15 @@ import 'models/models.dart';
 import 'utils/device_info.dart';
 import 'version.dart';
 
+/// Session states for tracking session lifecycle
+enum SessionState {
+  idle, // No session operation in progress
+  initializing, // Session start request sent, waiting for response
+  active, // Session successfully started
+  ending, // Session end request sent
+  failed, // Session start/end failed
+}
+
 /// Main class for the ULink SDK
 class ULink with WidgetsBindingObserver {
   static ULink? _instance;
@@ -68,6 +77,12 @@ class ULink with WidgetsBindingObserver {
   /// Current active session ID
   String? _currentSessionId;
 
+  /// Session state management
+  SessionState _sessionState = SessionState.idle;
+
+  /// Completer to track session initialization
+  Completer<void>? _sessionCompleter;
+
   /// Flag to track if lifecycle observer is registered
   bool _isLifecycleObserverRegistered = false;
 
@@ -120,21 +135,8 @@ class ULink with WidgetsBindingObserver {
       // Step 2: Get or generate installation ID
       await _instance!._getInstallationId();
 
-      // Step 3: Track installation with the server if needed
-      if (await _instance!._shouldTrackInstallation()) {
-        await _instance!._trackInstallation();
-      }
-
-      // Step 4: Start a new session
-      final sessionResponse = await _instance!._startSession();
-      if (_instance!.config.debug) {
-        if (sessionResponse.success) {
-          _instance!
-              ._log('Session started with ID: ${_instance!._currentSessionId}');
-        } else {
-          _instance!._log('Failed to start session: ${sessionResponse.error}');
-        }
-      }
+      // Step 3-4: Bootstrap (ensure installation and session in one call)
+      await _instance!._bootstrap();
 
       // Step 5: Initialize app links (happens in _init method)
       // Step 6: Register lifecycle observer for automatic session management
@@ -142,6 +144,71 @@ class ULink with WidgetsBindingObserver {
       _instance!._log('ULink SDK initialization complete');
     }
     return _instance!;
+  }
+
+  /// Bootstrap installation and session via single API call
+  Future<void> _bootstrap() async {
+    try {
+      _log('Bootstrapping installation and session');
+
+      final uri = Uri.parse('${config.baseUrl}/sdk/bootstrap');
+      final response = await _httpClient.post(
+        uri,
+        headers: {
+          'Content-Type': 'application/json',
+          'X-App-Key': config.apiKey,
+          if (_installationToken != null)
+            'X-Installation-Token': _installationToken!,
+          if (_installationId != null) 'X-Installation-Id': _installationId!,
+          if (_deviceId != null) 'X-Device-Id': _deviceId!,
+          'X-ULink-Client': 'sdk-flutter',
+          'X-ULink-Client-Version': ulinkSdkVersion,
+          'X-ULink-Client-Platform': _clientPlatform,
+        },
+        body: jsonEncode({
+          'installationId': _installationId,
+          'metadata': {
+            'client': {
+              'type': 'sdk-flutter',
+              'version': ulinkSdkVersion,
+              'platform': _clientPlatform,
+            }
+          }
+        }),
+      );
+
+      if (response.statusCode >= 200 && response.statusCode < 300) {
+        final data = jsonDecode(response.body) as Map<String, dynamic>;
+
+        // Persist token from header or body
+        final tokenFromHeader = response.headers['x-installation-token'];
+        final tokenFromBody = data['installationToken'] as String?;
+        final token = tokenFromHeader ?? tokenFromBody;
+        if (token != null && token.isNotEmpty) {
+          _installationToken = token;
+          await _saveInstallationToken(token);
+        }
+
+        // Ensure installation id
+        final ensuredInstallationId = data['installationId'] as String?;
+        if (ensuredInstallationId != null && ensuredInstallationId.isNotEmpty) {
+          _installationId = ensuredInstallationId;
+        }
+
+        // Ensure session id and set active state
+        final sessionId = data['sessionId'] as String?;
+        if (sessionId != null && sessionId.isNotEmpty) {
+          _currentSessionId = sessionId;
+          _sessionState = SessionState.active;
+          _sessionCompleter?.complete();
+          _log('Bootstrap ensured session: $sessionId');
+        }
+      } else {
+        _log('Bootstrap failed: ${response.statusCode}');
+      }
+    } catch (e) {
+      _log('Bootstrap error: $e');
+    }
   }
 
   /// Factory constructor for testing with a mock HTTP client
@@ -191,8 +258,8 @@ class ULink with WidgetsBindingObserver {
 
     switch (state) {
       case AppLifecycleState.resumed:
-        // App came to foreground - start new session if none exists
-        if (!hasActiveSession()) {
+        // App came to foreground - start new session if none exists and not already starting
+        if (_sessionState == SessionState.idle) {
           _log('App resumed - starting new session');
           _startSession().then((response) {
             if (config.debug) {
@@ -268,11 +335,21 @@ class ULink with WidgetsBindingObserver {
     _getInitialLink();
   }
 
+  /// Flag to track if initial link has been processed
+  bool _initialLinkProcessed = false;
+
   /// Get the initial link if the app was opened with one
   Future<void> _getInitialLink() async {
+    if (_initialLinkProcessed) {
+      _log('Initial link already processed, skipping');
+      return;
+    }
+
     try {
       _log('Checking for initial deep link...');
       final ULinkResolvedData? initialLinkData = await getInitialDeepLink();
+
+      _initialLinkProcessed = true;
 
       if (initialLinkData != null) {
         _log('Found initial ULink: ${initialLinkData.rawData}');
@@ -614,6 +691,7 @@ class ULink with WidgetsBindingObserver {
   /// This method takes a full URL and resolves it to get the dynamic link data
   /// Returns a ULinkResponse with the resolved data or an error
   Future<ULinkResponse> resolveLink(String url) async {
+    // Do not wait for session here; server will auto-start/ensure recent session on resolve
     try {
       _log('Resolving link: $url');
 
@@ -697,7 +775,8 @@ class ULink with WidgetsBindingObserver {
     return _installationId;
   }
 
-  /// Track the installation with the server
+  // Note: kept for backward compatibility but not used in bootstrap flow
+  // ignore: unused_element
   Future<ULinkInstallationResponse> _trackInstallation() async {
     try {
       _log('Tracking installation: $_installationId');
@@ -885,6 +964,8 @@ class ULink with WidgetsBindingObserver {
     } catch (_) {}
   }
 
+  // Heuristic retained for manual track flows; bootstrap path bypasses this
+  // ignore: unused_element
   Future<bool> _shouldTrackInstallation() async {
     try {
       // If we have no token, we should track to mint one
@@ -961,8 +1042,33 @@ class ULink with WidgetsBindingObserver {
       return ULinkSessionResponse.error('Installation ID not available');
     }
 
+    // If session is already initializing, wait for it to complete
+    if (_sessionState == SessionState.initializing) {
+      _log('Session already initializing, waiting for completion...');
+      try {
+        await _waitForSessionCompletion();
+        _log(
+            'Existing session initialization completed (ID: $_currentSessionId)');
+        return ULinkSessionResponse.success(_currentSessionId!);
+      } catch (e) {
+        _log(
+            'Existing session initialization failed: $e, starting new session');
+        // Continue to start a new session if the existing one failed
+      }
+    }
+
+    // If session is already active, return it
+    if (_sessionState == SessionState.active && _currentSessionId != null) {
+      _log(
+          'Session already active (ID: $_currentSessionId), reusing existing session');
+      return ULinkSessionResponse.success(_currentSessionId!);
+    }
+
     try {
       // End any existing session first
+      _sessionCompleter = Completer();
+      _sessionState = SessionState.initializing;
+
       if (_currentSessionId != null) {
         await endSession();
       }
@@ -1008,7 +1114,10 @@ class ULink with WidgetsBindingObserver {
         metadata: sessionMetadata.isEmpty ? null : sessionMetadata,
       );
 
-      return await _sendSessionStartRequest(sessionData);
+      return await _sendSessionStartRequest(sessionData).then((r) {
+        _sessionCompleter?.complete();
+        return r;
+      });
     } catch (e) {
       _log('Error starting session: $e');
       return ULinkSessionResponse.error('Error starting session: $e');
@@ -1018,6 +1127,10 @@ class ULink with WidgetsBindingObserver {
   /// Helper method to send session start request to the server
   Future<ULinkSessionResponse> _sendSessionStartRequest(
       ULinkSession session) async {
+    // Set session state to initializing
+    _sessionState = SessionState.initializing;
+    _log('Session state changed to: $_sessionState');
+
     try {
       // Send session data to server
       final response = await _httpClient.post(
@@ -1034,9 +1147,15 @@ class ULink with WidgetsBindingObserver {
       if (response.statusCode >= 200 && response.statusCode < 300) {
         _log('Session started successfully');
         _currentSessionId = responseData['sessionId'];
+        _sessionState = SessionState.active;
+        _log('Session state changed to: $_sessionState');
+
         return ULinkSessionResponse.fromJson(responseData);
       } else {
         _log('Error starting session: ${response.statusCode}');
+        _sessionState = SessionState.failed;
+        _log('Session state changed to: $_sessionState');
+
         return ULinkSessionResponse.error(
           responseData['message'] ??
               'Error starting session: ${response.statusCode}',
@@ -1044,91 +1163,33 @@ class ULink with WidgetsBindingObserver {
       }
     } catch (e) {
       _log('Error sending session request: $e');
+      _sessionState = SessionState.failed;
+      _log('Session state changed to: $_sessionState');
+
       return ULinkSessionResponse.error('Error sending session request: $e');
     }
   }
 
-  /// Start a new session with the server
-  ///
-  /// This method allows you to start a new session with additional data.
-  /// If a session is already active, it will be ended before starting a new one.
-  ///
-  /// Device information (battery level, network type, etc.) is automatically collected
-  /// when available, but you can also provide specific values to override the automatic collection.
-  ///
-  /// Parameters:
-  /// - [networkType]: The type of network connection (e.g., 'wifi', 'cellular')
-  /// - [deviceOrientation]: The current device orientation (e.g., 'portrait', 'landscape')
-  /// - [batteryLevel]: The current battery level as a percentage (0.0 to 1.0)
-  /// - [isCharging]: Whether the device is currently charging
-  /// - [metadata]: Additional custom data to include with the session
-  Future<ULinkSessionResponse> startSession({
-    String? networkType,
-    String? deviceOrientation,
-    double? batteryLevel,
-    bool? isCharging,
-    Map<String, dynamic>? metadata,
-  }) async {
-    try {
-      _log('Starting session with metadata for installation: $_installationId');
+  // _ensureActiveSession removed; the server ensures/auto-starts session on resolve
 
-      if (_installationId == null) {
-        return ULinkSessionResponse.error('Installation ID not available');
-      }
-
-      // End any existing session first
-      if (_currentSessionId != null) {
-        await endSession();
-      }
-
-      // Collect device information automatically
-      final deviceInfo = await DeviceInfoHelper.getCompleteDeviceInfo();
-      _log('Collected device info for session: ${deviceInfo.keys.join(', ')}');
-
-      // Use provided values or fall back to automatically collected values
-      final String? sessionNetworkType =
-          networkType ?? deviceInfo['networkType'] as String?;
-      final String? sessionDeviceOrientation =
-          deviceOrientation ?? deviceInfo['deviceOrientation'] as String?;
-      final double? sessionBatteryLevel =
-          batteryLevel ?? deviceInfo['batteryLevel'] as double?;
-      final bool? sessionIsCharging =
-          isCharging ?? deviceInfo['isCharging'] as bool?;
-
-      // Merge provided metadata with device info
-      final Map<String, dynamic> sessionMetadata = {};
-      if (metadata != null) {
-        sessionMetadata.addAll(metadata);
-      }
-
-      // Add basic device info to metadata if not explicitly provided
-      if (!sessionMetadata.containsKey('deviceInfo')) {
-        // Filter out properties that are already included in the session object
-        final Map<String, dynamic> filteredDeviceInfo = Map.from(deviceInfo);
-        filteredDeviceInfo.remove('networkType');
-        filteredDeviceInfo.remove('deviceOrientation');
-        filteredDeviceInfo.remove('batteryLevel');
-        filteredDeviceInfo.remove('isCharging');
-
-        if (filteredDeviceInfo.isNotEmpty) {
-          sessionMetadata['deviceInfo'] = filteredDeviceInfo;
-        }
-      }
-
-      // Create session data with all collected and provided parameters
-      return await _sendSessionStartRequest(ULinkSession(
-        installationId: _installationId!,
-        networkType: sessionNetworkType,
-        deviceOrientation: sessionDeviceOrientation,
-        batteryLevel: sessionBatteryLevel,
-        isCharging: sessionIsCharging,
-        metadata: sessionMetadata.isEmpty ? null : sessionMetadata,
-      ));
-    } catch (e) {
-      _log('Error starting session: $e');
-      return ULinkSessionResponse.error('Error starting session: $e');
+  /// Wait for session initialization to complete
+  Future<void> _waitForSessionCompletion() async {
+    const maxWaitTime = Duration(seconds: 10);
+    await _sessionCompleter?.future.timeout(maxWaitTime);
+    // After waiting, check if session actually became active
+    if (_sessionState != SessionState.active) {
+      throw Exception(
+          'Session failed to become active (final state: $_sessionState)');
     }
   }
+
+  /// Check if a session is currently being initialized
+  bool get isSessionInitializing {
+    return _sessionState == SessionState.initializing;
+  }
+
+  /// Get current session state
+  SessionState get sessionState => _sessionState;
 
   /// End the current session
   ///
@@ -1156,6 +1217,8 @@ class ULink with WidgetsBindingObserver {
 
       // Clear the session ID immediately to prevent duplicate end requests
       _currentSessionId = null;
+      _sessionState = SessionState.idle;
+      _log('Session state changed to: $_sessionState');
 
       final Map<String, dynamic> responseData = jsonDecode(response.body);
 
