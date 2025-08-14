@@ -31,6 +31,10 @@ class ULinkConfig {
   final bool redactAllParametersInLastLink;
   final List<String> redactedParameterKeysInLastLink;
 
+  /// Whether to enable deep link integration (AppLinks) on init
+  /// Disable in tests to avoid platform channel dependencies
+  final bool enableDeepLinkIntegration;
+
   /// Creates a new ULink configuration
   ULinkConfig({
     required this.apiKey,
@@ -41,6 +45,7 @@ class ULinkConfig {
     this.clearLastLinkOnRead = true,
     this.redactAllParametersInLastLink = false,
     this.redactedParameterKeysInLastLink = const [],
+    this.enableDeepLinkIntegration = true,
   });
 }
 

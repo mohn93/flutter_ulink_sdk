@@ -10,6 +10,7 @@ void main() {
     late http.Client mockClient;
     late ULink ulink;
 
+    TestWidgetsFlutterBinding.ensureInitialized();
     // Sample dynamic link data that matches the new API format
     final mockDynamicLinkData = {
       'id': 'link-123',

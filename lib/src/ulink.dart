@@ -30,8 +30,8 @@ class ULink with WidgetsBindingObserver {
   /// The configuration for the SDK
   final ULinkConfig config;
 
-  /// AppLinks instance for handling deep links
-  final AppLinks _appLinks = AppLinks();
+  /// AppLinks instance for handling deep links (lazily initialized)
+  AppLinks? _appLinks;
 
   /// HTTP client for API requests
   final http.Client _httpClient;
@@ -118,7 +118,8 @@ class ULink with WidgetsBindingObserver {
   ///   runApp(MyApp());
   /// }
   /// ```
-  static Future<ULink> initialize({ULinkConfig? config}) async {
+  static Future<ULink> initialize(
+      {ULinkConfig? config, http.Client? httpClient}) async {
     if (_instance == null) {
       // Step 1: Create instance with provided config or default settings
       final effectiveConfig = config ??
@@ -127,7 +128,7 @@ class ULink with WidgetsBindingObserver {
             baseUrl: 'https://api.ulink.ly',
           );
 
-      _instance = ULink._(config: effectiveConfig);
+      _instance = ULink._(config: effectiveConfig, httpClient: httpClient);
 
       // Preload any persisted installation token
       await _instance!._loadInstallationToken();
@@ -325,14 +326,19 @@ class ULink with WidgetsBindingObserver {
       _deviceId = info['deviceId'] as String?;
     }).catchError((_) {});
 
-    // Listen for app links while the app is in the foreground
-    _appLinks.uriLinkStream.listen((Uri uri) async {
-      _log('App link received: $uri');
-      await _handleUri(uri, context: '');
-    });
+    if (config.enableDeepLinkIntegration) {
+      _appLinks = AppLinks();
+      // Listen for app links while the app is in the foreground
+      _appLinks!.uriLinkStream.listen((Uri uri) async {
+        _log('App link received: $uri');
+        await _handleUri(uri, context: '');
+      });
 
-    // Get the initial link if the app was opened with one
-    _getInitialLink();
+      // Get the initial link if the app was opened with one
+      _getInitialLink();
+    } else {
+      _log('Deep link integration disabled by config');
+    }
   }
 
   /// Flag to track if initial link has been processed
@@ -593,7 +599,7 @@ class ULink with WidgetsBindingObserver {
   Future<Uri?> getInitialUri() async {
     try {
       _log('Getting initial URI...');
-      final Uri? initialLink = await _appLinks.getInitialLink();
+      final Uri? initialLink = await _appLinks?.getInitialLink();
 
       if (initialLink != null) {
         _log('Found initial URI: $initialLink');
@@ -631,7 +637,7 @@ class ULink with WidgetsBindingObserver {
   Future<ULinkResolvedData?> getInitialDeepLink() async {
     try {
       _log('Getting initial deep link...');
-      final Uri? initialLink = await _appLinks.getInitialLink();
+      final Uri? initialLink = await _appLinks?.getInitialLink();
 
       if (initialLink != null) {
         _log('Found initial link: $initialLink');
