@@ -1,5 +1,8 @@
 # Changelog
 
+## 0.1.11
+
+- fixes and improvements
 
 ## 0.1.10
 

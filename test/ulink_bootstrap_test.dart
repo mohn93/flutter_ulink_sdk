@@ -62,8 +62,18 @@ void main() {
       expect(capturedHeaders!.containsKey('X-ULink-Client-Version'), isTrue);
       expect(capturedHeaders!.containsKey('X-ULink-Client-Platform'), isTrue);
 
-      // Validate body contains installationId
+      // Validate body contains installation fields similar to /sdk/installations/track
       expect(capturedBody!['installationId'], isNotNull);
+      expect(capturedBody!['deviceId'], isA<Object?>());
+      expect(capturedBody!['deviceModel'], isA<Object?>());
+      expect(capturedBody!['deviceManufacturer'], isA<Object?>());
+      expect(capturedBody!['osName'], isA<Object?>());
+      expect(capturedBody!['osVersion'] ?? capturedBody!['androidVersion'],
+          isA<Object?>());
+      expect(capturedBody!['appVersion'], isA<Object?>());
+      expect(capturedBody!['appBuild'], isA<Object?>());
+      expect(capturedBody!['language'], isA<Object?>());
+      expect(capturedBody!['timezone'], isA<Object?>());
     });
   });
 }

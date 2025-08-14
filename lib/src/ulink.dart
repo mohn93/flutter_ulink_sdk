@@ -88,9 +88,7 @@ class ULink with WidgetsBindingObserver {
 
   /// Private constructor
   ULink._({required this.config, http.Client? httpClient})
-      : _httpClient = httpClient ?? http.Client() {
-    _init();
-  }
+      : _httpClient = httpClient ?? http.Client();
 
   /// Initialize the SDK
   ///
@@ -139,7 +137,8 @@ class ULink with WidgetsBindingObserver {
       // Step 3-4: Bootstrap (ensure installation and session in one call)
       await _instance!._bootstrap();
 
-      // Step 5: Initialize app links (happens in _init method)
+      // Step 5: Initialize app links (after bootstrap to avoid races)
+      _instance!._init();
       // Step 6: Register lifecycle observer for automatic session management
       _instance!._registerLifecycleObserver();
       _instance!._log('ULink SDK initialization complete');
@@ -166,16 +165,7 @@ class ULink with WidgetsBindingObserver {
           'X-ULink-Client-Version': ulinkSdkVersion,
           'X-ULink-Client-Platform': _clientPlatform,
         },
-        body: jsonEncode({
-          'installationId': _installationId,
-          'metadata': {
-            'client': {
-              'type': 'sdk-flutter',
-              'version': ulinkSdkVersion,
-              'platform': _clientPlatform,
-            }
-          }
-        }),
+        body: await _buildBootstrapBody(),
       );
 
       if (response.statusCode >= 200 && response.statusCode < 300) {
@@ -210,6 +200,33 @@ class ULink with WidgetsBindingObserver {
     } catch (e) {
       _log('Bootstrap error: $e');
     }
+  }
+
+  Future<String> _buildBootstrapBody() async {
+    // Gather basic device info for installation upsert
+    final deviceInfo = await DeviceInfoHelper.getBasicDeviceInfo();
+    final body = <String, dynamic>{
+      'installationId': _installationId,
+      'deviceId': deviceInfo['deviceId'],
+      'deviceModel': deviceInfo['deviceModel'],
+      'deviceManufacturer': deviceInfo['deviceManufacturer'],
+      'osName': deviceInfo['osName'],
+      'osVersion': deviceInfo['osVersion'] ??
+          deviceInfo['androidVersion'] ??
+          deviceInfo['systemVersion'],
+      'appVersion': deviceInfo['appVersion'],
+      'appBuild': deviceInfo['appBuild'],
+      'language': deviceInfo['language'],
+      'timezone': deviceInfo['timezone'],
+      'metadata': {
+        'client': {
+          'type': 'sdk-flutter',
+          'version': ulinkSdkVersion,
+          'platform': _clientPlatform,
+        }
+      }
+    };
+    return jsonEncode(body);
   }
 
   /// Factory constructor for testing with a mock HTTP client
