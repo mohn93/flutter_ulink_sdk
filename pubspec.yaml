@@ -1,6 +1,6 @@
 name: flutter_ulink_sdk
 description: "Flutter SDK for creating and handling dynamic links, similar to Branch.io"
-version: 0.1.11
+version: 0.1.12
 homepage: https://github.com/mohn93/flutter_ulink_sdk
 
 environment:

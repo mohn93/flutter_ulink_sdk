@@ -82,7 +82,7 @@ class SocialMediaTags {
 /// Dynamic link parameters
 class ULinkParameters {
   /// Link type: "unified" or "dynamic"
-  final String? type;
+  final String type;
 
   /// Optional custom slug for the link
   final String? slug;
@@ -113,7 +113,7 @@ class ULinkParameters {
 
   /// Creates a new set of ULink parameters
   ULinkParameters({
-    this.type,
+    this.type = 'dynamic',
     this.slug,
     this.iosUrl,
     this.androidUrl,
@@ -175,7 +175,7 @@ class ULinkParameters {
   Map<String, dynamic> toJson() {
     final Map<String, dynamic> data = {};
 
-    if (type != null) data['type'] = type;
+    data['type'] = type;
     if (slug != null) data['slug'] = slug;
     if (iosUrl != null) data['iosUrl'] = iosUrl;
     if (androidUrl != null) data['androidUrl'] = androidUrl;
