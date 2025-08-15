@@ -106,13 +106,6 @@ class _UnifiedLinkExampleState extends State<UnifiedLinkExample> {
           androidUrl:
               'https://play.google.com/store/apps/details?id=com.example.myapp',
           fallbackUrl: 'https://myapp.com/product/123',
-          parameters: {
-            'utm_source': 'email',
-            'campaign': 'summer',
-          },
-          metadata: {
-            'custom_param': 'value',
-          },
         ),
       );
 

@@ -1,5 +1,10 @@
 # Changelog
+## 0.1.13
 
+- Updated factory constructors in `ULinkParameters`:
+  - `ULinkParameters.dynamic(...)`: removed `metadata` parameter (use `socialMediaTags` for OG tags; other custom data should go in `parameters`).
+  - `ULinkParameters.unified(...)`: now only accepts platform URLs and optional `socialMediaTags` (removed `parameters` and `metadata`).
+- Note: If you previously passed `parameters`/`metadata` to `unified(...)`, migrate to dynamic links.
 
 ## 0.1.12
 
@@ -38,42 +43,42 @@
 
 ## 0.1.4
 
-  - Fixed issue with unified links and added getInitialLink method
+- Fixed issue with unified links and added getInitialLink method
 
 ## 0.1.3
 
-  - Changed dependecies
+- Changed dependecies
 
 ## 0.1.2
 
-  - changed package_info to package_info_plus
+- changed package_info to package_info_plus
 
 ## 0.1.1
 
-### 🔧 Improvements
+### Improvements
 
-* **Removed deepLink Field**: Removed unused `deepLink` field from `ULinkParameters` class and all related documentation
-* **Factory Methods**: Added `ULinkParameters.dynamic()` and `ULinkParameters.unified()` factory constructors for cleaner API
+- Removed deepLink Field: Removed unused `deepLink` field from `ULinkParameters` class and all related documentation
+- Factory Methods: Added `ULinkParameters.dynamic()` and `ULinkParameters.unified()` factory constructors for cleaner API
   - Improved type safety and developer experience
   - Better IDE support with parameter validation
   - More intuitive API for creating different link types
 
-* **Path Structure Update**: Updated all examples and documentation to use slug on root path instead of `/d/slug` format
+- Path Structure Update: Updated all examples and documentation to use slug on root path instead of `/d/slug` format
   - Updated link resolution examples to use direct slug paths
   - Simplified URL structure across all documentation
   - Updated test files to reflect new path format
 
-### 📚 Documentation
+### Documentation
 
-* Updated README.md with factory method examples and benefits
-* Updated UNIFIED_LINKS.md to use new factory constructors
-* Added comprehensive documentation for factory method usage
-* Updated all code examples to demonstrate cleaner API patterns
+- Updated README.md with factory method examples and benefits
+- Updated UNIFIED_LINKS.md to use new factory constructors
+- Added comprehensive documentation for factory method usage
+- Updated all code examples to demonstrate cleaner API patterns
 
-### 🗂️ Breaking Changes
+### Breaking Changes
 
-* Removed `deepLink` field from `ULinkParameters` (was unused)
-* Updated URL path structure from `/d/slug` to `/slug` format
+- Removed `deepLink` field from `ULinkParameters` (was unused)
+- Updated URL path structure from `/d/slug` to `/slug` format
 
 ## 0.1.0
 

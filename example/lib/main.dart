@@ -123,21 +123,16 @@ class _HomePageState extends State<HomePage> {
     try {
       // Create a dynamic link with social media tags
       final response = await _ulink.createLink(
-        ULinkParameters(
+        ULinkParameters.unified(
           slug: 'product-123',
-          iosFallbackUrl: 'myapp://product/123',
-          androidFallbackUrl: 'myapp://product/123',
+          iosUrl: 'myapp://product/123',
+          androidUrl: 'myapp://product/123',
           fallbackUrl: 'https://myapp.com/product/123',
           socialMediaTags: SocialMediaTags(
             ogTitle: 'Check out this awesome product!',
             ogDescription: 'This is a detailed description of the product.',
             ogImage: 'https://example.com/product-image.jpg',
           ),
-          // You can still include other parameters
-          parameters: {
-            'utm_source': 'share_button',
-            'campaign': 'summer_sale',
-          },
         ),
       );
 

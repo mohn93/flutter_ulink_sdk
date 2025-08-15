@@ -215,13 +215,11 @@ final unifiedResponse = await ULink.instance.createLink(
     iosUrl: 'https://apps.apple.com/app/my-app/id123456789',
     androidUrl: 'https://play.google.com/store/apps/details?id=com.example.myapp',
     fallbackUrl: 'https://myapp.com/product/123',
-    parameters: {
-      'utm_source': 'email',
-      'campaign': 'summer',
-    },
-    metadata: {
-      'custom_param': 'value',
-    },
+    // Unified links now accept only platform URLs and optional social media tags
+    socialMediaTags: SocialMediaTags(
+      ogTitle: 'Awesome product',
+      ogDescription: 'Works on any platform',
+    ),
   ),
 );
 
@@ -246,9 +244,10 @@ Creates dynamic links for in-app deep linking:
 ### ULinkParameters.unified()
 Creates unified links for external redirects:
 - **Purpose**: Simple platform-based redirects for marketing campaigns
-- **Required fields**: `iosUrl`, `androidUrl`
-- **Platform URLs**: `iosUrl`, `androidUrl`, `fallbackUrl`
-- **Additional**: `parameters` for tracking, `metadata` for custom data
+- **Required fields**: `iosUrl`, `androidUrl`, `fallbackUrl`
+- **Additional**: `socialMediaTags` for sharing metadata
+
+Note: `parameters` and `metadata` are intentionally not supported in unified links. For app-parameterized deep linking, use `ULinkParameters.dynamic(...)`.
 
 ### Benefits of Factory Methods
 - **Type Safety**: Ensures correct fields are used for each link type

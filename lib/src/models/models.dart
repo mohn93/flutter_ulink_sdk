@@ -134,7 +134,6 @@ class ULinkParameters {
     String? fallbackUrl,
     Map<String, dynamic>? parameters,
     SocialMediaTags? socialMediaTags,
-    Map<String, dynamic>? metadata,
   }) {
     return ULinkParameters(
       type: 'dynamic',
@@ -144,7 +143,6 @@ class ULinkParameters {
       fallbackUrl: fallbackUrl,
       parameters: parameters,
       socialMediaTags: socialMediaTags,
-      metadata: metadata,
     );
   }
 
@@ -155,9 +153,7 @@ class ULinkParameters {
     required String iosUrl,
     required String androidUrl,
     required String fallbackUrl,
-    Map<String, dynamic>? parameters,
     SocialMediaTags? socialMediaTags,
-    Map<String, dynamic>? metadata,
   }) {
     return ULinkParameters(
       type: 'unified',
@@ -165,9 +161,7 @@ class ULinkParameters {
       iosUrl: iosUrl,
       androidUrl: androidUrl,
       fallbackUrl: fallbackUrl,
-      parameters: parameters,
       socialMediaTags: socialMediaTags,
-      metadata: metadata,
     );
   }
 
@@ -188,7 +182,7 @@ class ULinkParameters {
     // Handle regular parameters (non-social media)
     final Map<String, dynamic> regularParameters = {};
     if (parameters != null) {
-      // Filter out social media parameters from regular parameters
+      // Filter out social media parameters fdcrom regular parameters
       parameters!.forEach((key, value) {
         if (!key.startsWith('og') && !_isSocialMediaParameter(key)) {
           regularParameters[key] = value;
