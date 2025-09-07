@@ -1,4 +1,7 @@
 # Changelog
+
+## 0.1.14
+- Added domain parameter to ULinkParameters factory constructors
 ## 0.1.13
 
 - Updated factory constructors in `ULinkParameters`:

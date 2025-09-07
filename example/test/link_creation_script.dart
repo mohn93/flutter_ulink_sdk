@@ -22,6 +22,9 @@ void main() async {
   try {
     // Test 1: Basic link creation
     debugPrint('\nTest 1: Creating a basic link...');
+    var stopwatch = Stopwatch()..start();
+    debugPrint('🔗 Starting basic link creation...');
+
     var response = await ulink.createLink(
       ULinkParameters(
         slug: 'script-test-basic',
@@ -31,10 +34,15 @@ void main() async {
       ),
     );
 
-    _debugPrintResponse('Basic link', response);
+    stopwatch.stop();
+    _debugPrintResponseWithTiming(
+        'Basic link', response, stopwatch.elapsedMilliseconds);
 
     // Test 2: Link with social media tags
     debugPrint('\nTest 2: Creating a link with social media tags...');
+    stopwatch = Stopwatch()..start();
+    debugPrint('🔗 Starting link creation with social media tags...');
+
     response = await ulink.createLink(
       ULinkParameters(
         slug: 'script-test-social',
@@ -49,11 +57,17 @@ void main() async {
       ),
     );
 
-    _debugPrintResponse('Social media tags link', response);
+    stopwatch.stop();
+    _debugPrintResponseWithTiming(
+        'Social media tags link', response, stopwatch.elapsedMilliseconds);
 
     // Test 3: Link with parameters including social media tags
     debugPrint(
         '\nTest 3: Creating a link with parameters including social media tags...');
+    stopwatch = Stopwatch()..start();
+    debugPrint(
+        '🔗 Starting link creation with parameters including social media tags...');
+
     response = await ulink.createLink(
       ULinkParameters(
         slug: 'script-test-params',
@@ -70,11 +84,17 @@ void main() async {
       ),
     );
 
-    _debugPrintResponse('Parameters with social media tags', response);
+    stopwatch.stop();
+    _debugPrintResponseWithTiming('Parameters with social media tags', response,
+        stopwatch.elapsedMilliseconds);
 
     // Test 4: Link with both social media tags and parameters
     debugPrint(
         '\nTest 4: Creating a link with both social media tags and parameters...');
+    stopwatch = Stopwatch()..start();
+    debugPrint(
+        '🔗 Starting link creation with both social media tags and parameters...');
+
     response = await ulink.createLink(
       ULinkParameters(
         slug: 'script-test-combined',
@@ -94,7 +114,9 @@ void main() async {
       ),
     );
 
-    _debugPrintResponse('Combined approach', response);
+    stopwatch.stop();
+    _debugPrintResponseWithTiming(
+        'Combined approach', response, stopwatch.elapsedMilliseconds);
 
     debugPrint('\nAll tests completed successfully!');
   } catch (e) {
@@ -105,15 +127,28 @@ void main() async {
   exit(0);
 }
 
-/// Helper function to debugPrint response details
-void _debugPrintResponse(String testName, ULinkResponse response) {
+/// Helper function to debugPrint response details with timing information
+void _debugPrintResponseWithTiming(
+    String testName, ULinkResponse response, int durationMs) {
   debugPrint('$testName test result:');
   debugPrint('  Success: ${response.success}');
+  debugPrint('  Duration: ${durationMs}ms');
+  debugPrint(
+      '  Performance: ${durationMs < 1000 ? 'Fast' : durationMs < 3000 ? 'Moderate' : 'Slow'}');
 
   if (response.success) {
-    debugPrint('  URL: ${response.url}');
-    debugPrint('  Data: ${response.data}');
+    debugPrint('  ✅ URL: ${response.url}');
+    debugPrint('  📊 Data: ${response.data}');
   } else {
-    debugPrint('  Error: ${response.error}');
+    debugPrint('  ❌ Error: ${response.error}');
+  }
+
+  // Add performance emojis for visual feedback
+  if (durationMs < 1000) {
+    debugPrint('  🚀 Great performance!');
+  } else if (durationMs < 3000) {
+    debugPrint('  ⚡ Good performance');
+  } else {
+    debugPrint('  🐌 Slow performance - check network connection');
   }
 }

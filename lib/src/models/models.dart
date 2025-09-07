@@ -111,6 +111,11 @@ class ULinkParameters {
   /// Metadata map for social media data
   final Map<String, dynamic>? metadata;
 
+  /// Domain host to use for the link (e.g., "example.com" or "subdomain.shared.ly")
+  /// If not provided, the system will automatically select a domain.
+  /// Required when project has multiple domains.
+  final String? domain;
+
   /// Creates a new set of ULink parameters
   ULinkParameters({
     this.type = 'dynamic',
@@ -123,6 +128,7 @@ class ULinkParameters {
     this.parameters,
     this.socialMediaTags,
     this.metadata,
+    this.domain,
   });
 
   /// Factory constructor for creating dynamic links
@@ -134,6 +140,7 @@ class ULinkParameters {
     String? fallbackUrl,
     Map<String, dynamic>? parameters,
     SocialMediaTags? socialMediaTags,
+    required String domain,
   }) {
     return ULinkParameters(
       type: 'dynamic',
@@ -143,6 +150,7 @@ class ULinkParameters {
       fallbackUrl: fallbackUrl,
       parameters: parameters,
       socialMediaTags: socialMediaTags,
+      domain: domain,
     );
   }
 
@@ -154,6 +162,7 @@ class ULinkParameters {
     required String androidUrl,
     required String fallbackUrl,
     SocialMediaTags? socialMediaTags,
+    required String domain,
   }) {
     return ULinkParameters(
       type: 'unified',
@@ -162,6 +171,7 @@ class ULinkParameters {
       androidUrl: androidUrl,
       fallbackUrl: fallbackUrl,
       socialMediaTags: socialMediaTags,
+      domain: domain,
     );
   }
 
@@ -178,6 +188,7 @@ class ULinkParameters {
       data['androidFallbackUrl'] = androidFallbackUrl;
     }
     if (fallbackUrl != null) data['fallbackUrl'] = fallbackUrl;
+    if (domain != null) data['domain'] = domain;
 
     // Handle regular parameters (non-social media)
     final Map<String, dynamic> regularParameters = {};

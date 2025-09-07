@@ -52,6 +52,7 @@ The SDK automatically distinguishes between link types:
 final response = await ULink.instance.createLink(
   ULinkParameters.dynamic(
     slug: 'my-dynamic-link',
+    domain: 'yourdomain.com', // Required: Your registered domain
     iosFallbackUrl: 'https://apps.apple.com/app/myapp',
     androidFallbackUrl: 'https://play.google.com/store/apps/details?id=com.myapp',
     fallbackUrl: 'https://example.com/profile',
@@ -70,6 +71,7 @@ final response = await ULink.instance.createLink(
 final response = await ULink.instance.createLink(
   ULinkParameters.unified(
     slug: 'my-unified-link',
+    domain: 'yourdomain.com', // Required: Your registered domain
     iosUrl: 'https://apps.apple.com/app/my-app/id123456789',
     androidUrl: 'https://play.google.com/store/apps/details?id=com.example.myapp',
     fallbackUrl: 'https://myapp.com/product/123',

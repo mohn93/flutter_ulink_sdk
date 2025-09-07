@@ -175,6 +175,8 @@ For detailed information, see [UNIFIED_LINKS.md](UNIFIED_LINKS.md).
 
 ## Creating Links
 
+> **Important**: Starting with version 0.1.14, the `domain` parameter is **required** for all link creation operations. This must be a domain that you have registered and verified in your ULink dashboard under Project → Domains.
+
 ### Dynamic Links (In-App Handling)
 
 ```dart
@@ -182,6 +184,7 @@ For detailed information, see [UNIFIED_LINKS.md](UNIFIED_LINKS.md).
 final dynamicResponse = await ULink.instance.createLink(
   ULinkParameters.dynamic(
     slug: 'my-dynamic-link',
+    domain: 'yourdomain.com', // Required: Your registered domain
     iosFallbackUrl: 'https://apps.apple.com/app/myapp',
     androidFallbackUrl: 'https://play.google.com/store/apps/details?id=com.myapp',
     fallbackUrl: 'https://example.com/profile',
@@ -212,6 +215,7 @@ if (dynamicResponse.success) {
 final unifiedResponse = await ULink.instance.createLink(
   ULinkParameters.unified(
     slug: 'my-unified-link',
+    domain: 'yourdomain.com', // Required: Your registered domain
     iosUrl: 'https://apps.apple.com/app/my-app/id123456789',
     androidUrl: 'https://play.google.com/store/apps/details?id=com.example.myapp',
     fallbackUrl: 'https://myapp.com/product/123',

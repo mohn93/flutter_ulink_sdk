@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_ulink_sdk/flutter_ulink_sdk.dart';
 
@@ -56,6 +57,10 @@ class _UnifiedLinkExampleState extends State<UnifiedLinkExample> {
   }
 
   Future<void> _createDynamicLink() async {
+    // Start timing the link creation
+    final stopwatch = Stopwatch()..start();
+    debugPrint('🔗 Starting dynamic link creation...');
+
     try {
       setState(() {
         _status = 'Creating dynamic link...';
@@ -63,6 +68,7 @@ class _UnifiedLinkExampleState extends State<UnifiedLinkExample> {
 
       final response = await ULink.instance.createLink(
         ULinkParameters.dynamic(
+            domain: 'lsapp.shared.ly',
           slug: 'dynamic-example-${DateTime.now().millisecondsSinceEpoch}',
           iosFallbackUrl: 'https://apps.apple.com/app/example',
           androidFallbackUrl:
@@ -77,23 +83,41 @@ class _UnifiedLinkExampleState extends State<UnifiedLinkExample> {
         ),
       );
 
+      // Stop timing and log the result
+      stopwatch.stop();
+      final duration = stopwatch.elapsedMilliseconds;
+
       if (response.success) {
+        debugPrint(
+            '✅ Dynamic link creation completed successfully in ${duration}ms');
+        debugPrint(
+            '📊 Performance: ${duration < 1000 ? 'Fast' : duration < 3000 ? 'Moderate' : 'Slow'} (${duration}ms)');
         setState(() {
-          _status = 'Dynamic link created: ${response.url}';
+          _status = 'Dynamic link created: ${response.url} (${duration}ms)';
         });
       } else {
+        debugPrint(
+            '❌ Dynamic link creation failed after ${duration}ms: ${response.error}');
         setState(() {
-          _status = 'Error creating dynamic link: ${response.error}';
+          _status =
+              'Error creating dynamic link: ${response.error} (${duration}ms)';
         });
       }
     } catch (e) {
+      stopwatch.stop();
+      debugPrint(
+          '💥 Dynamic link creation threw exception after ${stopwatch.elapsedMilliseconds}ms: $e');
       setState(() {
-        _status = 'Error: $e';
+        _status = 'Error: $e (${stopwatch.elapsedMilliseconds}ms)';
       });
     }
   }
 
   Future<void> _createUnifiedLink() async {
+    // Start timing the link creation
+    final stopwatch = Stopwatch()..start();
+    debugPrint('🔗 Starting unified link creation...');
+
     try {
       setState(() {
         _status = 'Creating unified link...';
@@ -106,21 +130,36 @@ class _UnifiedLinkExampleState extends State<UnifiedLinkExample> {
           androidUrl:
               'https://play.google.com/store/apps/details?id=com.example.myapp',
           fallbackUrl: 'https://myapp.com/product/123',
+          domain: 'lsapp.shared.ly'
         ),
       );
 
+      // Stop timing and log the result
+      stopwatch.stop();
+      final duration = stopwatch.elapsedMilliseconds;
+
       if (response.success) {
+        debugPrint(
+            '✅ Unified link creation completed successfully in ${duration}ms');
+        debugPrint(
+            '📊 Performance: ${duration < 1000 ? 'Fast' : duration < 3000 ? 'Moderate' : 'Slow'} (${duration}ms)');
         setState(() {
-          _status = 'Unified link created: ${response.url}';
+          _status = 'Unified link created: ${response.url} (${duration}ms)';
         });
       } else {
+        debugPrint(
+            '❌ Unified link creation failed after ${duration}ms: ${response.error}');
         setState(() {
-          _status = 'Error creating unified link: ${response.error}';
+          _status =
+              'Error creating unified link: ${response.error} (${duration}ms)';
         });
       }
     } catch (e) {
+      stopwatch.stop();
+      debugPrint(
+          '💥 Unified link creation threw exception after ${stopwatch.elapsedMilliseconds}ms: $e');
       setState(() {
-        _status = 'Error: $e';
+        _status = 'Error: $e (${stopwatch.elapsedMilliseconds}ms)';
       });
     }
   }

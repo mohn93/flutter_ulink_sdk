@@ -10,8 +10,10 @@ void main() async {
     config: ULinkConfig(
       apiKey: Environment.apiKey,
       // baseUrl: Environment.baseUrl,
+      baseUrl: 'https://ulink-dev.onrender.com',
       debug: true,
     ),
+
   );
 
   try {
@@ -120,13 +122,18 @@ class _HomePageState extends State<HomePage> {
       _isLoading = true;
     });
 
+    // Start timing the link creation
+    final stopwatch = Stopwatch()..start();
+    debugPrint('🔗 Starting link creation with social media tags...');
+
     try {
       // Create a dynamic link with social media tags
       final response = await _ulink.createLink(
         ULinkParameters.unified(
-          slug: 'product-123',
+          slug: 'product-fdsadsdd66wfa',
           iosUrl: 'myapp://product/123',
           androidUrl: 'myapp://product/123',
+          domain: 'lsapp.shared.ly',
           fallbackUrl: 'https://myapp.com/product/123',
           socialMediaTags: SocialMediaTags(
             ogTitle: 'Check out this awesome product!',
@@ -136,12 +143,33 @@ class _HomePageState extends State<HomePage> {
         ),
       );
 
+      // Stop timing and log the result
+      stopwatch.stop();
+      final duration = stopwatch.elapsedMilliseconds;
+
+      if (response.success) {
+        debugPrint(
+            '✅ Link creation with social media tags completed successfully in ${duration}ms');
+        debugPrint(
+            '📊 Performance: ${duration < 1000 ? 'Fast' : duration < 3000 ? 'Moderate' : 'Slow'} (${duration}ms)');
+      } else {
+        debugPrint(
+            '❌ Link creation with social media tags failed after ${duration}ms: ${response.error}');
+      }
+
       setState(() {
         if (response.success) {
           _createdLink = response.url!;
         } else {
           _createdLink = 'Error: ${response.error}';
         }
+      });
+    } catch (e) {
+      stopwatch.stop();
+      debugPrint(
+          '💥 Link creation with social media tags threw exception after ${stopwatch.elapsedMilliseconds}ms: $e');
+      setState(() {
+        _createdLink = 'Error: $e';
       });
     } finally {
       setState(() {
@@ -155,6 +183,10 @@ class _HomePageState extends State<HomePage> {
     setState(() {
       _isLoading = true;
     });
+
+    // Start timing the link creation
+    final stopwatch = Stopwatch()..start();
+    debugPrint('🔗 Starting link creation with parameters only...');
 
     try {
       // Create a dynamic link with social media tags in parameters
@@ -175,12 +207,33 @@ class _HomePageState extends State<HomePage> {
         ),
       );
 
+      // Stop timing and log the result
+      stopwatch.stop();
+      final duration = stopwatch.elapsedMilliseconds;
+
+      if (response.success) {
+        debugPrint(
+            '✅ Link creation with parameters completed successfully in ${duration}ms');
+        debugPrint(
+            '📊 Performance: ${duration < 1000 ? 'Fast' : duration < 3000 ? 'Moderate' : 'Slow'} (${duration}ms)');
+      } else {
+        debugPrint(
+            '❌ Link creation with parameters failed after ${duration}ms: ${response.error}');
+      }
+
       setState(() {
         if (response.success) {
           _createdLink = response.url!;
         } else {
           _createdLink = 'Error: ${response.error}';
         }
+      });
+    } catch (e) {
+      stopwatch.stop();
+      debugPrint(
+          '💥 Link creation with parameters threw exception after ${stopwatch.elapsedMilliseconds}ms: $e');
+      setState(() {
+        _createdLink = 'Error: $e';
       });
     } finally {
       setState(() {

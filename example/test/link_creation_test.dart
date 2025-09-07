@@ -18,6 +18,10 @@ void main() {
 
   group('Link Creation Tests', () {
     test('Create link with basic parameters', () async {
+      // Start timing the link creation
+      final stopwatch = Stopwatch()..start();
+      debugPrint('🔗 Starting basic link creation test...');
+
       final response = await ulink.createLink(
         ULinkParameters(
           // slug: 'test-basic-link',
@@ -28,8 +32,15 @@ void main() {
         ),
       );
 
-      // debugPrint the response for debugging
+      // Stop timing and log the result
+      stopwatch.stop();
+      final duration = stopwatch.elapsedMilliseconds;
+
+      // debugPrint the response for debugging with timing
       debugPrint('Basic link response: ${response.data}');
+      debugPrint('✅ Basic link creation completed in ${duration}ms');
+      debugPrint(
+          '📊 Performance: ${duration < 1000 ? 'Fast' : duration < 3000 ? 'Moderate' : 'Slow'} (${duration}ms)');
 
       // Verify the response
       expect(response.success, isTrue);
@@ -39,6 +50,10 @@ void main() {
 
     test('Create link with social media tags using SocialMediaTags class',
         () async {
+      // Start timing the link creation
+      final stopwatch = Stopwatch()..start();
+      debugPrint('🔗 Starting social media tags link creation test...');
+
       final response = await ulink.createLink(
         ULinkParameters(
           slug: 'test-social-tags',
@@ -53,8 +68,16 @@ void main() {
         ),
       );
 
-      // debugPrint the response for debugging
+      // Stop timing and log the result
+      stopwatch.stop();
+      final duration = stopwatch.elapsedMilliseconds;
+
+      // debugPrint the response for debugging with timing
       debugPrint('Social media tags response: ${response.data}');
+      debugPrint(
+          '✅ Social media tags link creation completed in ${duration}ms');
+      debugPrint(
+          '📊 Performance: ${duration < 1000 ? 'Fast' : duration < 3000 ? 'Moderate' : 'Slow'} (${duration}ms)');
 
       // Verify the response
       expect(response.success, isTrue);
@@ -63,6 +86,10 @@ void main() {
     });
 
     test('Create link with social media tags in parameters', () async {
+      // Start timing the link creation
+      final stopwatch = Stopwatch()..start();
+      debugPrint('🔗 Starting parameters tags link creation test...');
+
       final response = await ulink.createLink(
         ULinkParameters(
           slug: 'test-params-tags',
@@ -79,8 +106,15 @@ void main() {
         ),
       );
 
-      // debugPrint the response for debugging
+      // Stop timing and log the result
+      stopwatch.stop();
+      final duration = stopwatch.elapsedMilliseconds;
+
+      // debugPrint the response for debugging with timing
       debugPrint('Parameters tags response: ${response.data}');
+      debugPrint('✅ Parameters tags link creation completed in ${duration}ms');
+      debugPrint(
+          '📊 Performance: ${duration < 1000 ? 'Fast' : duration < 3000 ? 'Moderate' : 'Slow'} (${duration}ms)');
 
       // Verify the response
       expect(response.success, isTrue);
@@ -89,6 +123,10 @@ void main() {
     });
 
     test('Create link with both social media tags and parameters', () async {
+      // Start timing the link creation
+      final stopwatch = Stopwatch()..start();
+      debugPrint('🔗 Starting combined approach link creation test...');
+
       final response = await ulink.createLink(
         ULinkParameters(
           slug: 'test-combined',
@@ -108,8 +146,16 @@ void main() {
         ),
       );
 
-      // debugPrint the response for debugging
+      // Stop timing and log the result
+      stopwatch.stop();
+      final duration = stopwatch.elapsedMilliseconds;
+
+      // debugPrint the response for debugging with timing
       debugPrint('Combined approach response: ${response.data}');
+      debugPrint(
+          '✅ Combined approach link creation completed in ${duration}ms');
+      debugPrint(
+          '📊 Performance: ${duration < 1000 ? 'Fast' : duration < 3000 ? 'Moderate' : 'Slow'} (${duration}ms)');
 
       // Verify the response
       expect(response.success, isTrue);
