@@ -1,0 +1,4 @@
+rootProject.name = 'flutter_ulink_sdk'
+
+// ULink Android SDK is now available from Maven Central
+// No longer need to include as local project

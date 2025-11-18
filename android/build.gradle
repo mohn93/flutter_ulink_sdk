@@ -1,0 +1,82 @@
+group = "com.example.flutter_ulink_sdk"
+version = "1.0-SNAPSHOT"
+
+buildscript {
+    ext.kotlin_version = "2.1.0"
+    repositories {
+        google()
+        mavenCentral()
+    }
+
+    dependencies {
+        classpath("com.android.tools.build:gradle:8.7.3")
+        classpath("org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version")
+        classpath("org.jetbrains.kotlin:kotlin-serialization:$kotlin_version")
+    }
+}
+
+allprojects {
+    repositories {
+        if (System.getenv("ULINK_USE_LOCAL") == "true") {
+            mavenLocal()
+        }
+        google()
+        mavenCentral()
+    }
+}
+
+apply plugin: "com.android.library"
+apply plugin: "kotlin-android"
+apply plugin: "kotlinx-serialization"
+
+android {
+    namespace "com.example.flutter_ulink_sdk"
+
+    compileSdk 35
+
+    compileOptions {
+        sourceCompatibility = JavaVersion.VERSION_11
+        targetCompatibility = JavaVersion.VERSION_11
+    }
+
+    kotlinOptions {
+        jvmTarget = JavaVersion.VERSION_11
+    }
+
+    sourceSets {
+        main.java.srcDirs += "src/main/kotlin"
+        test.java.srcDirs += "src/test/kotlin"
+    }
+
+    defaultConfig {
+        minSdk = 24
+    }
+
+    dependencies {
+        implementation("androidx.core:core-ktx:1.12.0")
+        implementation("androidx.appcompat:appcompat:1.6.1")
+        implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.7.0")
+        implementation("androidx.lifecycle:lifecycle-process:2.7.0")
+        implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.7.3")
+        implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.7.3")
+        implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.0")
+        
+        // ULink Android SDK dependency from Maven Central
+        implementation "ly.ulink:ulink-sdk:1.0.3"
+        
+        testImplementation("org.jetbrains.kotlin:kotlin-test")
+        testImplementation("org.mockito:mockito-core:5.0.0")
+    }
+
+    testOptions {
+        unitTests.all {
+            useJUnitPlatform()
+
+            testLogging {
+               events "passed", "skipped", "failed", "standardOut", "standardError"
+               outputs.upToDateWhen {false}
+               showStandardStreams = true
+            }
+        }
+    }
+}

@@ -1,297 +1,572 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_ulink_sdk/flutter_ulink_sdk.dart';
-import 'config/env.dart';
+import 'package:flutter_ulink_sdk/models/models.dart';
+import 'dart:async';
 
-void main() async {
-  WidgetsFlutterBinding.ensureInitialized();
-
-  // Initialize the SDK using example app's environment configuration
-  await ULink.initialize(
-    config: ULinkConfig(
-      apiKey: Environment.apiKey,
-      // baseUrl: Environment.baseUrl,
-      baseUrl: 'https://ulink-dev.onrender.com',
-      debug: true,
-    ),
-
-  );
-
-  try {
-    // Create a dynamic link with social media tags
-    // final response = await ulink.createLink(
-    //   ULinkParameters(
-    //     slug: 'product-123',
-    //     iosFallbackUrl: 'myapp://product/123',
-    //     androidFallbackUrl: 'myapp://product/123',
-    //     fallbackUrl: 'https://myapp.com/product/123',
-    //     socialMediaTags: SocialMediaTags(
-    //       ogTitle: 'Check out this awesome product!',
-    //       ogDescription: 'This is a detailed description of the product.',
-    //       ogImage: 'https://example.com/product-image.jpg',
-    //     ),
-    //     // You can still include other parameters
-    //     parameters: {
-    //       'utm_source': 'share_button',
-    //       'campaign': 'summer_sale',
-    //     },
-    //   ),
-    // );
-
-    // setState(() {
-    // if (response.success) {
-    // _createdLink = response.url!;
-    // } else {
-    // _createdLink = 'Error: ${response.error}';
-    // }
-    // });
-  } finally {
-    // setState(() {
-    //   _isLoading = false;
-    // });
-  }
+void main() {
   runApp(const MyApp());
 }
 
-class MyApp extends StatelessWidget {
+class MyApp extends StatefulWidget {
   const MyApp({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'ULink SDK Example',
-      theme: ThemeData(
-        primarySwatch: Colors.blue,
-      ),
-      home: const HomePage(),
-    );
-  }
+  State<MyApp> createState() => _MyAppState();
 }
 
-class HomePage extends StatefulWidget {
-  const HomePage({super.key});
+class _MyAppState extends State<MyApp> {
+  final _sdk = ULink.instance;
+  bool _isInitialized = false;
+  String _status = 'Not initialized';
+  String? _sessionId;
+  String? _installationId;
+  ULinkResponse? _createdLink;
+  ULinkResolvedData? _resolvedData;
+  SessionState _sessionState = SessionState.idle;
 
-  @override
-  _HomePageState createState() => _HomePageState();
-}
-
-class _HomePageState extends State<HomePage> {
-  final ULink _ulink = ULink.instance;
-  ULinkResolvedData? _lastLinkData;
-  String _createdLink = 'No link created yet';
-  bool _isLoading = false;
+  StreamSubscription<ULinkResolvedData>? _dynamicLinkSubscription;
+  StreamSubscription<ULinkResolvedData>? _unifiedLinkSubscription;
+  final List<String> _linkEvents = [];
 
   @override
   void initState() {
     super.initState();
-
-    _ulink.getInitialDeepLink().then((data) {
-      setState(() {
-        _lastLinkData = data;
-      });
-
-      // Process the initial link parameters
-      if (data != null) {
-        final params = data.parameters;
-        debugPrint('Initial link parameters: $params');
-      }
-    });
-    // Listen for incoming links
-    _ulink.onLink.listen((ULinkResolvedData data) {
-      setState(() {
-        _lastLinkData = data;
-      });
-
-      // Process the link parameters
-      final params = data.parameters;
-      debugPrint('Link parameters: $params');
-    });
-    _ulink.onUnifiedLink.listen((ULinkResolvedData data) {
-      setState(() {
-        _lastLinkData = data;
-      });
-
-      // Process the unified link parameters
-      final params = data.parameters;
-      debugPrint('Unified link parameters: $params');
+    // Auto-initialize SDK for testing
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _initializeSDK();
     });
   }
 
-  // Example 1: Create a link with social media tags using the SocialMediaTags class
-  Future<void> _createLinkWithSocialMediaTags() async {
-    setState(() {
-      _isLoading = true;
+  @override
+  void dispose() {
+    _dynamicLinkSubscription?.cancel();
+    _unifiedLinkSubscription?.cancel();
+    super.dispose();
+  }
+
+  void _setupLinkListeners() {
+    debugPrint('DEBUG: Setting up link listeners');
+
+    // Cancel existing subscriptions to prevent duplicates
+    _dynamicLinkSubscription?.cancel();
+    _unifiedLinkSubscription?.cancel();
+
+    _dynamicLinkSubscription = _sdk.onDynamicLink.listen((linkData) {
+      debugPrint('DEBUG: Dynamic link event received: ${linkData.toJson()}');
+      setState(() {
+        _linkEvents.insert(
+          0,
+          'Dynamic Link: ${linkData.slug ?? "Unknown"} - ${linkData.parameters}',
+        );
+        _resolvedData = linkData;
+      });
+      debugPrint('DEBUG: UI updated with dynamic link event');
     });
 
-    // Start timing the link creation
-    final stopwatch = Stopwatch()..start();
-    debugPrint('🔗 Starting link creation with social media tags...');
+    _unifiedLinkSubscription = _sdk.onUnifiedLink.listen((linkData) {
+      debugPrint('DEBUG: Unified link event received: ${linkData.toJson()}');
+      setState(() {
+        _linkEvents.insert(
+          0,
+          'Unified Link: ${linkData.slug ?? "Unknown"} - ${linkData.parameters}',
+        );
+        _resolvedData = linkData;
+      });
+      debugPrint('DEBUG: UI updated with unified link event');
+    });
+    debugPrint('DEBUG: Link listeners setup complete');
+  }
 
+  Future<void> _initializeSDK() async {
+    if (_isInitialized) {
+      debugPrint('DEBUG: SDK already initialized, skipping...');
+      return;
+    }
+
+    debugPrint('DEBUG: Starting SDK initialization...');
     try {
-      // Create a dynamic link with social media tags
-      final response = await _ulink.createLink(
-        ULinkParameters.unified(
-          slug: 'product-fdsadsdd66wfa',
-          iosUrl: 'myapp://product/123',
-          androidUrl: 'myapp://product/123',
-          domain: 'lsapp.shared.ly',
-          fallbackUrl: 'https://myapp.com/product/123',
-          socialMediaTags: SocialMediaTags(
-            ogTitle: 'Check out this awesome product!',
-            ogDescription: 'This is a detailed description of the product.',
-            ogImage: 'https://example.com/product-image.jpg',
-          ),
-        ),
+      final config = ULinkConfig(
+        apiKey:
+            'ulk_5653d6d2c53cbbc7c1d09a621cf439782e795c0c437abee6', // Replace with your actual API key
+        debug: true,
+        enableDeepLinkIntegration:
+            true, // Explicitly enable deep link integration
       );
 
-      // Stop timing and log the result
-      stopwatch.stop();
-      final duration = stopwatch.elapsedMilliseconds;
+      debugPrint(
+        'DEBUG: Config created: ${config.apiKey}, ${config.baseUrl}, ${config.debug}',
+      );
 
-      if (response.success) {
-        debugPrint(
-            '✅ Link creation with social media tags completed successfully in ${duration}ms');
-        debugPrint(
-            '📊 Performance: ${duration < 1000 ? 'Fast' : duration < 3000 ? 'Moderate' : 'Slow'} (${duration}ms)');
-      } else {
-        debugPrint(
-            '❌ Link creation with social media tags failed after ${duration}ms: ${response.error}');
+      await _sdk.initialize(config);
+      debugPrint('DEBUG: SDK initialized successfully');
+
+      final installationId = await _sdk.getInstallationId();
+      debugPrint('DEBUG: Installation ID: $installationId');
+
+      final sessionState = await _sdk.getSessionState();
+      debugPrint('DEBUG: Session state: $sessionState');
+
+      // Setup link listeners after SDK is initialized
+      _setupLinkListeners();
+
+      // Check for initial deep link after listeners are set up
+      try {
+        final initialData = await _sdk.getInitialDeepLink();
+        if (initialData != null) {
+          debugPrint('DEBUG: Initial deep link found: ${initialData.toJson()}');
+          setState(() {
+            _linkEvents.insert(
+              0,
+              'Initial Link: ${initialData.slug ?? "Unknown"} - ${initialData.parameters}',
+            );
+            _resolvedData = initialData;
+          });
+        }
+      } catch (e) {
+        debugPrint('DEBUG: Error getting initial deep link: $e');
       }
 
       setState(() {
-        if (response.success) {
-          _createdLink = response.url!;
-        } else {
-          _createdLink = 'Error: ${response.error}';
-        }
+        _isInitialized = true;
+        _status = 'Initialized successfully';
+        _installationId = installationId;
+        _sessionState = sessionState;
       });
     } catch (e) {
-      stopwatch.stop();
-      debugPrint(
-          '💥 Link creation with social media tags threw exception after ${stopwatch.elapsedMilliseconds}ms: $e');
+      debugPrint('DEBUG: Initialization error: $e');
       setState(() {
-        _createdLink = 'Error: $e';
-      });
-    } finally {
-      setState(() {
-        _isLoading = false;
+        _status = 'Initialization failed: $e';
       });
     }
   }
 
-  // Example 2: Create a link with social media tags directly in the parameters
-  Future<void> _createLinkWithParametersOnly() async {
-    setState(() {
-      _isLoading = true;
-    });
-
-    // Start timing the link creation
-    final stopwatch = Stopwatch()..start();
-    debugPrint('🔗 Starting link creation with parameters only...');
-
+  Future<void> _endSession() async {
+    debugPrint('DEBUG: _endSession called');
     try {
-      // Create a dynamic link with social media tags in parameters
-      final response = await _ulink.createLink(
-        ULinkParameters(
-          slug: 'example-link',
-          iosFallbackUrl: 'myapp://product/123',
-          androidFallbackUrl: 'myapp://product/123',
-          fallbackUrl: 'https://myapp.com/product/123',
-          parameters: {
-            'utm_source': 'example_app',
-            'campaign': 'test',
-            // Social media tags directly in parameters
-            'ogTitle': 'Amazing Product Title',
-            'ogDescription': 'Product description for social sharing',
-            'ogImage': 'https://example.com/images/product.jpg',
-          },
+      debugPrint('DEBUG: Calling SDK endSession');
+      await _sdk.endSession();
+      debugPrint('DEBUG: Session ended successfully');
+
+      final sessionState = await _sdk.getSessionState();
+      debugPrint('DEBUG: Session state after end: $sessionState');
+
+      setState(() {
+        _sessionId = null;
+        _sessionState = sessionState;
+        _status = 'Session ended';
+      });
+      debugPrint('DEBUG: UI updated after session end');
+    } catch (e) {
+      debugPrint('DEBUG: Failed to end session - Error: $e');
+      debugPrint('DEBUG: Error type: ${e.runtimeType}');
+      setState(() {
+        _status = 'Failed to end session: $e';
+      });
+    }
+  }
+
+  Future<void> _createDynamicLink() async {
+    debugPrint('DEBUG: _createDynamicLink called');
+    try {
+      final parameters = ULinkParameters.dynamic(
+        domain: 'iossdk.shared.ly',
+        slug: 'example-dynamic-link1234',
+        iosFallbackUrl: 'https://apps.apple.com/app/your-app',
+        androidFallbackUrl:
+            'https://play.google.com/store/apps/details?id=your.app',
+        fallbackUrl: 'https://your-website.com',
+        parameters: {'product_id': '12345', 'campaign': 'summer_sale'},
+        socialMediaTags: SocialMediaTags(
+          ogTitle: 'Check out this amazing product!',
+          ogDescription: 'Don\'t miss our summer sale with great discounts.',
+          ogImage: 'https://your-website.com/images/product.jpg',
         ),
       );
+      debugPrint(
+        'DEBUG: Dynamic link parameters created: ${parameters.toJson()}',
+      );
 
-      // Stop timing and log the result
-      stopwatch.stop();
-      final duration = stopwatch.elapsedMilliseconds;
-
-      if (response.success) {
-        debugPrint(
-            '✅ Link creation with parameters completed successfully in ${duration}ms');
-        debugPrint(
-            '📊 Performance: ${duration < 1000 ? 'Fast' : duration < 3000 ? 'Moderate' : 'Slow'} (${duration}ms)');
-      } else {
-        debugPrint(
-            '❌ Link creation with parameters failed after ${duration}ms: ${response.error}');
-      }
+      debugPrint('DEBUG: Calling SDK createLink for dynamic link');
+      final response = await _sdk.createLink(parameters);
+      debugPrint(
+        'DEBUG: createLink response - success: ${response.success}, url: ${response.url}, error: ${response.error}',
+      );
 
       setState(() {
+        _createdLink = response;
         if (response.success) {
-          _createdLink = response.url!;
+          _status = 'Dynamic link created: ${response.url}';
         } else {
-          _createdLink = 'Error: ${response.error}';
+          _status = 'Failed to create link: ${response.error}';
         }
       });
+      debugPrint('DEBUG: UI updated with created dynamic link');
     } catch (e) {
-      stopwatch.stop();
-      debugPrint(
-          '💥 Link creation with parameters threw exception after ${stopwatch.elapsedMilliseconds}ms: $e');
+      debugPrint('DEBUG: Failed to create dynamic link - Error: $e');
+      debugPrint('DEBUG: Error type: ${e.runtimeType}');
       setState(() {
-        _createdLink = 'Error: $e';
+        _status = 'Failed to create dynamic link: $e';
       });
-    } finally {
+    }
+  }
+
+  Future<void> _createUnifiedLink() async {
+    debugPrint('DEBUG: _createUnifiedLink called');
+    try {
+      final parameters = ULinkParameters.unified(
+        domain: 'libyanspider.shared.ly',
+        slug: 'example-unified-link',
+        iosUrl: 'https://apps.apple.com/app/your-app',
+        androidUrl: 'https://play.google.com/store/apps/details?id=your.app',
+        fallbackUrl: 'https://your-website.com',
+        parameters: {'page': 'home', 'ref': 'unified_link'},
+      );
+      debugPrint(
+        'DEBUG: Unified link parameters created: ${parameters.toJson()}',
+      );
+
+      debugPrint('DEBUG: Calling SDK createLink for unified link');
+      final response = await _sdk.createLink(parameters);
+      debugPrint(
+        'DEBUG: createLink response - success: ${response.success}, url: ${response.url}, error: ${response.error}',
+      );
+
       setState(() {
-        _isLoading = false;
+        _createdLink = response;
+        if (response.success) {
+          _status = 'Unified link created: ${response.url}';
+        } else {
+          _status = 'Failed to create link: ${response.error}';
+        }
+      });
+      debugPrint('DEBUG: UI updated with created unified link');
+    } catch (e) {
+      debugPrint('DEBUG: Failed to create unified link - Error: $e');
+      debugPrint('DEBUG: Error type: ${e.runtimeType}');
+      setState(() {
+        _status = 'Failed to create unified link: $e';
+      });
+    }
+  }
+
+  Future<void> _resolveLink() async {
+    debugPrint('DEBUG: _resolveLink called');
+    if (_createdLink?.url == null) {
+      debugPrint('DEBUG: No link to resolve - _createdLink is null');
+      setState(() {
+        _status = 'No link to resolve. Create a link first.';
+      });
+      return;
+    }
+
+    try {
+      debugPrint('DEBUG: Resolving link: ${_createdLink!.url}');
+      final response = await _sdk.resolveLink(_createdLink!.url!);
+      debugPrint('DEBUG: resolveLink response - success: ${response.success}');
+
+      if (response.success && response.data != null) {
+        final resolvedData = ULinkResolvedData.fromJson(response.data!);
+        debugPrint(
+          'DEBUG: Link resolved successfully: ${resolvedData.toJson()}',
+        );
+
+        setState(() {
+          _resolvedData = resolvedData;
+          _status = 'Link resolved successfully';
+        });
+        debugPrint('DEBUG: UI updated with resolved data');
+      } else {
+        setState(() {
+          _status = 'Failed to resolve link: ${response.error}';
+        });
+      }
+    } catch (e) {
+      debugPrint('DEBUG: Failed to resolve link - Error: $e');
+      debugPrint('DEBUG: Error type: ${e.runtimeType}');
+      setState(() {
+        _status = 'Failed to resolve link: $e';
+      });
+    }
+  }
+
+  Future<void> _getLastLinkData() async {
+    debugPrint('DEBUG: _getLastLinkData called');
+    try {
+      debugPrint('DEBUG: Calling SDK getLastLinkData');
+      final lastLinkData = await _sdk.getLastLinkData();
+      debugPrint(
+        'DEBUG: Last link data retrieved: ${lastLinkData?.toJson() ?? "null"}',
+      );
+
+      setState(() {
+        _status = lastLinkData != null
+            ? 'Last link data retrieved'
+            : 'No last link data available';
+      });
+      debugPrint('DEBUG: UI updated with last link data');
+    } catch (e) {
+      debugPrint('DEBUG: Failed to get last link data - Error: $e');
+      debugPrint('DEBUG: Error type: ${e.runtimeType}');
+      setState(() {
+        _status = 'Failed to get last link data: $e';
       });
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('ULink SDK Example'),
-      ),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text(
-              'Last Received Link:',
-              style: TextStyle(fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 8),
-            _lastLinkData == null
-                ? const Text('No link received yet')
-                : Column(
+    return MaterialApp(
+      title: 'ULink Bridge SDK Example',
+      theme: ThemeData(primarySwatch: Colors.blue, useMaterial3: true),
+      home: Scaffold(
+        appBar: AppBar(
+          title: const Text('ULink Bridge SDK Example'),
+          backgroundColor: Theme.of(context).colorScheme.inversePrimary,
+        ),
+        body: SingleChildScrollView(
+          padding: const EdgeInsets.all(16.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              // Status Card
+              Card(
+                child: Padding(
+                  padding: const EdgeInsets.all(16.0),
+                  child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text('Slug: ${_lastLinkData!.slug ?? 'N/A'}'),
                       Text(
-                          'Fallback URL: ${_lastLinkData!.fallbackUrl ?? 'N/A'}'),
-                      if (_lastLinkData!.parameters != null)
-                        Text('Parameters: ${_lastLinkData!.parameters}'),
+                        'Status',
+                        style: Theme.of(context).textTheme.titleLarge,
+                      ),
+                      const SizedBox(height: 8),
+                      Text(_status),
+                      const SizedBox(height: 8),
+                      Text('Initialized: $_isInitialized'),
+                      if (_installationId != null)
+                        Text('Installation ID: $_installationId'),
+                      if (_sessionId != null) Text('Session ID: $_sessionId'),
+                      Text('Session State: ${_sessionState.value}'),
                     ],
                   ),
-            const SizedBox(height: 24),
-            const Text(
-              'Created Link:',
-              style: TextStyle(fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 8),
-            Text(_createdLink),
-            const SizedBox(height: 24),
-            ElevatedButton(
-              onPressed: _isLoading ? null : _createLinkWithSocialMediaTags,
-              child: _isLoading
-                  ? const CircularProgressIndicator()
-                  : const Text('Create Link with SocialMediaTags'),
-            ),
-            const SizedBox(height: 16),
-            ElevatedButton(
-              onPressed: _isLoading ? null : _createLinkWithParametersOnly,
-              child: _isLoading
-                  ? const CircularProgressIndicator()
-                  : const Text('Create Link with Parameters Only'),
-            ),
-          ],
+                ),
+              ),
+
+              const SizedBox(height: 16),
+
+              // SDK Operations
+              Card(
+                child: Padding(
+                  padding: const EdgeInsets.all(16.0),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'SDK Operations',
+                        style: Theme.of(context).textTheme.titleLarge,
+                      ),
+                      const SizedBox(height: 16),
+
+                      ElevatedButton(
+                        onPressed: _isInitialized ? null : _initializeSDK,
+                        child: const Text('Initialize SDK'),
+                      ),
+
+                      const SizedBox(height: 8),
+
+                      ElevatedButton(
+                        onPressed: _isInitialized && _sessionId != null
+                            ? _endSession
+                            : null,
+                        child: const Text('End Session (Manual)'),
+                      ),
+
+                      const SizedBox(height: 8),
+
+                      Text(
+                        'Note: Sessions are automatically managed by the SDK',
+                        style: Theme.of(context).textTheme.bodySmall,
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+
+              const SizedBox(height: 16),
+
+              // Link Operations
+              Card(
+                child: Padding(
+                  padding: const EdgeInsets.all(16.0),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Link Operations',
+                        style: Theme.of(context).textTheme.titleLarge,
+                      ),
+                      const SizedBox(height: 16),
+
+                      Row(
+                        children: [
+                          Expanded(
+                            child: ElevatedButton(
+                              onPressed: _isInitialized
+                                  ? _createDynamicLink
+                                  : null,
+                              child: const Text('Create Dynamic Link'),
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: ElevatedButton(
+                              onPressed: _isInitialized
+                                  ? _createUnifiedLink
+                                  : null,
+                              child: const Text('Create Unified Link'),
+                            ),
+                          ),
+                        ],
+                      ),
+
+                      const SizedBox(height: 8),
+
+                      Row(
+                        children: [
+                          Expanded(
+                            child: ElevatedButton(
+                              onPressed:
+                                  _isInitialized &&
+                                      _createdLink?.success == true
+                                  ? _resolveLink
+                                  : null,
+                              child: const Text('Resolve Link'),
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: ElevatedButton(
+                              onPressed: _isInitialized
+                                  ? _getLastLinkData
+                                  : null,
+                              child: const Text('Get Last Link Data'),
+                            ),
+                          ),
+                        ],
+                      ),
+
+                      if (_createdLink != null) ...[
+                        const SizedBox(height: 16),
+                        Text(
+                          'Created Link Response:',
+                          style: Theme.of(context).textTheme.titleMedium,
+                        ),
+                        const SizedBox(height: 4),
+                        Text('Success: ${_createdLink!.success}'),
+                        if (_createdLink!.url != null)
+                          SelectableText(
+                            'URL: ${_createdLink!.url}',
+                            style: Theme.of(context).textTheme.bodySmall,
+                          ),
+                        if (_createdLink!.error != null)
+                          Text(
+                            'Error: ${_createdLink!.error}',
+                            style: TextStyle(color: Colors.red),
+                          ),
+                        if (_createdLink!.data != null)
+                          Text(
+                            'Data: ${_createdLink!.data?.keys.length ?? 0} fields',
+                            style: Theme.of(context).textTheme.bodySmall,
+                          ),
+                      ],
+                    ],
+                  ),
+                ),
+              ),
+
+              const SizedBox(height: 16),
+
+              // Resolved Data
+              if (_resolvedData != null)
+                Card(
+                  child: Padding(
+                    padding: const EdgeInsets.all(16.0),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Resolved Link Data',
+                          style: Theme.of(context).textTheme.titleLarge,
+                        ),
+                        const SizedBox(height: 8),
+                        Text('Slug: ${_resolvedData!.slug ?? "N/A"}'),
+                        Text('Link Type: ${_resolvedData!.linkType.name}'),
+                        Text(
+                          'Fallback URL: ${_resolvedData!.fallbackUrl ?? "N/A"}',
+                        ),
+                        if (_resolvedData!.parameters != null)
+                          Text('Parameters: ${_resolvedData!.parameters}'),
+                        if (_resolvedData!.socialMediaTags != null) ...[
+                          const SizedBox(height: 8),
+                          Text(
+                            'Social Media Tags:',
+                            style: Theme.of(context).textTheme.titleMedium,
+                          ),
+                          Text(
+                            'Title: ${_resolvedData!.socialMediaTags!.ogTitle ?? "N/A"}',
+                          ),
+                          Text(
+                            'Description: ${_resolvedData!.socialMediaTags!.ogDescription ?? "N/A"}',
+                          ),
+                          Text(
+                            'Image: ${_resolvedData!.socialMediaTags!.ogImage ?? "N/A"}',
+                          ),
+                        ],
+                      ],
+                    ),
+                  ),
+                ),
+
+              const SizedBox(height: 16),
+
+              // Link Events
+              Card(
+                child: Padding(
+                  padding: const EdgeInsets.all(16.0),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Link Events (${_linkEvents.length})',
+                        style: Theme.of(context).textTheme.titleLarge,
+                      ),
+                      const SizedBox(height: 8),
+                      if (_linkEvents.isEmpty)
+                        const Text('No link events received yet')
+                      else
+                        SizedBox(
+                          height: 200,
+                          child: ListView.builder(
+                            itemCount: _linkEvents.length,
+                            itemBuilder: (context, index) {
+                              return Padding(
+                                padding: const EdgeInsets.symmetric(
+                                  vertical: 2.0,
+                                ),
+                                child: Text(
+                                  _linkEvents[index],
+                                  style: Theme.of(context).textTheme.bodySmall,
+                                ),
+                              );
+                            },
+                          ),
+                        ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );

@@ -1,0 +1,34 @@
+PODS:
+  - Flutter (1.0.0)
+  - flutter_ulink_sdk (0.0.1):
+    - Flutter
+    - ULinkSDK (~> 1.0.3)
+  - integration_test (0.0.1):
+    - Flutter
+  - ULinkSDK (1.0.3)
+
+DEPENDENCIES:
+  - Flutter (from `Flutter`)
+  - flutter_ulink_sdk (from `.symlinks/plugins/flutter_ulink_sdk/ios`)
+  - integration_test (from `.symlinks/plugins/integration_test/ios`)
+  - ULinkSDK (from `../../../ios_ulink_sdk`)
+
+EXTERNAL SOURCES:
+  Flutter:
+    :path: Flutter
+  flutter_ulink_sdk:
+    :path: ".symlinks/plugins/flutter_ulink_sdk/ios"
+  integration_test:
+    :path: ".symlinks/plugins/integration_test/ios"
+  ULinkSDK:
+    :path: "../../../ios_ulink_sdk"
+
+SPEC CHECKSUMS:
+  Flutter: cabc95a1d2626b1b06e7179b784ebcf0c0cde467
+  flutter_ulink_sdk: d28802cdc6617c4606c26c4a90f7efd9fb64e31d
+  integration_test: 4a889634ef21a45d28d50d622cf412dc6d9f586e
+  ULinkSDK: 142dbf63fc3011b7f4901ca9c27559e0bc7cb2d5
+
+PODFILE CHECKSUM: 3a60e1fcbc862d60a58208decb9bec8e5ff9ca1c
+
+COCOAPODS: 1.16.2
