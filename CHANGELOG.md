@@ -1,5 +1,8 @@
 # Changelog
 
+## 0.2.1
+- pumped version for new release
+
 ## 0.2.0
 - Change this package to be using native SDKS instead of InHouse implementation
 - Updated dependencies to latest versions
