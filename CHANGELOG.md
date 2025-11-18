@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.2.0
+- Change this package to be using native SDKS instead of InHouse implementation
+- Updated dependencies to latest versions
+
 ## 0.1.14
 - Added domain parameter to ULinkParameters factory constructors
 ## 0.1.13
