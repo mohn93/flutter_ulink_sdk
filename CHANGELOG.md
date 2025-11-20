@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.2.2
+- reference Android SDK 1.0.4 and re-export shared models
+- include latest Android manifest fixes
+
 ## 0.2.1
 - pumped version for new release
 

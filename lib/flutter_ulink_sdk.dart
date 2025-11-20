@@ -3,6 +3,8 @@ import 'dart:async';
 import 'flutter_ulink_sdk_platform_interface.dart';
 import 'models/models.dart';
 
+export 'models/models.dart';
+
 /// Flutter ULink Bridge SDK
 ///
 /// This SDK provides a bridge between Flutter and the native ULink SDKs
@@ -102,8 +104,7 @@ class ULink {
   ///
   /// Returns the initial URI or null if not available
   Future<Uri?> getInitialUri() async {
-    final uriString = await FlutterUlinkSdkPlatform.instance
-        .getInitialUri();
+    final uriString = await FlutterUlinkSdkPlatform.instance.getInitialUri();
     if (uriString != null && uriString.isNotEmpty) {
       try {
         return Uri.parse(uriString);
