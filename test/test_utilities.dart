@@ -572,6 +572,17 @@ class EnhancedMockFlutterUlinkSdkPlatform
   Stream<ULinkResolvedData> get onUnifiedLink => Stream.empty();
 
   @override
+  Stream<ULinkLogEntry> get onLog => Stream.empty();
+
+  @override
+  Future<void> checkDeferredLink() async {
+    await _simulateDelay();
+    if (!_isInitialized) {
+      throw Exception('ULink not initialized');
+    }
+  }
+
+  @override
   Stream<ULinkResolvedData> get dynamicLinkStream => Stream.empty();
 
   @override

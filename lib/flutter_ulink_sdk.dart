@@ -4,6 +4,7 @@ import 'flutter_ulink_sdk_platform_interface.dart';
 import 'models/models.dart';
 
 export 'models/models.dart';
+export 'widgets/ulink_debug_overlay.dart';
 
 /// Flutter ULink Bridge SDK
 ///
@@ -24,8 +25,18 @@ class ULink {
   /// Initializes the ULink SDK with the provided configuration
   ///
   /// [config] - Configuration object containing API key and other settings
-  Future<void> initialize(ULinkConfig config) {
-    return FlutterUlinkSdkPlatform.instance.initialize(config);
+  Future<void> initialize(ULinkConfig config) async {
+    await FlutterUlinkSdkPlatform.instance.initialize(config);
+  }
+
+  /// Checks for deferred deep links on first launch
+  Future<void> checkDeferredLink() async {
+    try {
+      // Delegate to native SDKs for consistent fingerprinting and matching logic
+      await FlutterUlinkSdkPlatform.instance.checkDeferredLink();
+    } catch (e) {
+      print('ULink: Error checking deferred link: $e');
+    }
   }
 
   /// Creates a new ULink with the specified parameters
@@ -158,5 +169,13 @@ class ULink {
   /// Listen to this stream to receive unified link data when links are opened
   Stream<ULinkResolvedData> get onUnifiedLink {
     return FlutterUlinkSdkPlatform.instance.onUnifiedLink;
+  }
+
+  /// Stream of SDK log entries for debugging
+  ///
+  /// Listen to this stream to receive log messages from the native SDK.
+  /// Only emits when debug mode is enabled in ULinkConfig.
+  Stream<ULinkLogEntry> get onLog {
+    return FlutterUlinkSdkPlatform.instance.onLog;
   }
 }

@@ -1,4 +1,4 @@
-package com.example.flutter_ulink_sdk_example
+package ly.ulink.sdk_flutter
 
 import io.flutter.embedding.android.FlutterActivity
 

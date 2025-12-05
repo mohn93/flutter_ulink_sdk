@@ -318,256 +318,262 @@ class _MyAppState extends State<MyApp> {
     return MaterialApp(
       title: 'ULink Bridge SDK Example',
       theme: ThemeData(primarySwatch: Colors.blue, useMaterial3: true),
-      home: Scaffold(
-        appBar: AppBar(
-          title: const Text('ULink Bridge SDK Example'),
-          backgroundColor: Theme.of(context).colorScheme.inversePrimary,
-        ),
-        body: SingleChildScrollView(
-          padding: const EdgeInsets.all(16.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              // Status Card
-              Card(
-                child: Padding(
-                  padding: const EdgeInsets.all(16.0),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Status',
-                        style: Theme.of(context).textTheme.titleLarge,
-                      ),
-                      const SizedBox(height: 8),
-                      Text(_status),
-                      const SizedBox(height: 8),
-                      Text('Initialized: $_isInitialized'),
-                      if (_installationId != null)
-                        Text('Installation ID: $_installationId'),
-                      if (_sessionId != null) Text('Session ID: $_sessionId'),
-                      Text('Session State: ${_sessionState.value}'),
-                    ],
-                  ),
-                ),
-              ),
-
-              const SizedBox(height: 16),
-
-              // SDK Operations
-              Card(
-                child: Padding(
-                  padding: const EdgeInsets.all(16.0),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'SDK Operations',
-                        style: Theme.of(context).textTheme.titleLarge,
-                      ),
-                      const SizedBox(height: 16),
-
-                      ElevatedButton(
-                        onPressed: _isInitialized ? null : _initializeSDK,
-                        child: const Text('Initialize SDK'),
-                      ),
-
-                      const SizedBox(height: 8),
-
-                      ElevatedButton(
-                        onPressed: _isInitialized && _sessionId != null
-                            ? _endSession
-                            : null,
-                        child: const Text('End Session (Manual)'),
-                      ),
-
-                      const SizedBox(height: 8),
-
-                      Text(
-                        'Note: Sessions are automatically managed by the SDK',
-                        style: Theme.of(context).textTheme.bodySmall,
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-
-              const SizedBox(height: 16),
-
-              // Link Operations
-              Card(
-                child: Padding(
-                  padding: const EdgeInsets.all(16.0),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Link Operations',
-                        style: Theme.of(context).textTheme.titleLarge,
-                      ),
-                      const SizedBox(height: 16),
-
-                      Row(
+      home: Stack(
+        children: [
+          Scaffold(
+            appBar: AppBar(
+              title: const Text('ULink Bridge SDK Example'),
+              backgroundColor: Theme.of(context).colorScheme.inversePrimary,
+            ),
+            body: SingleChildScrollView(
+              padding: const EdgeInsets.all(16.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  // Status Card
+                  Card(
+                    child: Padding(
+                      padding: const EdgeInsets.all(16.0),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Expanded(
-                            child: ElevatedButton(
-                              onPressed: _isInitialized
-                                  ? _createDynamicLink
-                                  : null,
-                              child: const Text('Create Dynamic Link'),
-                            ),
-                          ),
-                          const SizedBox(width: 8),
-                          Expanded(
-                            child: ElevatedButton(
-                              onPressed: _isInitialized
-                                  ? _createUnifiedLink
-                                  : null,
-                              child: const Text('Create Unified Link'),
-                            ),
-                          ),
-                        ],
-                      ),
-
-                      const SizedBox(height: 8),
-
-                      Row(
-                        children: [
-                          Expanded(
-                            child: ElevatedButton(
-                              onPressed:
-                                  _isInitialized &&
-                                      _createdLink?.success == true
-                                  ? _resolveLink
-                                  : null,
-                              child: const Text('Resolve Link'),
-                            ),
-                          ),
-                          const SizedBox(width: 8),
-                          Expanded(
-                            child: ElevatedButton(
-                              onPressed: _isInitialized
-                                  ? _getLastLinkData
-                                  : null,
-                              child: const Text('Get Last Link Data'),
-                            ),
-                          ),
-                        ],
-                      ),
-
-                      if (_createdLink != null) ...[
-                        const SizedBox(height: 16),
-                        Text(
-                          'Created Link Response:',
-                          style: Theme.of(context).textTheme.titleMedium,
-                        ),
-                        const SizedBox(height: 4),
-                        Text('Success: ${_createdLink!.success}'),
-                        if (_createdLink!.url != null)
-                          SelectableText(
-                            'URL: ${_createdLink!.url}',
-                            style: Theme.of(context).textTheme.bodySmall,
-                          ),
-                        if (_createdLink!.error != null)
                           Text(
-                            'Error: ${_createdLink!.error}',
-                            style: TextStyle(color: Colors.red),
+                            'Status',
+                            style: Theme.of(context).textTheme.titleLarge,
                           ),
-                        if (_createdLink!.data != null)
-                          Text(
-                            'Data: ${_createdLink!.data?.keys.length ?? 0} fields',
-                            style: Theme.of(context).textTheme.bodySmall,
-                          ),
-                      ],
-                    ],
-                  ),
-                ),
-              ),
-
-              const SizedBox(height: 16),
-
-              // Resolved Data
-              if (_resolvedData != null)
-                Card(
-                  child: Padding(
-                    padding: const EdgeInsets.all(16.0),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'Resolved Link Data',
-                          style: Theme.of(context).textTheme.titleLarge,
-                        ),
-                        const SizedBox(height: 8),
-                        Text('Slug: ${_resolvedData!.slug ?? "N/A"}'),
-                        Text('Link Type: ${_resolvedData!.linkType.name}'),
-                        Text(
-                          'Fallback URL: ${_resolvedData!.fallbackUrl ?? "N/A"}',
-                        ),
-                        if (_resolvedData!.parameters != null)
-                          Text('Parameters: ${_resolvedData!.parameters}'),
-                        if (_resolvedData!.socialMediaTags != null) ...[
                           const SizedBox(height: 8),
-                          Text(
-                            'Social Media Tags:',
-                            style: Theme.of(context).textTheme.titleMedium,
-                          ),
-                          Text(
-                            'Title: ${_resolvedData!.socialMediaTags!.ogTitle ?? "N/A"}',
-                          ),
-                          Text(
-                            'Description: ${_resolvedData!.socialMediaTags!.ogDescription ?? "N/A"}',
-                          ),
-                          Text(
-                            'Image: ${_resolvedData!.socialMediaTags!.ogImage ?? "N/A"}',
-                          ),
+                          Text(_status),
+                          const SizedBox(height: 8),
+                          Text('Initialized: $_isInitialized'),
+                          if (_installationId != null)
+                            Text('Installation ID: $_installationId'),
+                          if (_sessionId != null) Text('Session ID: $_sessionId'),
+                          Text('Session State: ${_sessionState.value}'),
                         ],
-                      ],
+                      ),
                     ),
                   ),
-                ),
 
-              const SizedBox(height: 16),
+                  const SizedBox(height: 16),
 
-              // Link Events
-              Card(
-                child: Padding(
-                  padding: const EdgeInsets.all(16.0),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Link Events (${_linkEvents.length})',
-                        style: Theme.of(context).textTheme.titleLarge,
-                      ),
-                      const SizedBox(height: 8),
-                      if (_linkEvents.isEmpty)
-                        const Text('No link events received yet')
-                      else
-                        SizedBox(
-                          height: 200,
-                          child: ListView.builder(
-                            itemCount: _linkEvents.length,
-                            itemBuilder: (context, index) {
-                              return Padding(
-                                padding: const EdgeInsets.symmetric(
-                                  vertical: 2.0,
-                                ),
-                                child: Text(
-                                  _linkEvents[index],
-                                  style: Theme.of(context).textTheme.bodySmall,
-                                ),
-                              );
-                            },
+                  // SDK Operations
+                  Card(
+                    child: Padding(
+                      padding: const EdgeInsets.all(16.0),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'SDK Operations',
+                            style: Theme.of(context).textTheme.titleLarge,
                           ),
-                        ),
-                    ],
+                          const SizedBox(height: 16),
+
+                          ElevatedButton(
+                            onPressed: _isInitialized ? null : _initializeSDK,
+                            child: const Text('Initialize SDK'),
+                          ),
+
+                          const SizedBox(height: 8),
+
+                          ElevatedButton(
+                            onPressed: _isInitialized && _sessionId != null
+                                ? _endSession
+                                : null,
+                            child: const Text('End Session (Manual)'),
+                          ),
+
+                          const SizedBox(height: 8),
+
+                          Text(
+                            'Note: Sessions are automatically managed by the SDK',
+                            style: Theme.of(context).textTheme.bodySmall,
+                          ),
+                        ],
+                      ),
+                    ),
                   ),
-                ),
+
+                  const SizedBox(height: 16),
+
+                  // Link Operations
+                  Card(
+                    child: Padding(
+                      padding: const EdgeInsets.all(16.0),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Link Operations',
+                            style: Theme.of(context).textTheme.titleLarge,
+                          ),
+                          const SizedBox(height: 16),
+
+                          Row(
+                            children: [
+                              Expanded(
+                                child: ElevatedButton(
+                                  onPressed: _isInitialized
+                                      ? _createDynamicLink
+                                      : null,
+                                  child: const Text('Create Dynamic Link'),
+                                ),
+                              ),
+                              const SizedBox(width: 8),
+                              Expanded(
+                                child: ElevatedButton(
+                                  onPressed: _isInitialized
+                                      ? _createUnifiedLink
+                                      : null,
+                                  child: const Text('Create Unified Link'),
+                                ),
+                              ),
+                            ],
+                          ),
+
+                          const SizedBox(height: 8),
+
+                          Row(
+                            children: [
+                              Expanded(
+                                child: ElevatedButton(
+                                  onPressed:
+                                      _isInitialized &&
+                                          _createdLink?.success == true
+                                      ? _resolveLink
+                                      : null,
+                                  child: const Text('Resolve Link'),
+                                ),
+                              ),
+                              const SizedBox(width: 8),
+                              Expanded(
+                                child: ElevatedButton(
+                                  onPressed: _isInitialized
+                                      ? _getLastLinkData
+                                      : null,
+                                  child: const Text('Get Last Link Data'),
+                                ),
+                              ),
+                            ],
+                          ),
+
+                          if (_createdLink != null) ...[
+                            const SizedBox(height: 16),
+                            Text(
+                              'Created Link Response:',
+                              style: Theme.of(context).textTheme.titleMedium,
+                            ),
+                            const SizedBox(height: 4),
+                            Text('Success: ${_createdLink!.success}'),
+                            if (_createdLink!.url != null)
+                              SelectableText(
+                                'URL: ${_createdLink!.url}',
+                                style: Theme.of(context).textTheme.bodySmall,
+                              ),
+                            if (_createdLink!.error != null)
+                              Text(
+                                'Error: ${_createdLink!.error}',
+                                style: TextStyle(color: Colors.red),
+                              ),
+                            if (_createdLink!.data != null)
+                              Text(
+                                'Data: ${_createdLink!.data?.keys.length ?? 0} fields',
+                                style: Theme.of(context).textTheme.bodySmall,
+                              ),
+                          ],
+                        ],
+                      ),
+                    ),
+                  ),
+
+                  const SizedBox(height: 16),
+
+                  // Resolved Data
+                  if (_resolvedData != null)
+                    Card(
+                      child: Padding(
+                        padding: const EdgeInsets.all(16.0),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Resolved Link Data',
+                              style: Theme.of(context).textTheme.titleLarge,
+                            ),
+                            const SizedBox(height: 8),
+                            Text('Slug: ${_resolvedData!.slug ?? "N/A"}'),
+                            Text('Link Type: ${_resolvedData!.linkType.name}'),
+                            Text(
+                              'Fallback URL: ${_resolvedData!.fallbackUrl ?? "N/A"}',
+                            ),
+                            if (_resolvedData!.parameters != null)
+                              Text('Parameters: ${_resolvedData!.parameters}'),
+                            if (_resolvedData!.socialMediaTags != null) ...[
+                              const SizedBox(height: 8),
+                              Text(
+                                'Social Media Tags:',
+                                style: Theme.of(context).textTheme.titleMedium,
+                              ),
+                              Text(
+                                'Title: ${_resolvedData!.socialMediaTags!.ogTitle ?? "N/A"}',
+                              ),
+                              Text(
+                                'Description: ${_resolvedData!.socialMediaTags!.ogDescription ?? "N/A"}',
+                              ),
+                              Text(
+                                'Image: ${_resolvedData!.socialMediaTags!.ogImage ?? "N/A"}',
+                              ),
+                            ],
+                          ],
+                        ),
+                      ),
+                    ),
+
+                  const SizedBox(height: 16),
+
+                  // Link Events
+                  Card(
+                    child: Padding(
+                      padding: const EdgeInsets.all(16.0),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Link Events (${_linkEvents.length})',
+                            style: Theme.of(context).textTheme.titleLarge,
+                          ),
+                          const SizedBox(height: 8),
+                          if (_linkEvents.isEmpty)
+                            const Text('No link events received yet')
+                          else
+                            SizedBox(
+                              height: 200,
+                              child: ListView.builder(
+                                itemCount: _linkEvents.length,
+                                itemBuilder: (context, index) {
+                                  return Padding(
+                                    padding: const EdgeInsets.symmetric(
+                                      vertical: 2.0,
+                                    ),
+                                    child: Text(
+                                      _linkEvents[index],
+                                      style: Theme.of(context).textTheme.bodySmall,
+                                    ),
+                                  );
+                                },
+                              ),
+                            ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ],
               ),
-            ],
+            ),
           ),
-        ),
+          // Debug overlay - tap the floating bug button to see SDK logs!
+          const ULinkDebugOverlay(),
+        ],
       ),
     );
   }

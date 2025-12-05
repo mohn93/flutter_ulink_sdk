@@ -225,6 +225,8 @@ public class FlutterUlinkSdkPlugin: NSObject, FlutterPlugin {
             getSessionState(result: result)
         case "getInstallationId":
             getInstallationId(result: result)
+        case "checkDeferredLink":
+            checkDeferredLink(result: result)
         case "dispose":
             dispose(result: result)
         default:
@@ -510,6 +512,20 @@ public class FlutterUlinkSdkPlugin: NSObject, FlutterPlugin {
         }
         
         result(ulink.getInstallationId())
+    }
+
+    private func checkDeferredLink(result: @escaping FlutterResult) {
+        guard let ulink = ulink else {
+            result(FlutterError(code: "NOT_INITIALIZED", message: "ULink not initialized", details: nil))
+            return
+        }
+        
+        Task {
+            await ulink.checkDeferredLink()
+            DispatchQueue.main.async {
+                result(nil)
+            }
+        }
     }
     
     private func dispose(result: @escaping FlutterResult) {
@@ -977,6 +993,8 @@ public class FlutterUlinkSdkPlugin: NSObject, FlutterPlugin {
             "socialMediaTags": socialMediaTagsMap,
             "metadata": linkData.metadata,
             "type": linkData.type,
+            "isDeferred": linkData.isDeferred,
+            "matchType": linkData.matchType,
             "resolvedAt": linkData.resolvedAt?.timeIntervalSince1970
         ]
     }

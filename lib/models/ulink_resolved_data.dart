@@ -26,6 +26,12 @@ class ULinkResolvedData {
   /// The type of link (dynamic or unified)
   final ULinkType linkType;
 
+  /// Whether this link was resolved from deferred deep linking
+  final bool isDeferred;
+
+  /// Match type for deferred links: 'deterministic', 'fingerprint', or null for regular links
+  final String? matchType;
+
   /// Raw data from the response
   final Map<String, dynamic> rawData;
 
@@ -39,6 +45,8 @@ class ULinkResolvedData {
     this.socialMediaTags,
     this.metadata,
     this.linkType = ULinkType.dynamic,
+    this.isDeferred = false,
+    this.matchType,
     required this.rawData,
   });
 
@@ -105,6 +113,8 @@ class ULinkResolvedData {
       socialMediaTags: socialMediaTags,
       metadata: metadata,
       linkType: linkType,
+      isDeferred: json['isDeferred'] == true,
+      matchType: json['matchType'],
       rawData: json,
     );
   }
@@ -113,6 +123,7 @@ class ULinkResolvedData {
   Map<String, dynamic> toJson() {
     final Map<String, dynamic> data = {
       'type': linkType == ULinkType.dynamic ? 'dynamic' : 'unified',
+      'isDeferred': isDeferred,
     };
 
     if (slug != null) data['slug'] = slug;
@@ -122,6 +133,7 @@ class ULinkResolvedData {
     if (parameters != null) data['parameters'] = parameters;
     if (socialMediaTags != null) data['socialMediaTags'] = socialMediaTags!.toJson();
     if (metadata != null) data['metadata'] = metadata;
+    if (matchType != null) data['matchType'] = matchType;
     
     // Include raw data
     data.addAll(rawData);

@@ -1,7 +1,14 @@
 # Changelog
 
+## 0.2.3
+- Add `ULinkDebugOverlay` widget for displaying SDK logs in a floating panel
+- Add `onLog` stream for real-time SDK debug log access
+- Add `ULinkLogEntry` model for structured log entries
+- Debug overlay auto-hides in release mode (use `showInRelease: true` to override)
+- Reference Android SDK 1.0.5 with full log streaming support
+
 ## 0.2.2
-- reference Android SDK 1.0.4 and re-export shared models
+- reference Android SDK 1.0.5 and re-export shared models
 - include latest Android manifest fixes
 
 ## 0.2.1

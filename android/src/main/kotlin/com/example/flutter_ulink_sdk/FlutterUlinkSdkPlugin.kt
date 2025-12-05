@@ -24,12 +24,14 @@ class FlutterUlinkSdkPlugin: FlutterPlugin, MethodCallHandler, ActivityAware, Pl
   private lateinit var channel: MethodChannel
   private lateinit var dynamicLinkEventChannel: EventChannel
   private lateinit var unifiedLinkEventChannel: EventChannel
+  private lateinit var logEventChannel: EventChannel
   private var context: Context? = null
   private var ulink: ULink? = null
   private val scope = CoroutineScope(Dispatchers.Main + SupervisorJob())
   
   private var dynamicLinkStreamHandler: StreamHandler? = null
   private var unifiedLinkStreamHandler: StreamHandler? = null
+  private var logStreamHandler: StreamHandler? = null
   private var activity: Activity? = null
   private var activityBinding: ActivityPluginBinding? = null
   private var pendingIntent: Intent? = null
@@ -58,12 +60,15 @@ class FlutterUlinkSdkPlugin: FlutterPlugin, MethodCallHandler, ActivityAware, Pl
     // Set up event channels for streams
     dynamicLinkEventChannel = EventChannel(flutterPluginBinding.binaryMessenger, "flutter_ulink_sdk/dynamic_links")
     unifiedLinkEventChannel = EventChannel(flutterPluginBinding.binaryMessenger, "flutter_ulink_sdk/unified_links")
+    logEventChannel = EventChannel(flutterPluginBinding.binaryMessenger, "flutter_ulink_sdk/logs")
     
     dynamicLinkStreamHandler = StreamHandler()
     unifiedLinkStreamHandler = StreamHandler()
+    logStreamHandler = StreamHandler()
     
     dynamicLinkEventChannel.setStreamHandler(dynamicLinkStreamHandler)
     unifiedLinkEventChannel.setStreamHandler(unifiedLinkStreamHandler)
+    logEventChannel.setStreamHandler(logStreamHandler)
   }
 
   override fun onMethodCall(call: MethodCall, result: Result) {
@@ -134,6 +139,7 @@ class FlutterUlinkSdkPlugin: FlutterPlugin, MethodCallHandler, ActivityAware, Pl
       "hasActiveSession" -> hasActiveSession(result)
       "getSessionState" -> getSessionState(result)
       "getInstallationId" -> getInstallationId(result)
+      "checkDeferredLink" -> checkDeferredLink(result)
       "dispose" -> dispose(result)
       else -> result.notImplemented()
     }
@@ -199,6 +205,19 @@ class FlutterUlinkSdkPlugin: FlutterPlugin, MethodCallHandler, ActivityAware, Pl
                     unifiedLinkStreamHandler?.sendEvent(linkDataToMap(linkData))
                 }
             }
+            
+            // Listen to log stream from Android SDK
+            scope.launch {
+                android.util.Log.d("ULinkBridge", "Starting log stream collection")
+                ulinkInstance.logStream.collect { logEntry ->
+                    logStreamHandler?.sendEvent(mapOf(
+                        "level" to logEntry.level,
+                        "tag" to logEntry.tag,
+                        "message" to logEntry.message,
+                        "timestamp" to logEntry.timestamp
+                    ))
+                }
+            }
         }
     }
     
@@ -212,6 +231,8 @@ class FlutterUlinkSdkPlugin: FlutterPlugin, MethodCallHandler, ActivityAware, Pl
             "socialMediaTags" to linkData.socialMediaTags?.let { socialMediaTagsToMap(it) },
             "metadata" to linkData.metadata?.let { jsonElementToMap(it) },
             "type" to linkData.type,
+            "isDeferred" to linkData.isDeferred,
+            "matchType" to linkData.matchType,
             "rawData" to linkData.rawData?.let { jsonObjectToMap(it) }
         )
     }
@@ -384,6 +405,16 @@ class FlutterUlinkSdkPlugin: FlutterPlugin, MethodCallHandler, ActivityAware, Pl
       result.error("GET_INSTALLATION_ID_ERROR", e.message, null)
     }
   }
+
+  private fun checkDeferredLink(result: Result) {
+    try {
+      ulink?.checkDeferredLink() ?: throw IllegalStateException("ULink not initialized")
+      result.success(null)
+    } catch (e: Exception) {
+      result.error("CHECK_DEFERRED_LINK_ERROR", e.message, null)
+    }
+  }
+
   
   private fun dispose(result: Result) {
     try {

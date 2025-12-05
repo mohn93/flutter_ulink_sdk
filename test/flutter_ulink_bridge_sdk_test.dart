@@ -32,9 +32,6 @@ class MockFlutterUlinkSdkPlatform
   Future<SessionState> getSessionState() => Future.value(SessionState.active);
 
   @override
-  Future<ULinkResolvedData?> handleDeepLink(String url) => Future.value(null);
-
-  @override
   Future<void> setInitialUri(String uri) => Future.value();
 
   @override
@@ -50,6 +47,9 @@ class MockFlutterUlinkSdkPlatform
   Future<String?> getInstallationId() => Future.value('install123');
 
   @override
+  Future<void> checkDeferredLink() => Future.value();
+
+  @override
   Future<void> dispose() => Future.value();
 
   @override
@@ -57,6 +57,9 @@ class MockFlutterUlinkSdkPlatform
 
   @override
   Stream<ULinkResolvedData> get onUnifiedLink => Stream.empty();
+
+  @override
+  Stream<ULinkLogEntry> get onLog => Stream.empty();
 
   @override
   Stream<ULinkResolvedData> get dynamicLinkStream => Stream.empty();

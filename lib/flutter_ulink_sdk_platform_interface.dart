@@ -77,6 +77,11 @@ abstract class FlutterUlinkSdkPlatform extends PlatformInterface {
     throw UnimplementedError('getInstallationId() has not been implemented.');
   }
 
+  // Deferred Deep Linking
+  Future<void> checkDeferredLink() {
+    throw UnimplementedError('checkDeferredLink() has not been implemented.');
+  }
+
   // Cleanup
   Future<void> dispose() {
     throw UnimplementedError('dispose() has not been implemented.');
@@ -97,5 +102,10 @@ abstract class FlutterUlinkSdkPlatform extends PlatformInterface {
 
   Stream<ULinkResolvedData> get onUnifiedLink {
     throw UnimplementedError('onUnifiedLink has not been implemented.');
+  }
+
+  /// Stream of log entries for debugging
+  Stream<ULinkLogEntry> get onLog {
+    throw UnimplementedError('onLog has not been implemented.');
   }
 }

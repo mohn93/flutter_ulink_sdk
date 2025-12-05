@@ -39,6 +39,10 @@ class ULinkConfig {
   /// Additional metadata
   final Map<String, dynamic>? metadata;
 
+  /// Whether to automatically check for deferred deep links on first app launch
+  /// If false, developers must manually call checkDeferredLink() when ready
+  final bool autoCheckDeferredLink;
+
   /// Creates a new ULink configuration
   ULinkConfig({
     required this.apiKey,
@@ -56,6 +60,7 @@ class ULinkConfig {
     this.timeout = 30000,
     this.retryCount = 3,
     this.metadata,
+    this.autoCheckDeferredLink = true,
   });
 
   /// Converts the configuration to a map
@@ -76,6 +81,7 @@ class ULinkConfig {
       'timeout': timeout,
       'retryCount': retryCount,
       'metadata': metadata,
+      'autoCheckDeferredLink': autoCheckDeferredLink,
     };
   }
 
@@ -106,6 +112,7 @@ class ULinkConfig {
       metadata: json['metadata'] != null
           ? Map<String, dynamic>.from(json['metadata'])
           : null,
+      autoCheckDeferredLink: json['autoCheckDeferredLink'] ?? true,
     );
   }
 }

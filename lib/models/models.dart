@@ -7,6 +7,7 @@ export 'ulink_resolved_data.dart';
 export 'ulink_response.dart';
 export 'social_media_tags.dart';
 export 'session_state.dart';
+export 'ulink_log_entry.dart';
 
 /// Enumeration for different types of links
 enum ULinkType {
