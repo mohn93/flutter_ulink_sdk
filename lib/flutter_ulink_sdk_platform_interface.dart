@@ -77,6 +77,19 @@ abstract class FlutterUlinkSdkPlatform extends PlatformInterface {
     throw UnimplementedError('getInstallationId() has not been implemented.');
   }
 
+  /// Gets the current installation info including reinstall detection data.
+  ///
+  /// If this is a reinstall, the returned object will have isReinstall=true
+  /// and previousInstallationId will contain the ID of the previous installation.
+  Future<ULinkInstallationInfo?> getInstallationInfo() {
+    throw UnimplementedError('getInstallationInfo() has not been implemented.');
+  }
+
+  /// Checks if the current installation is a reinstall.
+  Future<bool> isReinstall() {
+    throw UnimplementedError('isReinstall() has not been implemented.');
+  }
+
   // Deferred Deep Linking
   Future<void> checkDeferredLink() {
     throw UnimplementedError('checkDeferredLink() has not been implemented.');
@@ -107,5 +120,11 @@ abstract class FlutterUlinkSdkPlatform extends PlatformInterface {
   /// Stream of log entries for debugging
   Stream<ULinkLogEntry> get onLog {
     throw UnimplementedError('onLog has not been implemented.');
+  }
+
+  /// Stream of reinstall detection events.
+  /// Emits ULinkInstallationInfo when a reinstall is detected during bootstrap.
+  Stream<ULinkInstallationInfo> get onReinstallDetected {
+    throw UnimplementedError('onReinstallDetected has not been implemented.');
   }
 }

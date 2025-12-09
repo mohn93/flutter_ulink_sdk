@@ -16,6 +16,8 @@ import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 
 /**
  * Flutter bridge implementation of ULink SDK that delegates to the native Android SDK
@@ -25,17 +27,19 @@ class ULink private constructor(private val context: Context, private val config
     companion object {
         @Volatile
         private var INSTANCE: ULink? = null
+        private val mutex = Mutex()
         
-        fun initialize(context: Context, config: ULinkConfig): ULink {
-            return INSTANCE ?: synchronized(this) {
+        suspend fun initialize(context: Context, config: ULinkConfig): ULink {
+            return INSTANCE ?: mutex.withLock {
                 INSTANCE ?: run {
-                    // Initialize native SDK
+                    // Initialize native SDK (now suspend)
                     val nativeConfig = NativeULinkConfig(
                         apiKey = config.apiKey,
                         baseUrl = config.baseUrl,
                         debug = config.debug,
-                        enableDeepLinkIntegration = config.enableDeepLinkIntegration
-                        // Note: redact fields not available in bridge SDK config
+                        enableDeepLinkIntegration = config.enableDeepLinkIntegration,
+                        autoCheckDeferredLink = config.autoCheckDeferredLink ?: true,
+                        persistLastLinkData = config.persistLastLinkData ?: true
                     )
                     NativeULink.initialize(context, nativeConfig)
                     ULink(context, config).also { INSTANCE = it }

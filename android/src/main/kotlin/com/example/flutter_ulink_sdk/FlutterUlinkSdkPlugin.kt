@@ -25,6 +25,7 @@ class FlutterUlinkSdkPlugin: FlutterPlugin, MethodCallHandler, ActivityAware, Pl
   private lateinit var dynamicLinkEventChannel: EventChannel
   private lateinit var unifiedLinkEventChannel: EventChannel
   private lateinit var logEventChannel: EventChannel
+  private lateinit var reinstallEventChannel: EventChannel
   private var context: Context? = null
   private var ulink: ULink? = null
   private val scope = CoroutineScope(Dispatchers.Main + SupervisorJob())
@@ -32,6 +33,7 @@ class FlutterUlinkSdkPlugin: FlutterPlugin, MethodCallHandler, ActivityAware, Pl
   private var dynamicLinkStreamHandler: StreamHandler? = null
   private var unifiedLinkStreamHandler: StreamHandler? = null
   private var logStreamHandler: StreamHandler? = null
+  private var reinstallStreamHandler: StreamHandler? = null
   private var activity: Activity? = null
   private var activityBinding: ActivityPluginBinding? = null
   private var pendingIntent: Intent? = null
@@ -61,14 +63,17 @@ class FlutterUlinkSdkPlugin: FlutterPlugin, MethodCallHandler, ActivityAware, Pl
     dynamicLinkEventChannel = EventChannel(flutterPluginBinding.binaryMessenger, "flutter_ulink_sdk/dynamic_links")
     unifiedLinkEventChannel = EventChannel(flutterPluginBinding.binaryMessenger, "flutter_ulink_sdk/unified_links")
     logEventChannel = EventChannel(flutterPluginBinding.binaryMessenger, "flutter_ulink_sdk/logs")
+    reinstallEventChannel = EventChannel(flutterPluginBinding.binaryMessenger, "flutter_ulink_sdk/reinstall_detected")
     
     dynamicLinkStreamHandler = StreamHandler()
     unifiedLinkStreamHandler = StreamHandler()
     logStreamHandler = StreamHandler()
+    reinstallStreamHandler = StreamHandler()
     
     dynamicLinkEventChannel.setStreamHandler(dynamicLinkStreamHandler)
     unifiedLinkEventChannel.setStreamHandler(unifiedLinkStreamHandler)
     logEventChannel.setStreamHandler(logStreamHandler)
+    reinstallEventChannel.setStreamHandler(reinstallStreamHandler)
   }
 
   override fun onMethodCall(call: MethodCall, result: Result) {
@@ -139,6 +144,8 @@ class FlutterUlinkSdkPlugin: FlutterPlugin, MethodCallHandler, ActivityAware, Pl
       "hasActiveSession" -> hasActiveSession(result)
       "getSessionState" -> getSessionState(result)
       "getInstallationId" -> getInstallationId(result)
+      "getInstallationInfo" -> getInstallationInfo(result)
+      "isReinstall" -> isReinstall(result)
       "checkDeferredLink" -> checkDeferredLink(result)
       "dispose" -> dispose(result)
       else -> result.notImplemented()
@@ -154,6 +161,9 @@ class FlutterUlinkSdkPlugin: FlutterPlugin, MethodCallHandler, ActivityAware, Pl
       enableDeepLinkIntegration = config.enableDeepLinkIntegration
       
       context?.let { ctx ->
+        // Initialize is now suspend, so we need to launch it in a coroutine
+        scope.launch {
+          try {
         ulink = ULink.initialize(ctx, config)
         android.util.Log.d("ULinkBridge", "ULink initialized successfully, instance: ${ulink != null}")
         
@@ -178,6 +188,13 @@ class FlutterUlinkSdkPlugin: FlutterPlugin, MethodCallHandler, ActivityAware, Pl
         processPendingMethodCalls()
         
         result.success(true)
+          } catch (e: Exception) {
+            android.util.Log.e("ULinkBridge", "Initialization failed", e)
+            isInitialized = false
+            initializationCompleted = true
+            result.error("INITIALIZATION_ERROR", e.message ?: "Unknown error", null)
+          }
+        }
       } ?: result.error("CONTEXT_ERROR", "Context not available", null)
     } catch (e: Exception) {
       android.util.Log.e("ULinkBridge", "Initialization failed", e)
@@ -215,6 +232,21 @@ class FlutterUlinkSdkPlugin: FlutterPlugin, MethodCallHandler, ActivityAware, Pl
                         "tag" to logEntry.tag,
                         "message" to logEntry.message,
                         "timestamp" to logEntry.timestamp
+                    ))
+                }
+            }
+            
+            // Listen to reinstall detection stream from Android SDK
+            scope.launch {
+                android.util.Log.d("ULinkBridge", "Starting reinstall detection stream collection")
+                ulinkInstance.onReinstallDetected.collect { installationInfo ->
+                    android.util.Log.d("ULinkBridge", "[STREAM] Reinstall detected: previousInstallationId=${installationInfo.previousInstallationId}")
+                    reinstallStreamHandler?.sendEvent(mapOf(
+                        "installationId" to installationInfo.installationId,
+                        "isReinstall" to installationInfo.isReinstall,
+                        "previousInstallationId" to installationInfo.previousInstallationId,
+                        "reinstallDetectedAt" to installationInfo.reinstallDetectedAt,
+                        "persistentDeviceId" to installationInfo.persistentDeviceId
                     ))
                 }
             }
@@ -406,6 +438,34 @@ class FlutterUlinkSdkPlugin: FlutterPlugin, MethodCallHandler, ActivityAware, Pl
     }
   }
 
+  private fun getInstallationInfo(result: Result) {
+    try {
+      val installationInfo = ulink?.getInstallationInfo()
+      if (installationInfo != null) {
+        result.success(mapOf(
+          "installationId" to installationInfo.installationId,
+          "isReinstall" to installationInfo.isReinstall,
+          "previousInstallationId" to installationInfo.previousInstallationId,
+          "reinstallDetectedAt" to installationInfo.reinstallDetectedAt,
+          "persistentDeviceId" to installationInfo.persistentDeviceId
+        ))
+      } else {
+        result.success(null)
+      }
+    } catch (e: Exception) {
+      result.error("GET_INSTALLATION_INFO_ERROR", e.message, null)
+    }
+  }
+
+  private fun isReinstall(result: Result) {
+    try {
+      val isReinstall = ulink?.isReinstall() ?: false
+      result.success(isReinstall)
+    } catch (e: Exception) {
+      result.error("IS_REINSTALL_ERROR", e.message, null)
+    }
+  }
+
   private fun checkDeferredLink(result: Result) {
     try {
       ulink?.checkDeferredLink() ?: throw IllegalStateException("ULink not initialized")
@@ -450,12 +510,8 @@ class FlutterUlinkSdkPlugin: FlutterPlugin, MethodCallHandler, ActivityAware, Pl
       baseUrl = configMap["baseUrl"] as? String ?: "https://api.ulink.ly",
       debug = configMap["debug"] as? Boolean ?: false,
       enableDeepLinkIntegration = configMap["enableDeepLinkIntegration"] as? Boolean ?: true,
-      persistLastLinkData = configMap["persistLastLinkData"] as? Boolean ?: false,
-      lastLinkTimeToLiveSeconds = lastLinkTTLSeconds,
-      clearLastLinkOnRead = configMap["clearLastLinkOnRead"] as? Boolean ?: true,
-      redactAllParametersInLastLink = configMap["redactAllParametersInLastLink"] as? Boolean ?: false,
-      redactedParameterKeysInLastLink = (configMap["redactedParameterKeysInLastLink"] as? List<*>)
-        ?.filterIsInstance<String>() ?: emptyList()
+      autoCheckDeferredLink = configMap["autoCheckDeferredLink"] as? Boolean ?: true,
+      persistLastLinkData = configMap["persistLastLinkData"] as? Boolean ?: true
     )
   }
   

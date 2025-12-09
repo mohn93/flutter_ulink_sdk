@@ -26,7 +26,9 @@ class _MyAppState extends State<MyApp> {
 
   StreamSubscription<ULinkResolvedData>? _dynamicLinkSubscription;
   StreamSubscription<ULinkResolvedData>? _unifiedLinkSubscription;
+  StreamSubscription<ULinkInstallationInfo>? _reinstallSubscription;
   final List<String> _linkEvents = [];
+  ULinkInstallationInfo? _installationInfo;
 
   @override
   void initState() {
@@ -41,6 +43,7 @@ class _MyAppState extends State<MyApp> {
   void dispose() {
     _dynamicLinkSubscription?.cancel();
     _unifiedLinkSubscription?.cancel();
+    _reinstallSubscription?.cancel();
     super.dispose();
   }
 
@@ -77,6 +80,51 @@ class _MyAppState extends State<MyApp> {
     debugPrint('DEBUG: Link listeners setup complete');
   }
 
+  void _setupReinstallListener() {
+    debugPrint('DEBUG: Setting up reinstall detection listener');
+
+    // Cancel existing subscription to prevent duplicates
+    _reinstallSubscription?.cancel();
+
+    _reinstallSubscription = _sdk.onReinstallDetected.listen((
+      installationInfo,
+    ) {
+      debugPrint('DEBUG: Reinstall detected: ${installationInfo.toJson()}');
+      setState(() {
+        _installationInfo = installationInfo;
+        _linkEvents.insert(
+          0,
+          '🔄 Reinstall Detected! Previous: ${installationInfo.previousInstallationId ?? "Unknown"}',
+        );
+      });
+      debugPrint('DEBUG: UI updated with reinstall detection');
+    });
+
+    debugPrint('DEBUG: Reinstall detection listener setup complete');
+  }
+
+  Future<void> _fetchInstallationInfo() async {
+    debugPrint('DEBUG: Fetching installation info');
+    try {
+      final info = await _sdk.getInstallationInfo();
+      debugPrint(
+        'DEBUG: Installation info retrieved: ${info?.toJson() ?? "null"}',
+      );
+
+      setState(() {
+        _installationInfo = info;
+      });
+
+      if (info != null && info.isReinstall) {
+        debugPrint(
+          'DEBUG: This is a reinstall! Previous: ${info.previousInstallationId}',
+        );
+      }
+    } catch (e) {
+      debugPrint('DEBUG: Error fetching installation info: $e');
+    }
+  }
+
   Future<void> _initializeSDK() async {
     if (_isInitialized) {
       debugPrint('DEBUG: SDK already initialized, skipping...');
@@ -84,13 +132,21 @@ class _MyAppState extends State<MyApp> {
     }
 
     debugPrint('DEBUG: Starting SDK initialization...');
+    setState(() {
+      _status = 'Initializing...';
+    });
+
     try {
       final config = ULinkConfig(
         apiKey:
             'ulk_5653d6d2c53cbbc7c1d09a621cf439782e795c0c437abee6', // Replace with your actual API key
         debug: true,
+
+        baseUrl: 'http://10.0.2.2:3000',
         enableDeepLinkIntegration:
             true, // Explicitly enable deep link integration
+        // persistLastLinkData:
+        //     true, // Enable persistence to capture deferred links processed during initialization
       );
 
       debugPrint(
@@ -98,7 +154,7 @@ class _MyAppState extends State<MyApp> {
       );
 
       await _sdk.initialize(config);
-      debugPrint('DEBUG: SDK initialized successfully');
+      debugPrint('DEBUG: SDK initialization call completed');
 
       final installationId = await _sdk.getInstallationId();
       debugPrint('DEBUG: Installation ID: $installationId');
@@ -106,8 +162,29 @@ class _MyAppState extends State<MyApp> {
       final sessionState = await _sdk.getSessionState();
       debugPrint('DEBUG: Session state: $sessionState');
 
+      // Check if bootstrap succeeded by checking session state
+      final hasActiveSession = await _sdk.hasActiveSession();
+      final bootstrapSucceeded =
+          sessionState == SessionState.active || hasActiveSession;
+
+      if (bootstrapSucceeded) {
+        debugPrint(
+          'DEBUG: SDK initialized and bootstrap completed successfully',
+        );
+      } else {
+        debugPrint(
+          'DEBUG: SDK initialized but session not active yet (session state: $sessionState)',
+        );
+      }
+
       // Setup link listeners after SDK is initialized
       _setupLinkListeners();
+
+      // Setup reinstall detection listener
+      _setupReinstallListener();
+
+      // Fetch installation info
+      await _fetchInstallationInfo();
 
       // Check for initial deep link after listeners are set up
       try {
@@ -126,6 +203,35 @@ class _MyAppState extends State<MyApp> {
         debugPrint('DEBUG: Error getting initial deep link: $e');
       }
 
+      // Check for last link data (catches deferred links processed during initialization)
+      // This is important because deferred links may be processed during setup()
+      // before listeners are subscribed, so we check persisted data
+      try {
+        final lastLinkData = await _sdk.getLastLinkData();
+        if (lastLinkData != null) {
+          debugPrint(
+            'DEBUG: Last link data found (may be from deferred link): ${lastLinkData.toJson()}',
+          );
+          // Only add if we don't already have this link in events
+          final linkExists = _linkEvents.any(
+            (event) => event.contains(lastLinkData.slug ?? ''),
+          );
+
+          if (!linkExists) {
+            setState(() {
+              _linkEvents.insert(
+                0,
+                'Deferred Link: ${lastLinkData.slug ?? "Unknown"} - ${lastLinkData.parameters}',
+              );
+              _resolvedData = lastLinkData;
+            });
+            debugPrint('DEBUG: Added deferred link to UI from last link data');
+          }
+        }
+      } catch (e) {
+        debugPrint('DEBUG: Error getting last link data: $e');
+      }
+
       setState(() {
         _isInitialized = true;
         _status = 'Initialized successfully';
@@ -135,7 +241,9 @@ class _MyAppState extends State<MyApp> {
     } catch (e) {
       debugPrint('DEBUG: Initialization error: $e');
       setState(() {
-        _status = 'Initialization failed: $e';
+        // Don't set _isInitialized to true - allow retry
+        _isInitialized = false;
+        _status = 'Initialization failed: $e\n\nTap "Initialize SDK" to retry.';
       });
     }
   }
@@ -289,6 +397,34 @@ class _MyAppState extends State<MyApp> {
     }
   }
 
+  Widget _buildInfoRow(String label, String value, {bool isMonospace = false}) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 4.0),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          SizedBox(
+            width: 140,
+            child: Text(
+              '$label:',
+              style: Theme.of(
+                context,
+              ).textTheme.bodySmall?.copyWith(fontWeight: FontWeight.bold),
+            ),
+          ),
+          Expanded(
+            child: SelectableText(
+              value,
+              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                fontFamily: isMonospace ? 'monospace' : null,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   Future<void> _getLastLinkData() async {
     debugPrint('DEBUG: _getLastLinkData called');
     try {
@@ -319,6 +455,7 @@ class _MyAppState extends State<MyApp> {
       title: 'ULink Bridge SDK Example',
       theme: ThemeData(primarySwatch: Colors.blue, useMaterial3: true),
       home: Stack(
+        clipBehavior: Clip.none, // Ensure debug overlay is not clipped
         children: [
           Scaffold(
             appBar: AppBar(
@@ -347,14 +484,151 @@ class _MyAppState extends State<MyApp> {
                           Text('Initialized: $_isInitialized'),
                           if (_installationId != null)
                             Text('Installation ID: $_installationId'),
-                          if (_sessionId != null) Text('Session ID: $_sessionId'),
+                          if (_sessionId != null)
+                            Text('Session ID: $_sessionId'),
                           Text('Session State: ${_sessionState.value}'),
+                          if (_installationInfo != null) ...[
+                            const SizedBox(height: 8),
+                            const Divider(),
+                            const SizedBox(height: 8),
+                            Row(
+                              children: [
+                                Icon(
+                                  _installationInfo!.isReinstall
+                                      ? Icons.refresh
+                                      : Icons.check_circle,
+                                  color: _installationInfo!.isReinstall
+                                      ? Colors.orange
+                                      : Colors.green,
+                                ),
+                                const SizedBox(width: 8),
+                                Text(
+                                  _installationInfo!.isReinstall
+                                      ? 'Reinstall Detected'
+                                      : 'Fresh Install',
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    color: _installationInfo!.isReinstall
+                                        ? Colors.orange
+                                        : Colors.green,
+                                  ),
+                                ),
+                              ],
+                            ),
+                            if (_installationInfo!.isReinstall) ...[
+                              const SizedBox(height: 4),
+                              Text(
+                                'Previous Installation: ${_installationInfo!.previousInstallationId ?? "Unknown"}',
+                                style: Theme.of(context).textTheme.bodySmall,
+                              ),
+                              if (_installationInfo!.reinstallDetectedAt !=
+                                  null)
+                                Text(
+                                  'Detected At: ${_installationInfo!.reinstallDetectedAt}',
+                                  style: Theme.of(context).textTheme.bodySmall,
+                                ),
+                            ],
+                            if (_installationInfo!.persistentDeviceId != null)
+                              Text(
+                                'Persistent Device ID: ${_installationInfo!.persistentDeviceId!.substring(0, 8)}...',
+                                style: Theme.of(context).textTheme.bodySmall,
+                              ),
+                          ],
                         ],
                       ),
                     ),
                   ),
 
                   const SizedBox(height: 16),
+
+                  // Installation Info Card
+                  if (_installationInfo != null)
+                    Card(
+                      color: _installationInfo!.isReinstall
+                          ? Colors.orange.shade50
+                          : Colors.green.shade50,
+                      child: Padding(
+                        padding: const EdgeInsets.all(16.0),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              children: [
+                                Icon(
+                                  _installationInfo!.isReinstall
+                                      ? Icons.refresh
+                                      : Icons.check_circle,
+                                  color: _installationInfo!.isReinstall
+                                      ? Colors.orange
+                                      : Colors.green,
+                                  size: 28,
+                                ),
+                                const SizedBox(width: 12),
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        _installationInfo!.isReinstall
+                                            ? 'Reinstall Detected'
+                                            : 'Fresh Installation',
+                                        style: Theme.of(context)
+                                            .textTheme
+                                            .titleLarge
+                                            ?.copyWith(
+                                              fontWeight: FontWeight.bold,
+                                              color:
+                                                  _installationInfo!.isReinstall
+                                                  ? Colors.orange.shade900
+                                                  : Colors.green.shade900,
+                                            ),
+                                      ),
+                                      if (_installationInfo!.isReinstall)
+                                        Text(
+                                          'This app was reinstalled on this device',
+                                          style: Theme.of(
+                                            context,
+                                          ).textTheme.bodySmall,
+                                        ),
+                                    ],
+                                  ),
+                                ),
+                              ],
+                            ),
+                            if (_installationInfo!.isReinstall) ...[
+                              const SizedBox(height: 12),
+                              const Divider(),
+                              const SizedBox(height: 8),
+                              _buildInfoRow(
+                                'Previous Installation ID',
+                                _installationInfo!.previousInstallationId ??
+                                    'Unknown',
+                              ),
+                              if (_installationInfo!.reinstallDetectedAt !=
+                                  null)
+                                _buildInfoRow(
+                                  'Detected At',
+                                  _installationInfo!.reinstallDetectedAt!,
+                                ),
+                            ],
+                            if (_installationInfo!.persistentDeviceId !=
+                                null) ...[
+                              const SizedBox(height: 8),
+                              const Divider(),
+                              const SizedBox(height: 8),
+                              _buildInfoRow(
+                                'Persistent Device ID',
+                                '${_installationInfo!.persistentDeviceId!.substring(0, 16)}...',
+                                isMonospace: true,
+                              ),
+                            ],
+                          ],
+                        ),
+                      ),
+                    ),
+
+                  if (_installationInfo != null) const SizedBox(height: 16),
 
                   // SDK Operations
                   Card(
@@ -557,7 +831,9 @@ class _MyAppState extends State<MyApp> {
                                     ),
                                     child: Text(
                                       _linkEvents[index],
-                                      style: Theme.of(context).textTheme.bodySmall,
+                                      style: Theme.of(
+                                        context,
+                                      ).textTheme.bodySmall,
                                     ),
                                   );
                                 },
@@ -572,7 +848,11 @@ class _MyAppState extends State<MyApp> {
             ),
           ),
           // Debug overlay - tap the floating bug button to see SDK logs!
-          const ULinkDebugOverlay(),
+          // Enabled in release mode for testing
+          const ULinkDebugOverlay(
+            initialPosition: Offset(20, 100),
+            showInRelease: true, // Show even in release mode
+          ),
         ],
       ),
     );

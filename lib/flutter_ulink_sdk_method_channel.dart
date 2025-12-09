@@ -29,15 +29,24 @@ class MethodChannelFlutterUlinkSdk extends FlutterUlinkSdkPlatform {
     'flutter_ulink_sdk/logs',
   );
 
+  /// Event channel for reinstall detection events
+  @visibleForTesting
+  final reinstallEventChannel = const EventChannel(
+    'flutter_ulink_sdk/reinstall_detected',
+  );
+
   StreamSubscription<dynamic>? _dynamicLinkSubscription;
   StreamSubscription<dynamic>? _unifiedLinkSubscription;
   StreamSubscription<dynamic>? _logSubscription;
+  StreamSubscription<dynamic>? _reinstallSubscription;
   final StreamController<ULinkResolvedData> _dynamicLinkController =
       StreamController<ULinkResolvedData>.broadcast();
   final StreamController<ULinkResolvedData> _unifiedLinkController =
       StreamController<ULinkResolvedData>.broadcast();
   final StreamController<ULinkLogEntry> _logController =
       StreamController<ULinkLogEntry>.broadcast();
+  final StreamController<ULinkInstallationInfo> _reinstallController =
+      StreamController<ULinkInstallationInfo>.broadcast();
 
   @override
   Future<void> initialize(ULinkConfig config) async {
@@ -89,6 +98,22 @@ class MethodChannelFlutterUlinkSdk extends FlutterUlinkSdkPlatform {
           },
           onError: (error) {
             debugPrint('Log event channel error: $error');
+          },
+        );
+
+    _reinstallSubscription = reinstallEventChannel
+        .receiveBroadcastStream()
+        .listen(
+          (dynamic event) {
+            if (event != null) {
+              final installationInfo = ULinkInstallationInfo.fromJson(
+                Map<String, dynamic>.from(event),
+              );
+              _reinstallController.add(installationInfo);
+            }
+          },
+          onError: (error) {
+            debugPrint('Reinstall event channel error: $error');
           },
         );
   }
@@ -206,6 +231,32 @@ class MethodChannelFlutterUlinkSdk extends FlutterUlinkSdkPlatform {
   }
 
   @override
+  Future<ULinkInstallationInfo?> getInstallationInfo() async {
+    try {
+      final result = await methodChannel.invokeMethod('getInstallationInfo');
+      if (result != null && result is Map) {
+        final infoMap = Map<String, dynamic>.from(result);
+        return ULinkInstallationInfo.fromJson(infoMap);
+      }
+      return null;
+    } catch (e) {
+      debugPrint('Error getting installation info: $e');
+      return null;
+    }
+  }
+
+  @override
+  Future<bool> isReinstall() async {
+    try {
+      final result = await methodChannel.invokeMethod<bool>('isReinstall');
+      return result ?? false;
+    } catch (e) {
+      debugPrint('Error checking reinstall status: $e');
+      return false;
+    }
+  }
+
+  @override
   Future<void> checkDeferredLink() async {
     await methodChannel.invokeMethod('checkDeferredLink');
   }
@@ -215,9 +266,11 @@ class MethodChannelFlutterUlinkSdk extends FlutterUlinkSdkPlatform {
     await _dynamicLinkSubscription?.cancel();
     await _unifiedLinkSubscription?.cancel();
     await _logSubscription?.cancel();
+    await _reinstallSubscription?.cancel();
     await _dynamicLinkController.close();
     await _unifiedLinkController.close();
     await _logController.close();
+    await _reinstallController.close();
     await methodChannel.invokeMethod('dispose');
   }
 
@@ -229,4 +282,8 @@ class MethodChannelFlutterUlinkSdk extends FlutterUlinkSdkPlatform {
 
   @override
   Stream<ULinkLogEntry> get onLog => _logController.stream;
+
+  @override
+  Stream<ULinkInstallationInfo> get onReinstallDetected =>
+      _reinstallController.stream;
 }

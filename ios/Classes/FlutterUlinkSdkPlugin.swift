@@ -161,8 +161,12 @@ public class FlutterUlinkSdkPlugin: NSObject, FlutterPlugin {
     private var methodChannel: FlutterMethodChannel?
     private var dynamicLinkEventChannel: FlutterEventChannel?
     private var unifiedLinkEventChannel: FlutterEventChannel?
+    private var logEventChannel: FlutterEventChannel?
+    private var reinstallEventChannel: FlutterEventChannel?
     private var dynamicLinkStreamHandler: StreamHandler?
     private var unifiedLinkStreamHandler: StreamHandler?
+    private var logStreamHandler: StreamHandler?
+    private var reinstallStreamHandler: StreamHandler?
     private var ulink: ULink?
     private var cancellables = Set<AnyCancellable>()
     private var enableAutomaticAppDelegateIntegration = true
@@ -182,15 +186,23 @@ public class FlutterUlinkSdkPlugin: NSObject, FlutterPlugin {
         // Set up event channels for streams
         let dynamicLinkEventChannel = FlutterEventChannel(name: "flutter_ulink_sdk/dynamic_links", binaryMessenger: registrar.messenger())
         let unifiedLinkEventChannel = FlutterEventChannel(name: "flutter_ulink_sdk/unified_links", binaryMessenger: registrar.messenger())
+        let logEventChannel = FlutterEventChannel(name: "flutter_ulink_sdk/logs", binaryMessenger: registrar.messenger())
+        let reinstallEventChannel = FlutterEventChannel(name: "flutter_ulink_sdk/reinstall_detected", binaryMessenger: registrar.messenger())
         
         instance.dynamicLinkEventChannel = dynamicLinkEventChannel
         instance.unifiedLinkEventChannel = unifiedLinkEventChannel
+        instance.logEventChannel = logEventChannel
+        instance.reinstallEventChannel = reinstallEventChannel
         
         instance.dynamicLinkStreamHandler = StreamHandler()
         instance.unifiedLinkStreamHandler = StreamHandler()
+        instance.logStreamHandler = StreamHandler()
+        instance.reinstallStreamHandler = StreamHandler()
         
         dynamicLinkEventChannel.setStreamHandler(instance.dynamicLinkStreamHandler)
         unifiedLinkEventChannel.setStreamHandler(instance.unifiedLinkStreamHandler)
+        logEventChannel.setStreamHandler(instance.logStreamHandler)
+        reinstallEventChannel.setStreamHandler(instance.reinstallStreamHandler)
         
         // Set up automatic AppDelegate integration early to avoid race conditions
         if instance.enableAutomaticAppDelegateIntegration {
@@ -225,6 +237,10 @@ public class FlutterUlinkSdkPlugin: NSObject, FlutterPlugin {
             getSessionState(result: result)
         case "getInstallationId":
             getInstallationId(result: result)
+        case "getInstallationInfo":
+            getInstallationInfo(result: result)
+        case "isReinstall":
+            isReinstall(result: result)
         case "checkDeferredLink":
             checkDeferredLink(result: result)
         case "dispose":
@@ -246,7 +262,7 @@ public class FlutterUlinkSdkPlugin: NSObject, FlutterPlugin {
             
             Task {
                 do {
-                    self.ulink = await ULink.initialize(config: config)
+                    self.ulink = try await ULink.initialize(config: config)
                     
                     // Set up enhanced stream listeners with error handling
                     self.ulink?.dynamicLinkStream
@@ -258,6 +274,32 @@ public class FlutterUlinkSdkPlugin: NSObject, FlutterPlugin {
                     self.ulink?.unifiedLinkStream
                         .sink { [weak self] linkData in
                             self?.handleStreamLinkData(linkData, streamHandler: self?.unifiedLinkStreamHandler, streamType: "unified")
+                        }
+                        .store(in: &self.cancellables)
+                    
+                    // Listen to log stream
+                    self.ulink?.logStream
+                        .sink { [weak self] logEntry in
+                            self?.logStreamHandler?.sendEvent([
+                                "level": logEntry.level,
+                                "tag": logEntry.tag,
+                                "message": logEntry.message,
+                                "timestamp": logEntry.timestamp
+                            ])
+                        }
+                        .store(in: &self.cancellables)
+                    
+                    // Listen to reinstall detection stream
+                    self.ulink?.onReinstallDetected
+                        .sink { [weak self] installationInfo in
+                            print("[ULink] Reinstall detected: previousInstallationId=\(installationInfo.previousInstallationId ?? "nil")")
+                            self?.reinstallStreamHandler?.sendEvent([
+                                "installationId": installationInfo.installationId,
+                                "isReinstall": installationInfo.isReinstall,
+                                "previousInstallationId": installationInfo.previousInstallationId as Any,
+                                "reinstallDetectedAt": installationInfo.reinstallDetectedAt as Any,
+                                "persistentDeviceId": installationInfo.persistentDeviceId as Any
+                            ])
                         }
                         .store(in: &self.cancellables)
                     
@@ -512,6 +554,34 @@ public class FlutterUlinkSdkPlugin: NSObject, FlutterPlugin {
         }
         
         result(ulink.getInstallationId())
+    }
+    
+    private func getInstallationInfo(result: @escaping FlutterResult) {
+        guard let ulink = ulink else {
+            result(FlutterError(code: "NOT_INITIALIZED", message: "ULink not initialized", details: nil))
+            return
+        }
+        
+        if let installationInfo = ulink.getInstallationInfo() {
+            result([
+                "installationId": installationInfo.installationId,
+                "isReinstall": installationInfo.isReinstall,
+                "previousInstallationId": installationInfo.previousInstallationId as Any,
+                "reinstallDetectedAt": installationInfo.reinstallDetectedAt as Any,
+                "persistentDeviceId": installationInfo.persistentDeviceId as Any
+            ])
+        } else {
+            result(nil)
+        }
+    }
+    
+    private func isReinstall(result: @escaping FlutterResult) {
+        guard let ulink = ulink else {
+            result(FlutterError(code: "NOT_INITIALIZED", message: "ULink not initialized", details: nil))
+            return
+        }
+        
+        result(ulink.isReinstall())
     }
 
     private func checkDeferredLink(result: @escaping FlutterResult) {

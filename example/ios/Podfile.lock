@@ -5,7 +5,7 @@ PODS:
     - ULinkSDK (~> 1.0.3)
   - integration_test (0.0.1):
     - Flutter
-  - ULinkSDK (1.0.3)
+  - ULinkSDK (1.0.4)
 
 DEPENDENCIES:
   - Flutter (from `Flutter`)
@@ -27,7 +27,7 @@ SPEC CHECKSUMS:
   Flutter: cabc95a1d2626b1b06e7179b784ebcf0c0cde467
   flutter_ulink_sdk: 922597943dc5df8252cb31d54437a3ff1848afb2
   integration_test: 4a889634ef21a45d28d50d622cf412dc6d9f586e
-  ULinkSDK: 47781659161170a025a7623a0152ccbbb6fcd0fb
+  ULinkSDK: 24c8c14e717eb1c8dd7fc35c58d881f47d7aeee5
 
 PODFILE CHECKSUM: e96a3bfb0becc909f3606380122d9298846414e7
 

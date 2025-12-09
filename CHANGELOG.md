@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.2.4
+- Bump version for new release
+- Add ULinkInstallationInfo model support
+
 ## 0.2.3
 - Add `ULinkDebugOverlay` widget for displaying SDK logs in a floating panel
 - Add `onLog` stream for real-time SDK debug log access

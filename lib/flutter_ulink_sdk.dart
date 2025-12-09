@@ -147,6 +147,23 @@ class ULink {
     return FlutterUlinkSdkPlatform.instance.getInstallationId();
   }
 
+  /// Gets the current installation info including reinstall detection data.
+  ///
+  /// If this is a reinstall, the returned object will have isReinstall=true
+  /// and previousInstallationId will contain the ID of the previous installation.
+  ///
+  /// Returns ULinkInstallationInfo or null if bootstrap hasn't completed
+  Future<ULinkInstallationInfo?> getInstallationInfo() {
+    return FlutterUlinkSdkPlatform.instance.getInstallationInfo();
+  }
+
+  /// Checks if the current installation is a reinstall.
+  ///
+  /// Returns true if this installation was detected as a reinstall
+  Future<bool> isReinstall() {
+    return FlutterUlinkSdkPlatform.instance.isReinstall();
+  }
+
   /// Disposes of the SDK and cleans up resources
   Future<void> dispose() {
     return FlutterUlinkSdkPlatform.instance.dispose();
@@ -177,5 +194,14 @@ class ULink {
   /// Only emits when debug mode is enabled in ULinkConfig.
   Stream<ULinkLogEntry> get onLog {
     return FlutterUlinkSdkPlatform.instance.onLog;
+  }
+
+  /// Stream of reinstall detection events.
+  ///
+  /// Listen to this stream to receive notifications when a reinstall is detected
+  /// during bootstrap. The emitted ULinkInstallationInfo contains details about
+  /// the reinstall, including the previous installation ID.
+  Stream<ULinkInstallationInfo> get onReinstallDetected {
+    return FlutterUlinkSdkPlatform.instance.onReinstallDetected;
   }
 }

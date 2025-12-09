@@ -13,5 +13,7 @@ data class ULinkConfig(
     val enableCrashReporting: Boolean = true,
     val timeout: Long = 30000L,
     val retryCount: Int = 3,
-    val metadata: Map<String, String>? = null
+    val metadata: Map<String, String>? = null,
+    val autoCheckDeferredLink: Boolean = true,
+    val persistLastLinkData: Boolean = true
 )
