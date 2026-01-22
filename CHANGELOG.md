@@ -1,5 +1,8 @@
 # Changelog
 
+## 0.2.5
+- Release version 0.2.5
+
 ## 0.2.4
 - Bump version for new release
 - Add ULinkInstallationInfo model support
