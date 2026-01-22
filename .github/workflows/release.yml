@@ -2,13 +2,15 @@ name: Release
 
 on:
   push:
-    tags: ['v*']
+    tags:
+      - 'v[0-9]+.[0-9]+.[0-9]+*'
 
 permissions:
   contents: write
 
 jobs:
-  release:
+  # Job 1: Update version files, run tests, create GitHub release
+  build-and-release:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -60,19 +62,6 @@ jobs:
             echo "Version update committed and pushed"
           fi
 
-      # Update tag to point to new commit (with version updates)
-      - name: Update tag
-        run: |
-          VERSION="${{ steps.version.outputs.VERSION }}"
-          TAG_NAME="v$VERSION"
-
-          # Delete and recreate tag at current commit
-          git tag -d "$TAG_NAME" 2>/dev/null || true
-          git push origin :refs/tags/"$TAG_NAME" 2>/dev/null || true
-          git tag "$TAG_NAME"
-          git push origin "$TAG_NAME"
-          echo "Tag $TAG_NAME updated to include version changes"
-
       # Setup Flutter
       - name: Setup Flutter
         uses: subosito/flutter-action@v2
@@ -94,16 +83,6 @@ jobs:
       # Dry run to verify package is ready
       - name: Verify package
         run: dart pub publish --dry-run
-
-      # Setup pub.dev credentials
-      - name: Setup pub.dev credentials
-        run: |
-          mkdir -p $HOME/.config/dart
-          echo '${{ secrets.PUB_DEV_CREDENTIALS }}' > $HOME/.config/dart/pub-credentials.json
-
-      # Publish to pub.dev
-      - name: Publish to pub.dev
-        run: dart pub publish --force
 
       # Create GitHub Release
       - name: Create Release
@@ -128,3 +107,10 @@ jobs:
             ## Links
             - [pub.dev package](https://pub.dev/packages/flutter_ulink_sdk)
             - [Documentation](https://github.com/mohn93/flutter_ulink_sdk#readme)
+
+  # Job 2: Publish to pub.dev using official Dart workflow with OIDC
+  publish:
+    needs: build-and-release
+    permissions:
+      id-token: write  # Required for authentication using OIDC
+    uses: dart-lang/setup-dart/.github/workflows/publish.yml@v1
