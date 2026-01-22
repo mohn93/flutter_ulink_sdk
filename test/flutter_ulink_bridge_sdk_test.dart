@@ -2,7 +2,6 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_ulink_sdk/flutter_ulink_sdk.dart';
 import 'package:flutter_ulink_sdk/flutter_ulink_sdk_platform_interface.dart';
 import 'package:flutter_ulink_sdk/flutter_ulink_sdk_method_channel.dart';
-import 'package:flutter_ulink_sdk/models/models.dart';
 import 'package:plugin_platform_interface/plugin_platform_interface.dart';
 
 class MockFlutterUlinkSdkPlatform
@@ -66,6 +65,15 @@ class MockFlutterUlinkSdkPlatform
 
   @override
   Stream<ULinkResolvedData> get unifiedLinkStream => Stream.empty();
+
+  @override
+  Future<ULinkInstallationInfo?> getInstallationInfo() => Future.value(null);
+
+  @override
+  Future<bool> isReinstall() => Future.value(false);
+
+  @override
+  Stream<ULinkInstallationInfo> get onReinstallDetected => Stream.empty();
 }
 
 void main() {
@@ -77,10 +85,8 @@ void main() {
   });
 
   test('createLink returns ULinkResponse', () async {
-    ULink flutterUlinkBridgeSdkPlugin =
-        ULink.instance;
-    MockFlutterUlinkSdkPlatform fakePlatform =
-        MockFlutterUlinkSdkPlatform();
+    ULink flutterUlinkBridgeSdkPlugin = ULink.instance;
+    MockFlutterUlinkSdkPlatform fakePlatform = MockFlutterUlinkSdkPlatform();
     FlutterUlinkSdkPlatform.instance = fakePlatform;
 
     final parameters = ULinkParameters.dynamic(

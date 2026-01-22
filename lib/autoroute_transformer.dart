@@ -1,6 +1,5 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter_ulink_sdk/flutter_ulink_sdk.dart';
-import 'package:flutter_ulink_sdk/models/models.dart';
 
 /// A function type that defines how to resolve ULink data to a route path.
 ///
@@ -101,8 +100,7 @@ class ULinkAutoRouteTransformer {
   /// Handles unified links by extracting the target URL.
   Uri _handleUnifiedLink(ULinkResolvedData data, Uri originalUri) {
     // For unified links, try to extract the target URL from parameters
-    final targetUrl =
-        data.parameters?['target_url'] ??
+    final targetUrl = data.parameters?['target_url'] ??
         data.parameters?['url'] ??
         data.fallbackUrl;
 
@@ -144,7 +142,7 @@ class ULinkAutoRouteTransformer {
   /// Logs debug messages if debug mode is enabled.
   void _log(String message) {
     if (debugMode && kDebugMode) {
-      print('[ULinkAutoRouteTransformer] $message');
+      debugPrint('[ULinkAutoRouteTransformer] $message');
     }
   }
 }

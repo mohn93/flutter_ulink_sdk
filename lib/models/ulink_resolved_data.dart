@@ -56,13 +56,13 @@ class ULinkResolvedData {
     SocialMediaTags? socialMediaTags;
     Map<String, dynamic>? metadata;
     Map<String, dynamic>? parameters;
-    
+
     // Safely extract metadata
     final metadataRaw = json['metadata'];
     if (metadataRaw is Map) {
       metadata = Map<String, dynamic>.from(metadataRaw);
     }
-    
+
     // Safely extract parameters
     final parametersRaw = json['parameters'];
     if (parametersRaw is Map) {
@@ -128,13 +128,15 @@ class ULinkResolvedData {
 
     if (slug != null) data['slug'] = slug;
     if (iosFallbackUrl != null) data['iosFallbackUrl'] = iosFallbackUrl;
-    if (androidFallbackUrl != null) data['androidFallbackUrl'] = androidFallbackUrl;
+    if (androidFallbackUrl != null)
+      data['androidFallbackUrl'] = androidFallbackUrl;
     if (fallbackUrl != null) data['fallbackUrl'] = fallbackUrl;
     if (parameters != null) data['parameters'] = parameters;
-    if (socialMediaTags != null) data['socialMediaTags'] = socialMediaTags!.toJson();
+    if (socialMediaTags != null)
+      data['socialMediaTags'] = socialMediaTags!.toJson();
     if (metadata != null) data['metadata'] = metadata;
     if (matchType != null) data['matchType'] = matchType;
-    
+
     // Include raw data
     data.addAll(rawData);
 

@@ -10,7 +10,6 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:integration_test/integration_test.dart';
 
 import 'package:flutter_ulink_sdk/flutter_ulink_sdk.dart';
-import 'package:flutter_ulink_sdk/models/ulink_config.dart';
 
 void main() {
   IntegrationTestWidgetsFlutterBinding.ensureInitialized();

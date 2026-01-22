@@ -9,8 +9,7 @@ abstract class FlutterUlinkSdkPlatform extends PlatformInterface {
 
   static final Object _token = Object();
 
-  static FlutterUlinkSdkPlatform _instance =
-      MethodChannelFlutterUlinkSdk();
+  static FlutterUlinkSdkPlatform _instance = MethodChannelFlutterUlinkSdk();
 
   /// The default instance of [FlutterUlinkSdkPlatform] to use.
   ///

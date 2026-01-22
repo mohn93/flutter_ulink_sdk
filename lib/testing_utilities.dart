@@ -1,6 +1,5 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter_ulink_sdk/flutter_ulink_sdk.dart';
-import 'package:flutter_ulink_sdk/models/models.dart';
 
 /// Testing utilities for the ULink Bridge SDK.
 ///
@@ -211,11 +210,9 @@ class ULinkTestingUtilities {
     } else if (json['type'] == 'unified') {
       final hasIosUrl =
           json['iosUrl'] != null && (json['iosUrl'] as String).isNotEmpty;
-      final hasAndroidUrl =
-          json['androidUrl'] != null &&
+      final hasAndroidUrl = json['androidUrl'] != null &&
           (json['androidUrl'] as String).isNotEmpty;
-      final hasFallbackUrl =
-          json['fallbackUrl'] != null &&
+      final hasFallbackUrl = json['fallbackUrl'] != null &&
           (json['fallbackUrl'] as String).isNotEmpty;
 
       if (!hasIosUrl && !hasAndroidUrl && !hasFallbackUrl) {
@@ -242,8 +239,7 @@ class ULinkTestingUtilities {
 
       // Note: Sessions are automatically managed by the SDK lifecycle
       // Just get the current session ID if one exists
-      final sessionId = await ULink.instance
-          .getCurrentSessionId();
+      final sessionId = await ULink.instance.getCurrentSessionId();
 
       if (sessionId != null) {
         _log('Active session found: $sessionId');
@@ -274,8 +270,7 @@ class ULinkTestingUtilities {
 
     while (DateTime.now().difference(startTime) < timeout) {
       try {
-        final currentState = await ULink.instance
-            .getSessionState();
+        final currentState = await ULink.instance.getSessionState();
 
         if (currentState == targetState) {
           _log('Session reached target state: $targetState');
@@ -297,7 +292,7 @@ class ULinkTestingUtilities {
   /// Logs debug messages if debug mode is enabled.
   static void _log(String message) {
     if (debugMode && kDebugMode) {
-      print('[ULinkTestingUtilities] $message');
+      debugPrint('[ULinkTestingUtilities] $message');
     }
   }
 }
@@ -350,8 +345,7 @@ extension ULinkTestingUtilitiesExtension on ULinkTestingUtilities {
       results['session_creation'] = sessionId != null;
 
       if (sessionId != null) {
-        final hasActiveSession = await ULink.instance
-            .hasActiveSession();
+        final hasActiveSession = await ULink.instance.hasActiveSession();
         results['session_active_check'] = hasActiveSession;
 
         await ULink.instance.endSession();
@@ -371,8 +365,7 @@ extension ULinkTestingUtilitiesExtension on ULinkTestingUtilities {
 
     // Test 5: Installation ID
     try {
-      final installationId = await ULink.instance
-          .getInstallationId();
+      final installationId = await ULink.instance.getInstallationId();
       results['installation_id'] = installationId?.isNotEmpty ?? false;
       ULinkTestingUtilities._log(
         'Installation ID test: ${(results['installation_id'] == true) ? 'passed' : 'failed'}',

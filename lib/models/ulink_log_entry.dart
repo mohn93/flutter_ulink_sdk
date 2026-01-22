@@ -26,7 +26,8 @@ class ULinkLogEntry {
       level: map['level'] as String? ?? 'debug',
       tag: map['tag'] as String? ?? 'ULink',
       message: map['message'] as String? ?? '',
-      timestamp: map['timestamp'] as int? ?? DateTime.now().millisecondsSinceEpoch,
+      timestamp:
+          map['timestamp'] as int? ?? DateTime.now().millisecondsSinceEpoch,
     );
   }
 

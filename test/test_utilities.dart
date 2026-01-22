@@ -7,90 +7,90 @@ import 'package:plugin_platform_interface/plugin_platform_interface.dart';
 class ULinkTestUtilities {
   /// Mock ULink configuration for testing
   static ULinkConfig get mockConfig => ULinkConfig(
-    apiKey: 'test_api_key_123',
-    baseUrl: 'https://test-api.ulink.io',
-    debug: true,
-    enableDeepLinkIntegration: true,
-    enableAnalytics: false,
-    enableCrashReporting: false,
-    timeout: 5000,
-    retryCount: 2,
-    metadata: {'test': 'true', 'environment': 'testing'},
-  );
+        apiKey: 'test_api_key_123',
+        baseUrl: 'https://test-api.ulink.io',
+        debug: true,
+        enableDeepLinkIntegration: true,
+        enableAnalytics: false,
+        enableCrashReporting: false,
+        timeout: 5000,
+        retryCount: 2,
+        metadata: {'test': 'true', 'environment': 'testing'},
+      );
 
   /// Mock ULink parameters for dynamic links
   static ULinkParameters get mockDynamicParameters => ULinkParameters.dynamic(
-    domain: 'example.com',
-    slug: 'test-dynamic-link',
-    iosFallbackUrl: 'https://apps.apple.com/app/test',
-    androidFallbackUrl:
-        'https://play.google.com/store/apps/details?id=com.test',
-    fallbackUrl: 'https://test.com/fallback',
-    parameters: {'utm_source': 'test', 'utm_campaign': 'testing'},
-    socialMediaTags: SocialMediaTags(
-      ogTitle: 'Test Dynamic Link',
-      ogDescription: 'This is a test dynamic link for testing purposes',
-      ogImage: 'https://test.com/image.png',
-    ),
-  );
+        domain: 'example.com',
+        slug: 'test-dynamic-link',
+        iosFallbackUrl: 'https://apps.apple.com/app/test',
+        androidFallbackUrl:
+            'https://play.google.com/store/apps/details?id=com.test',
+        fallbackUrl: 'https://test.com/fallback',
+        parameters: {'utm_source': 'test', 'utm_campaign': 'testing'},
+        socialMediaTags: SocialMediaTags(
+          ogTitle: 'Test Dynamic Link',
+          ogDescription: 'This is a test dynamic link for testing purposes',
+          ogImage: 'https://test.com/image.png',
+        ),
+      );
 
   /// Mock ULink parameters for unified links
   static ULinkParameters get mockUnifiedParameters => ULinkParameters.unified(
-    domain: 'example.com',
-    slug: 'test-unified-link',
-    iosUrl: 'https://apps.apple.com/app/test',
-    androidUrl: 'https://play.google.com/store/apps/details?id=com.test',
-    fallbackUrl: 'https://test.com/fallback',
-    parameters: {'utm_source': 'test', 'utm_medium': 'unified'},
-    socialMediaTags: SocialMediaTags(
-      ogTitle: 'Test Unified Link',
-      ogDescription: 'This is a test unified link for testing purposes',
-      ogImage: 'https://test.com/unified-image.png',
-    ),
-  );
+        domain: 'example.com',
+        slug: 'test-unified-link',
+        iosUrl: 'https://apps.apple.com/app/test',
+        androidUrl: 'https://play.google.com/store/apps/details?id=com.test',
+        fallbackUrl: 'https://test.com/fallback',
+        parameters: {'utm_source': 'test', 'utm_medium': 'unified'},
+        socialMediaTags: SocialMediaTags(
+          ogTitle: 'Test Unified Link',
+          ogDescription: 'This is a test unified link for testing purposes',
+          ogImage: 'https://test.com/unified-image.png',
+        ),
+      );
 
   /// Mock resolved data for testing
   static ULinkResolvedData get mockResolvedData => ULinkResolvedData(
-    slug: 'test-resolved-link',
-    iosFallbackUrl: 'https://apps.apple.com/app/test',
-    androidFallbackUrl:
-        'https://play.google.com/store/apps/details?id=com.test',
-    fallbackUrl: 'https://test.com/fallback',
-    parameters: {'utm_source': 'resolved', 'utm_campaign': 'test'},
-    socialMediaTags: SocialMediaTags(
-      ogTitle: 'Resolved Test Link',
-      ogDescription: 'This is a resolved test link',
-      ogImage: 'https://test.com/resolved-image.png',
-    ),
-    metadata: {'resolved': 'true'},
-    linkType: ULinkType.dynamic,
-    rawData: {'raw_test': 'data'},
-  );
+        slug: 'test-resolved-link',
+        iosFallbackUrl: 'https://apps.apple.com/app/test',
+        androidFallbackUrl:
+            'https://play.google.com/store/apps/details?id=com.test',
+        fallbackUrl: 'https://test.com/fallback',
+        parameters: {'utm_source': 'resolved', 'utm_campaign': 'test'},
+        socialMediaTags: SocialMediaTags(
+          ogTitle: 'Resolved Test Link',
+          ogDescription: 'This is a resolved test link',
+          ogImage: 'https://test.com/resolved-image.png',
+        ),
+        metadata: {'resolved': 'true'},
+        linkType: ULinkType.dynamic,
+        rawData: {'raw_test': 'data'},
+      );
 
   /// Generate test URLs for different scenarios
   static List<String> get testUrls => [
-    'https://test.ulink.ly/abc123',
-    'https://test.ulink.ly/xyz789?param=value',
-    'https://custom.domain.com/link/test',
-    'ulink://test.app/deep/link?data=test',
-    'https://test.com/share?ulink=abc123',
-  ];
+        'https://test.ulink.ly/abc123',
+        'https://test.ulink.ly/xyz789?param=value',
+        'https://custom.domain.com/link/test',
+        'ulink://test.app/deep/link?data=test',
+        'https://test.com/share?ulink=abc123',
+      ];
 
   /// Generate test session IDs
   static List<String> get testSessionIds => [
-    'session_123456789',
-    'test_session_abc',
-    'mock_session_xyz',
-    'debug_session_001',
-  ];
+        'session_123456789',
+        'test_session_abc',
+        'mock_session_xyz',
+        'debug_session_001',
+      ];
 
   /// Generate test installation IDs
   static List<String> get testInstallationIds => [
-    'install_123456789',
-    'test_install_abc',
-    'mock_install_xyz',
-    'debug_install_001',
-  ];
+        'install_123456789',
+        'test_install_abc',
+        'mock_install_xyz',
+        'debug_install_001',
+      ];
 
   /// Create a test configuration with custom parameters
   static ULinkConfig createTestConfig({
@@ -135,13 +135,11 @@ class ULinkTestUtilities {
         domain: 'example.com',
         slug: slug ?? 'test-slug',
         iosUrl: iosUrl ?? 'https://apps.apple.com/app/test',
-        androidUrl:
-            androidUrl ??
+        androidUrl: androidUrl ??
             'https://play.google.com/store/apps/details?id=com.test',
         fallbackUrl: fallbackUrl ?? 'https://test.com/fallback',
         parameters: parameters ?? {'test': 'true'},
-        socialMediaTags:
-            socialMediaTags ??
+        socialMediaTags: socialMediaTags ??
             SocialMediaTags(
               ogTitle: 'Test Link',
               ogDescription: 'Test description',
@@ -153,13 +151,11 @@ class ULinkTestUtilities {
         domain: 'example.com',
         slug: slug ?? 'test-slug',
         iosFallbackUrl: iosFallbackUrl ?? 'https://apps.apple.com/app/test',
-        androidFallbackUrl:
-            androidFallbackUrl ??
+        androidFallbackUrl: androidFallbackUrl ??
             'https://play.google.com/store/apps/details?id=com.test',
         fallbackUrl: fallbackUrl ?? 'https://test.com/fallback',
         parameters: parameters ?? {'test': 'true'},
-        socialMediaTags:
-            socialMediaTags ??
+        socialMediaTags: socialMediaTags ??
             SocialMediaTags(
               ogTitle: 'Test Link',
               ogDescription: 'Test description',
@@ -184,13 +180,11 @@ class ULinkTestUtilities {
     return ULinkResolvedData(
       slug: slug ?? 'test-resolved',
       iosFallbackUrl: iosFallbackUrl ?? 'https://apps.apple.com/app/test',
-      androidFallbackUrl:
-          androidFallbackUrl ??
+      androidFallbackUrl: androidFallbackUrl ??
           'https://play.google.com/store/apps/details?id=com.test',
       fallbackUrl: fallbackUrl ?? 'https://test.com/fallback',
       parameters: parameters ?? {'resolved': 'true'},
-      socialMediaTags:
-          socialMediaTags ??
+      socialMediaTags: socialMediaTags ??
           SocialMediaTags(
             ogTitle: 'Resolved Link',
             ogDescription: 'Resolved description',
@@ -433,8 +427,7 @@ class EnhancedMockFlutterUlinkSdkPlatform
       throw Exception('ULink not initialized');
     }
 
-    final url =
-        customResponses['createLink'] as String? ??
+    final url = customResponses['createLink'] as String? ??
         'https://test.ulink.ly/${parameters.slug ?? 'generated'}';
     _createdLinks.add(url);
     return ULinkResponse.success(url, {'slug': parameters.slug});
@@ -450,15 +443,11 @@ class EnhancedMockFlutterUlinkSdkPlatform
       throw Exception('ULink not initialized');
     }
 
-    final resolvedData =
-        customResponses['resolveLink'] as ULinkResolvedData? ??
+    final resolvedData = customResponses['resolveLink'] as ULinkResolvedData? ??
         ULinkTestUtilities.mockResolvedData;
-    if (resolvedData != null) {
-      _resolvedLinks.add(resolvedData);
-      _lastLinkData = resolvedData;
-      return ULinkResponse.success(url, resolvedData.rawData);
-    }
-    return ULinkResponse.error('Link not found');
+    _resolvedLinks.add(resolvedData);
+    _lastLinkData = resolvedData;
+    return ULinkResponse.success(url, resolvedData.rawData);
   }
 
   @override
@@ -587,6 +576,27 @@ class EnhancedMockFlutterUlinkSdkPlatform
 
   @override
   Stream<ULinkResolvedData> get unifiedLinkStream => Stream.empty();
+
+  @override
+  Future<ULinkInstallationInfo?> getInstallationInfo() async {
+    await _simulateDelay();
+    if (!_isInitialized) {
+      throw Exception('ULink not initialized');
+    }
+    return null;
+  }
+
+  @override
+  Future<bool> isReinstall() async {
+    await _simulateDelay();
+    if (!_isInitialized) {
+      throw Exception('ULink not initialized');
+    }
+    return false;
+  }
+
+  @override
+  Stream<ULinkInstallationInfo> get onReinstallDetected => Stream.empty();
 
   // Test helper methods
   void reset() {

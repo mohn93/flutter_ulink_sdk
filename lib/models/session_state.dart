@@ -2,16 +2,16 @@
 enum SessionState {
   /// No session operation in progress
   idle,
-  
+
   /// Session start request sent, waiting for response
   initializing,
-  
+
   /// Session successfully started
   active,
-  
+
   /// Session end request sent
   ending,
-  
+
   /// Session start/end failed
   failed,
 }
