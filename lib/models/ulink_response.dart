@@ -43,7 +43,7 @@ class ULinkResponse {
       success: map['success'] == true,
       url: map['url'] as String?,
       error: map['error'] as String?,
-      data: map['data'] != null 
+      data: map['data'] != null
           ? Map<String, dynamic>.from(map['data'] as Map)
           : null,
     );

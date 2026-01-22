@@ -100,8 +100,7 @@ class ULinkAutoRouteTransformer {
   /// Handles unified links by extracting the target URL.
   Uri _handleUnifiedLink(ULinkResolvedData data, Uri originalUri) {
     // For unified links, try to extract the target URL from parameters
-    final targetUrl =
-        data.parameters?['target_url'] ??
+    final targetUrl = data.parameters?['target_url'] ??
         data.parameters?['url'] ??
         data.fallbackUrl;
 

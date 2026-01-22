@@ -85,10 +85,8 @@ void main() {
   });
 
   test('createLink returns ULinkResponse', () async {
-    ULink flutterUlinkBridgeSdkPlugin =
-        ULink.instance;
-    MockFlutterUlinkSdkPlatform fakePlatform =
-        MockFlutterUlinkSdkPlatform();
+    ULink flutterUlinkBridgeSdkPlugin = ULink.instance;
+    MockFlutterUlinkSdkPlatform fakePlatform = MockFlutterUlinkSdkPlatform();
     FlutterUlinkSdkPlatform.instance = fakePlatform;
 
     final parameters = ULinkParameters.dynamic(

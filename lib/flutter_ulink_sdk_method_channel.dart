@@ -53,69 +53,64 @@ class MethodChannelFlutterUlinkSdk extends FlutterUlinkSdkPlatform {
     await methodChannel.invokeMethod('initialize', {'config': config.toMap()});
 
     // Set up event channel listeners
-    _dynamicLinkSubscription = dynamicLinkEventChannel
-        .receiveBroadcastStream()
-        .listen(
-          (dynamic event) {
-            if (event != null) {
-              final linkData = ULinkResolvedData.fromJson(
-                Map<String, dynamic>.from(event),
-              );
-              _dynamicLinkController.add(linkData);
-            }
-          },
-          onError: (error) {
-            debugPrint('Dynamic link event channel error: $error');
-          },
-        );
+    _dynamicLinkSubscription =
+        dynamicLinkEventChannel.receiveBroadcastStream().listen(
+      (dynamic event) {
+        if (event != null) {
+          final linkData = ULinkResolvedData.fromJson(
+            Map<String, dynamic>.from(event),
+          );
+          _dynamicLinkController.add(linkData);
+        }
+      },
+      onError: (error) {
+        debugPrint('Dynamic link event channel error: $error');
+      },
+    );
 
-    _unifiedLinkSubscription = unifiedLinkEventChannel
-        .receiveBroadcastStream()
-        .listen(
-          (dynamic event) {
-            if (event != null) {
-              final linkData = ULinkResolvedData.fromJson(
-                Map<String, dynamic>.from(event),
-              );
-              _unifiedLinkController.add(linkData);
-            }
-          },
-          onError: (error) {
-            debugPrint('Unified link event channel error: $error');
-          },
-        );
+    _unifiedLinkSubscription =
+        unifiedLinkEventChannel.receiveBroadcastStream().listen(
+      (dynamic event) {
+        if (event != null) {
+          final linkData = ULinkResolvedData.fromJson(
+            Map<String, dynamic>.from(event),
+          );
+          _unifiedLinkController.add(linkData);
+        }
+      },
+      onError: (error) {
+        debugPrint('Unified link event channel error: $error');
+      },
+    );
 
-    _logSubscription = logEventChannel
-        .receiveBroadcastStream()
-        .listen(
-          (dynamic event) {
-            if (event != null) {
-              final logEntry = ULinkLogEntry.fromMap(
-                Map<dynamic, dynamic>.from(event),
-              );
-              _logController.add(logEntry);
-            }
-          },
-          onError: (error) {
-            debugPrint('Log event channel error: $error');
-          },
-        );
+    _logSubscription = logEventChannel.receiveBroadcastStream().listen(
+      (dynamic event) {
+        if (event != null) {
+          final logEntry = ULinkLogEntry.fromMap(
+            Map<dynamic, dynamic>.from(event),
+          );
+          _logController.add(logEntry);
+        }
+      },
+      onError: (error) {
+        debugPrint('Log event channel error: $error');
+      },
+    );
 
-    _reinstallSubscription = reinstallEventChannel
-        .receiveBroadcastStream()
-        .listen(
-          (dynamic event) {
-            if (event != null) {
-              final installationInfo = ULinkInstallationInfo.fromJson(
-                Map<String, dynamic>.from(event),
-              );
-              _reinstallController.add(installationInfo);
-            }
-          },
-          onError: (error) {
-            debugPrint('Reinstall event channel error: $error');
-          },
-        );
+    _reinstallSubscription =
+        reinstallEventChannel.receiveBroadcastStream().listen(
+      (dynamic event) {
+        if (event != null) {
+          final installationInfo = ULinkInstallationInfo.fromJson(
+            Map<String, dynamic>.from(event),
+          );
+          _reinstallController.add(installationInfo);
+        }
+      },
+      onError: (error) {
+        debugPrint('Reinstall event channel error: $error');
+      },
+    );
   }
 
   @override

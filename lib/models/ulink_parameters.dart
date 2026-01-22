@@ -109,10 +109,12 @@ class ULinkParameters {
     if (iosUrl != null) data['iosUrl'] = iosUrl;
     if (androidUrl != null) data['androidUrl'] = androidUrl;
     if (iosFallbackUrl != null) data['iosFallbackUrl'] = iosFallbackUrl;
-    if (androidFallbackUrl != null) data['androidFallbackUrl'] = androidFallbackUrl;
+    if (androidFallbackUrl != null)
+      data['androidFallbackUrl'] = androidFallbackUrl;
     if (fallbackUrl != null) data['fallbackUrl'] = fallbackUrl;
     if (parameters != null) data['parameters'] = parameters;
-    if (socialMediaTags != null) data['socialMediaTags'] = socialMediaTags!.toJson();
+    if (socialMediaTags != null)
+      data['socialMediaTags'] = socialMediaTags!.toJson();
     if (metadata != null) data['metadata'] = metadata;
 
     return data;

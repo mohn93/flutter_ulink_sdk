@@ -70,12 +70,14 @@ class ULinkConfig {
       'baseUrl': baseUrl,
       'debug': debug,
       'persistLastLinkData': persistLastLinkData,
-      'lastLinkTimeToLive': lastLinkTimeToLive?.inMilliseconds, // Serialize Duration to milliseconds
+      'lastLinkTimeToLive': lastLinkTimeToLive
+          ?.inMilliseconds, // Serialize Duration to milliseconds
       'clearLastLinkOnRead': clearLastLinkOnRead,
       'redactAllParametersInLastLink': redactAllParametersInLastLink,
       'redactedParameterKeysInLastLink': redactedParameterKeysInLastLink,
       'enableDeepLinkIntegration': enableDeepLinkIntegration,
-      'enableAutomaticAppDelegateIntegration': enableAutomaticAppDelegateIntegration,
+      'enableAutomaticAppDelegateIntegration':
+          enableAutomaticAppDelegateIntegration,
       'enableAnalytics': enableAnalytics,
       'enableCrashReporting': enableCrashReporting,
       'timeout': timeout,
@@ -104,7 +106,8 @@ class ULinkConfig {
       redactedParameterKeysInLastLink:
           List<String>.from(json['redactedParameterKeysInLastLink'] ?? []),
       enableDeepLinkIntegration: json['enableDeepLinkIntegration'] ?? true,
-      enableAutomaticAppDelegateIntegration: json['enableAutomaticAppDelegateIntegration'] ?? true,
+      enableAutomaticAppDelegateIntegration:
+          json['enableAutomaticAppDelegateIntegration'] ?? true,
       enableAnalytics: json['enableAnalytics'] ?? true,
       enableCrashReporting: json['enableCrashReporting'] ?? false,
       timeout: json['timeout'] ?? 30000,
