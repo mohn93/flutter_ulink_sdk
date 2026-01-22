@@ -1,7 +1,11 @@
 # Changelog
 
 ## 0.2.5
-- Release version 0.2.5
+- Add GitHub Actions CI/CD workflows
+- Automated pub.dev publishing with OIDC authentication
+- Add CONTRIBUTING.md with release process documentation
+- Fix README initialization code examples
+- Add reinstall detection support (`getInstallationInfo()`, `isReinstall()`, `onReinstallDetected`)
 
 ## 0.2.4
 - Bump version for new release

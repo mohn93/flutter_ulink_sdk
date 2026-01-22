@@ -33,7 +33,7 @@ Add this to your `pubspec.yaml` dependencies:
 
 ```yaml
 dependencies:
-  flutter_ulink_sdk: ^1.0.0
+  flutter_ulink_sdk: ^0.2.5
 ```
 
 ## Configuration
@@ -139,18 +139,15 @@ import 'package:flutter_ulink_sdk/flutter_ulink_sdk.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  
-  // Initialize with production defaults
-  final ulink = await ULink.initialize();
-  
-  // Or with custom config
-  final ulink = await ULink.initialize(
-    config: ULinkConfig(
+
+  // Initialize with your configuration
+  await ULink.instance.initialize(
+    ULinkConfig(
       apiKey: 'your_api_key',
-      debug: true, // Enable debug logging
+      debug: true, // Enable debug logging (optional)
     ),
   );
-  
+
   runApp(MyApp());
 }
 ```
@@ -541,6 +538,10 @@ final productLinkResponse = await ULink.instance.createLink(
 ## Example Project
 
 Check out the example project in the `example` directory for a complete implementation, including AutoRoute integration examples.
+
+## Contributing
+
+See [CONTRIBUTING.md](CONTRIBUTING.md) for information on how to contribute to this project, including how to release new versions.
 
 ## License
 
