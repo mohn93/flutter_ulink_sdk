@@ -588,6 +588,27 @@ class EnhancedMockFlutterUlinkSdkPlatform
   @override
   Stream<ULinkResolvedData> get unifiedLinkStream => Stream.empty();
 
+  @override
+  Future<ULinkInstallationInfo?> getInstallationInfo() async {
+    await _simulateDelay();
+    if (!_isInitialized) {
+      throw Exception('ULink not initialized');
+    }
+    return null;
+  }
+
+  @override
+  Future<bool> isReinstall() async {
+    await _simulateDelay();
+    if (!_isInitialized) {
+      throw Exception('ULink not initialized');
+    }
+    return false;
+  }
+
+  @override
+  Stream<ULinkInstallationInfo> get onReinstallDetected => Stream.empty();
+
   // Test helper methods
   void reset() {
     _isInitialized = false;

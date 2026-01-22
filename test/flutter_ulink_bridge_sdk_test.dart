@@ -66,6 +66,15 @@ class MockFlutterUlinkSdkPlatform
 
   @override
   Stream<ULinkResolvedData> get unifiedLinkStream => Stream.empty();
+
+  @override
+  Future<ULinkInstallationInfo?> getInstallationInfo() => Future.value(null);
+
+  @override
+  Future<bool> isReinstall() => Future.value(false);
+
+  @override
+  Stream<ULinkInstallationInfo> get onReinstallDetected => Stream.empty();
 }
 
 void main() {
