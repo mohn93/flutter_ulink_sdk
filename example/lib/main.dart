@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_ulink_sdk/flutter_ulink_sdk.dart';
-import 'package:flutter_ulink_sdk/models/models.dart';
 import 'dart:async';
 
 void main() {
@@ -141,8 +140,7 @@ class _MyAppState extends State<MyApp> {
         apiKey:
             'ulk_5653d6d2c53cbbc7c1d09a621cf439782e795c0c437abee6', // Replace with your actual API key
         debug: true,
-
-        baseUrl: 'http://10.0.2.2:3000',
+        // baseUrl: 'http://10.0.2.2:3000',
         enableDeepLinkIntegration:
             true, // Explicitly enable deep link integration
         // persistLastLinkData:

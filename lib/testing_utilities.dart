@@ -1,6 +1,5 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter_ulink_sdk/flutter_ulink_sdk.dart';
-import 'package:flutter_ulink_sdk/models/models.dart';
 
 /// Testing utilities for the ULink Bridge SDK.
 ///
@@ -297,7 +296,7 @@ class ULinkTestingUtilities {
   /// Logs debug messages if debug mode is enabled.
   static void _log(String message) {
     if (debugMode && kDebugMode) {
-      print('[ULinkTestingUtilities] $message');
+      debugPrint('[ULinkTestingUtilities] $message');
     }
   }
 }

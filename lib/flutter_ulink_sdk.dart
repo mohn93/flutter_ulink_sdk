@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:flutter/foundation.dart';
 import 'flutter_ulink_sdk_platform_interface.dart';
 import 'models/models.dart';
 
@@ -35,7 +36,7 @@ class ULink {
       // Delegate to native SDKs for consistent fingerprinting and matching logic
       await FlutterUlinkSdkPlatform.instance.checkDeferredLink();
     } catch (e) {
-      print('ULink: Error checking deferred link: $e');
+      debugPrint('ULink: Error checking deferred link: $e');
     }
   }
 

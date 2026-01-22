@@ -2,7 +2,6 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_ulink_sdk/flutter_ulink_sdk.dart';
 import 'package:flutter_ulink_sdk/flutter_ulink_sdk_platform_interface.dart';
 import 'package:flutter_ulink_sdk/flutter_ulink_sdk_method_channel.dart';
-import 'package:flutter_ulink_sdk/models/models.dart';
 import 'package:plugin_platform_interface/plugin_platform_interface.dart';
 
 class MockFlutterUlinkSdkPlatform

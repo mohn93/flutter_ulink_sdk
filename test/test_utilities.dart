@@ -453,12 +453,9 @@ class EnhancedMockFlutterUlinkSdkPlatform
     final resolvedData =
         customResponses['resolveLink'] as ULinkResolvedData? ??
         ULinkTestUtilities.mockResolvedData;
-    if (resolvedData != null) {
-      _resolvedLinks.add(resolvedData);
-      _lastLinkData = resolvedData;
-      return ULinkResponse.success(url, resolvedData.rawData);
-    }
-    return ULinkResponse.error('Link not found');
+    _resolvedLinks.add(resolvedData);
+    _lastLinkData = resolvedData;
+    return ULinkResponse.success(url, resolvedData.rawData);
   }
 
   @override
