@@ -14,7 +14,10 @@ void main() {
         .setMockMethodCallHandler(channel, (MethodCall methodCall) async {
       switch (methodCall.method) {
         case 'createLink':
-          return 'https://test.ulink.ly/abc123';
+          return {
+            'success': true,
+            'url': 'https://test.ulink.ly/abc123',
+          };
         case 'getCurrentSessionId':
           return 'session123';
         case 'hasActiveSession':
@@ -37,10 +40,9 @@ void main() {
       slug: 'test',
       domain: 'example.com',
     );
-    expect(
-      await platform.createLink(parameters),
-      'https://test.ulink.ly/abc123',
-    );
+    final response = await platform.createLink(parameters);
+    expect(response.success, true);
+    expect(response.url, 'https://test.ulink.ly/abc123');
   });
 
   test('getCurrentSessionId', () async {
