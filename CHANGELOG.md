@@ -1,5 +1,8 @@
 # Changelog
 
+## 0.2.6
+- Release version 0.2.6
+
 ## 0.2.5
 - Add GitHub Actions CI/CD workflows
 - Automated pub.dev publishing with OIDC authentication
