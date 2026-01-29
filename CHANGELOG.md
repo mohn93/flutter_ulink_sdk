@@ -1,7 +1,8 @@
 # Changelog
 
 ## 0.2.6
-- Release version 0.2.6
+- Add optional `name` parameter to `ULinkParameters` for setting human-readable link names in the dashboard
+- Supported in both `ULinkParameters.dynamic()` and `ULinkParameters.unified()` factory constructors
 
 ## 0.2.5
 - Add GitHub Actions CI/CD workflows
