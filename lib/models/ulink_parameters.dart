@@ -8,6 +8,9 @@ class ULinkParameters {
   /// Optional custom slug for the link
   final String? slug;
 
+  /// Optional human-readable name for the link (shown in the dashboard)
+  final String? name;
+
   /// iOS URL for unified links (direct iOS app store or web URL)
   final String? iosUrl;
 
@@ -42,6 +45,7 @@ class ULinkParameters {
     this.type = 'dynamic',
     required this.domain,
     this.slug,
+    this.name,
     this.iosUrl,
     this.androidUrl,
     this.iosFallbackUrl,
@@ -57,6 +61,7 @@ class ULinkParameters {
   factory ULinkParameters.dynamic({
     required String domain,
     String? slug,
+    String? name,
     String? iosFallbackUrl,
     String? androidFallbackUrl,
     String? fallbackUrl,
@@ -67,6 +72,7 @@ class ULinkParameters {
       type: 'dynamic',
       domain: domain,
       slug: slug,
+      name: name,
       iosFallbackUrl: iosFallbackUrl,
       androidFallbackUrl: androidFallbackUrl,
       fallbackUrl: fallbackUrl,
@@ -80,6 +86,7 @@ class ULinkParameters {
   factory ULinkParameters.unified({
     required String domain,
     String? slug,
+    String? name,
     String? iosUrl,
     String? androidUrl,
     String? fallbackUrl,
@@ -90,6 +97,7 @@ class ULinkParameters {
       type: 'unified',
       domain: domain,
       slug: slug,
+      name: name,
       iosUrl: iosUrl,
       androidUrl: androidUrl,
       fallbackUrl: fallbackUrl,
@@ -106,6 +114,7 @@ class ULinkParameters {
     };
 
     if (slug != null) data['slug'] = slug;
+    if (name != null) data['name'] = name;
     if (iosUrl != null) data['iosUrl'] = iosUrl;
     if (androidUrl != null) data['androidUrl'] = androidUrl;
     if (iosFallbackUrl != null) data['iosFallbackUrl'] = iosFallbackUrl;
@@ -126,6 +135,7 @@ class ULinkParameters {
       type: json['type'] ?? 'dynamic',
       domain: json['domain'] ?? '',
       slug: json['slug'],
+      name: json['name'],
       iosUrl: json['iosUrl'],
       androidUrl: json['androidUrl'],
       iosFallbackUrl: json['iosFallbackUrl'],

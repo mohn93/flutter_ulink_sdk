@@ -8,6 +8,7 @@ data class ULinkParameters(
     val type: String = "unified",
     val domain: String,
     val slug: String? = null,
+    val name: String? = null,
     val iosUrl: String? = null,
     val androidUrl: String? = null,
     val iosFallbackUrl: String? = null,
