@@ -1,5 +1,8 @@
 # Changelog
 
+## 0.2.8
+- Bump iOS SDK dependency from 1.0.3 to 1.0.7
+
 ## 0.2.7
 - Bump Android SDK dependency from 1.0.5 to 1.0.9 to fix compilation errors for reinstall detection APIs (`onReinstallDetected`, `getInstallationInfo`, `isReinstall`)
 
