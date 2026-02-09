@@ -5,6 +5,8 @@
 	<key>com.apple.developer.associated-domains</key>
 	<array>
 		<string>applinks:iossdk.shared.ly</string>
+		<string>applinks:iossdk1.shared.ly</string>
+		<string>webcredentials:iossdk1.shared.ly</string>
 	</array>
 </dict>
 </plist>

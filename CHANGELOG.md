@@ -1,5 +1,8 @@
 # Changelog
 
+## 0.2.7
+- Bump Android SDK dependency from 1.0.5 to 1.0.9 to fix compilation errors for reinstall detection APIs (`onReinstallDetected`, `getInstallationInfo`, `isReinstall`)
+
 ## 0.2.6
 - Add optional `name` parameter to `ULinkParameters` for setting human-readable link names in the dashboard
 - Supported in both `ULinkParameters.dynamic()` and `ULinkParameters.unified()` factory constructors
