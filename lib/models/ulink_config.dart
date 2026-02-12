@@ -3,7 +3,9 @@ class ULinkConfig {
   /// The API key for the ULink service
   final String apiKey;
 
-  /// The base URL for the ULink API
+  /// The base URL for the ULink API.
+  /// You do not need to set this. It defaults to the production API and is only
+  /// used internally for local development and testing.
   final String baseUrl;
 
   /// Whether to use debug mode
