@@ -33,7 +33,7 @@ Add this to your `pubspec.yaml` dependencies:
 
 ```yaml
 dependencies:
-  flutter_ulink_sdk: ^0.2.8
+  flutter_ulink_sdk: ^0.2.9
 ```
 
 ## Configuration

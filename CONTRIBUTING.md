@@ -76,10 +76,10 @@ This project uses **automated publishing** to pub.dev via GitHub Actions with OI
 3. **Create and push a version tag**
    ```bash
    # Create tag (format: v<major>.<minor>.<patch>)
-   git tag v0.2.8
+   git tag v0.2.9
 
    # Push the tag to trigger release
-   git push origin v0.2.8
+   git push origin v0.2.9
    ```
 
 4. **Monitor the release**
@@ -125,10 +125,10 @@ The release workflow (`.github/workflows/release.yml`) automatically:
 2. Fix the issue in a new commit to `main`
 3. Delete and recreate the tag:
    ```bash
-   git tag -d v0.2.8
-   git push origin :refs/tags/v0.2.8
-   git tag v0.2.8
-   git push origin v0.2.8
+   git tag -d v0.2.9
+   git push origin :refs/tags/v0.2.9
+   git tag v0.2.9
+   git push origin v0.2.9
    ```
 
 **pub.dev publishing failed?**
