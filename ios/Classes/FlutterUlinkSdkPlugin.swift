@@ -982,9 +982,9 @@ public class FlutterUlinkSdkPlugin: NSObject, FlutterPlugin {
         
         var socialTags: SocialMediaTags? = nil
         if let socialMediaArgs = map["socialMediaTags"] as? [String: Any] {
-            let ogTitle = socialMediaArgs["title"] as? String
-            let ogDescription = socialMediaArgs["description"] as? String
-            let ogImage = socialMediaArgs["imageUrl"] as? String
+            let ogTitle = socialMediaArgs["ogTitle"] as? String
+            let ogDescription = socialMediaArgs["ogDescription"] as? String
+            let ogImage = socialMediaArgs["ogImage"] as? String
             
             socialTags = SocialMediaTags(
                 ogTitle: ogTitle,

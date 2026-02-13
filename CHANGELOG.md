@@ -1,5 +1,8 @@
 # Changelog
 
+## 0.2.9
+- Fix social media preview tags not being saved when creating links from iOS (key name mismatch in iOS Flutter plugin bridge)
+
 ## 0.2.8
 - Bump iOS SDK dependency from 1.0.3 to 1.0.7
 
