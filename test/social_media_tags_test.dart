@@ -47,11 +47,14 @@ void main() {
       // These wrong keys were the cause of the iOS bug.
       // If someone accidentally changes toJson to use these, this test catches it.
       expect(json.containsKey('title'), isFalse,
-          reason: 'Must use "ogTitle", not "title" — native plugins expect "ogTitle"');
+          reason:
+              'Must use "ogTitle", not "title" — native plugins expect "ogTitle"');
       expect(json.containsKey('description'), isFalse,
-          reason: 'Must use "ogDescription", not "description" — native plugins expect "ogDescription"');
+          reason:
+              'Must use "ogDescription", not "description" — native plugins expect "ogDescription"');
       expect(json.containsKey('imageUrl'), isFalse,
-          reason: 'Must use "ogImage", not "imageUrl" — native plugins expect "ogImage"');
+          reason:
+              'Must use "ogImage", not "imageUrl" — native plugins expect "ogImage"');
     });
 
     test('toJson omits null fields', () {
@@ -123,7 +126,8 @@ void main() {
         slug: 'promo',
         fallbackUrl: 'https://example.com',
         iosFallbackUrl: 'https://apps.apple.com/app/123',
-        androidFallbackUrl: 'https://play.google.com/store/apps/details?id=com.app',
+        androidFallbackUrl:
+            'https://play.google.com/store/apps/details?id=com.app',
         parameters: {'screen': 'product', 'productId': '42'},
         socialMediaTags: SocialMediaTags(
           ogTitle: 'Spring Sale',
@@ -199,7 +203,8 @@ void main() {
           .setMockMethodCallHandler(channel, null);
     });
 
-    test('createLink passes social media tags with correct keys to native', () async {
+    test('createLink passes social media tags with correct keys to native',
+        () async {
       final params = ULinkParameters.dynamic(
         domain: 'example.com',
         slug: 'test',
@@ -231,7 +236,8 @@ void main() {
       expect(socialTags.containsKey('imageUrl'), isFalse);
     });
 
-    test('createLink without social media tags omits the key entirely', () async {
+    test('createLink without social media tags omits the key entirely',
+        () async {
       final params = ULinkParameters.dynamic(
         domain: 'example.com',
         slug: 'no-social',
@@ -245,7 +251,8 @@ void main() {
       expect(parametersMap.containsKey('socialMediaTags'), isFalse);
     });
 
-    test('createLink with partial social media tags sends only provided keys', () async {
+    test('createLink with partial social media tags sends only provided keys',
+        () async {
       final params = ULinkParameters.dynamic(
         domain: 'example.com',
         slug: 'partial',

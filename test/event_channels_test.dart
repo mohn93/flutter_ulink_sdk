@@ -270,7 +270,8 @@ void main() {
             events.success({
               'slug': 'unified-link',
               'iosUrl': 'https://apps.apple.com/app/123',
-              'androidUrl': 'https://play.google.com/store/apps/details?id=com.test',
+              'androidUrl':
+                  'https://play.google.com/store/apps/details?id=com.test',
               'fallbackUrl': 'https://example.com/unified',
               'type': 'unified',
             });
@@ -294,7 +295,9 @@ void main() {
     });
   });
 
-  group('Reinstall detection event channel (flutter_ulink_sdk/reinstall_detected)', () {
+  group(
+      'Reinstall detection event channel (flutter_ulink_sdk/reinstall_detected)',
+      () {
     test('parses reinstall events and forwards to onReinstallDetected stream',
         () async {
       final reinstallEvents = <ULinkInstallationInfo>[];
@@ -549,7 +552,8 @@ void main() {
         timestamp: 1700000000000,
       );
 
-      expect(entry.formattedTime, matches(RegExp(r'^\d{2}:\d{2}:\d{2}\.\d{3}$')));
+      expect(
+          entry.formattedTime, matches(RegExp(r'^\d{2}:\d{2}:\d{2}\.\d{3}$')));
     });
 
     test('level constants are correct', () {
