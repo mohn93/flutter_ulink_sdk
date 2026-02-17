@@ -28,7 +28,7 @@ class FlutterUlinkSdkPlugin: FlutterPlugin, MethodCallHandler, ActivityAware, Pl
   private lateinit var reinstallEventChannel: EventChannel
   private var context: Context? = null
   private var ulink: ULink? = null
-  private val scope = CoroutineScope(Dispatchers.Main + SupervisorJob())
+  private var scope = CoroutineScope(Dispatchers.Main + SupervisorJob())
   
   private var dynamicLinkStreamHandler: StreamHandler? = null
   private var unifiedLinkStreamHandler: StreamHandler? = null
@@ -489,6 +489,7 @@ class FlutterUlinkSdkPlugin: FlutterPlugin, MethodCallHandler, ActivityAware, Pl
       pendingMethodCalls.clear()
       
       scope.cancel()
+      scope = CoroutineScope(Dispatchers.Main + SupervisorJob())
       result.success(true)
     } catch (e: Exception) {
       result.error("DISPOSE_ERROR", e.message, null)
@@ -639,6 +640,8 @@ class FlutterUlinkSdkPlugin: FlutterPlugin, MethodCallHandler, ActivityAware, Pl
     channel.setMethodCallHandler(null)
     dynamicLinkEventChannel.setStreamHandler(null)
     unifiedLinkEventChannel.setStreamHandler(null)
+    logEventChannel.setStreamHandler(null)
+    reinstallEventChannel.setStreamHandler(null)
     scope.cancel()
   }
   
@@ -738,25 +741,35 @@ class FlutterUlinkSdkPlugin: FlutterPlugin, MethodCallHandler, ActivityAware, Pl
   
   // Stream handler for event channels
   private class StreamHandler : EventChannel.StreamHandler {
+    @Volatile
     private var eventSink: EventChannel.EventSink? = null
-    
+    private val mainHandler = android.os.Handler(android.os.Looper.getMainLooper())
+
     override fun onListen(arguments: Any?, events: EventChannel.EventSink?) {
       android.util.Log.d("ULinkBridge", "Flutter started listening to event stream")
       eventSink = events
     }
-    
+
     override fun onCancel(arguments: Any?) {
       android.util.Log.d("ULinkBridge", "Flutter stopped listening to event stream")
       eventSink = null
     }
-    
+
     fun sendEvent(event: Any) {
-      android.util.Log.d("ULinkBridge", "Dynamic link event received")
-      if (eventSink != null) {
-        android.util.Log.d("ULinkBridge", "Sending event to Flutter: $event")
+      if (eventSink == null) return
+      if (android.os.Looper.myLooper() == android.os.Looper.getMainLooper()) {
         eventSink?.success(event)
       } else {
-        android.util.Log.w("ULinkBridge", "EventSink is null, cannot send event")
+        mainHandler.post { eventSink?.success(event) }
+      }
+    }
+
+    fun sendError(errorCode: String, errorMessage: String, errorDetails: Any?) {
+      if (eventSink == null) return
+      if (android.os.Looper.myLooper() == android.os.Looper.getMainLooper()) {
+        eventSink?.error(errorCode, errorMessage, errorDetails)
+      } else {
+        mainHandler.post { eventSink?.error(errorCode, errorMessage, errorDetails) }
       }
     }
   }

@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.2.10
+- Fix platform channel threading violation: EventChannel messages now always dispatched on the main/platform thread (Android & iOS)
+- Fix `onDetachedFromEngine` missing cleanup for log and reinstall event channels (Android)
+- Fix `dispose()` not recreating coroutine scope, causing silent failures on re-initialization (Android)
+- Add `sendError` to Android StreamHandler for parity with iOS
+- Add `@Volatile` annotation to Android event sink for JVM memory visibility
+- Add event channel tests for all 4 streams (logs, dynamic links, unified links, reinstall detection)
+
 ## 0.2.9
 - Fix social media preview tags not being saved when creating links from iOS (key name mismatch in iOS Flutter plugin bridge)
 

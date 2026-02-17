@@ -1074,22 +1074,35 @@ public class FlutterUlinkSdkPlugin: NSObject, FlutterPlugin {
 
 class StreamHandler: NSObject, FlutterStreamHandler {
     private var eventSink: FlutterEventSink?
-    
+
     func onListen(withArguments arguments: Any?, eventSink events: @escaping FlutterEventSink) -> FlutterError? {
         self.eventSink = events
         return nil
     }
-    
+
     func onCancel(withArguments arguments: Any?) -> FlutterError? {
         self.eventSink = nil
         return nil
     }
-    
+
     func sendEvent(_ event: Any) {
-        eventSink?(event)
+        if Thread.isMainThread {
+            eventSink?(event)
+        } else {
+            DispatchQueue.main.async { [weak self] in
+                self?.eventSink?(event)
+            }
+        }
     }
-    
+
     func sendError(code: String, message: String, details: Any? = nil) {
-        eventSink?(FlutterError(code: code, message: message, details: details))
+        let error = FlutterError(code: code, message: message, details: details)
+        if Thread.isMainThread {
+            eventSink?(error)
+        } else {
+            DispatchQueue.main.async { [weak self] in
+                self?.eventSink?(error)
+            }
+        }
     }
 }
