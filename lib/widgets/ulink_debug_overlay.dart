@@ -231,46 +231,41 @@ class _ULinkDebugOverlayState extends State<ULinkDebugOverlay> {
                           SizedBox(
                             width: 32,
                             height: 32,
-                            child: IconButton(
-                              padding: EdgeInsets.zero,
-                              icon: const Icon(
+                            child: GestureDetector(
+                              onTap: _copyLogsToClipboard,
+                              child: const Icon(
                                 Icons.copy,
                                 color: Colors.white70,
                                 size: 18,
                               ),
-                              onPressed: _copyLogsToClipboard,
-                              tooltip: 'Copy',
                             ),
                           ),
                           SizedBox(
                             width: 32,
                             height: 32,
-                            child: IconButton(
-                              padding: EdgeInsets.zero,
-                              icon: const Icon(
+                            child: GestureDetector(
+                              onTap: _clearLogs,
+                              child: const Icon(
                                 Icons.delete_outline,
                                 color: Colors.white70,
                                 size: 18,
                               ),
-                              onPressed: _clearLogs,
-                              tooltip: 'Clear',
                             ),
                           ),
                           SizedBox(
                             width: 32,
                             height: 32,
-                            child: IconButton(
-                              padding: EdgeInsets.zero,
-                              icon: const Icon(
-                                Icons.close,
-                                color: Colors.white70,
-                                size: 18,
-                              ),
-                              onPressed: () {
+                            child: GestureDetector(
+                              onTap: () {
                                 setState(() {
                                   _isExpanded = false;
                                 });
                               },
+                              child: const Icon(
+                                Icons.close,
+                                color: Colors.white70,
+                                size: 18,
+                              ),
                             ),
                           ),
                         ],

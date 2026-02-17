@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.2.12
+- Fix iOS deep link handling: replace broken method swizzling with Flutter's `addApplicationDelegate` API
+- Fix EventChannel listener ordering: set up listeners before calling native `initialize` so logs emitted during SDK init are captured
+- Add `debugPrint` bridge for native SDK logs so they appear in `flutter run` console
+- Fix debug overlay overflow for long log messages
+- Bump iOS SDK dependency to 1.0.8 (adds log replay buffer)
+
 ## 0.2.11
 - Fix dart format CI issue from 0.2.10 release
 

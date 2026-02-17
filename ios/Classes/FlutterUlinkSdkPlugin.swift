@@ -3,155 +3,9 @@ import UIKit
 import ULinkSDK
 import Combine
 
-// MARK: - AppDelegate Swizzling Manager
-class ULinkAppDelegateSwizzler: NSObject {
-    static let shared = ULinkAppDelegateSwizzler()
-    private var isSwizzled = false
-    private var plugin: FlutterUlinkSdkPlugin?
-    
-    private override init() {
-        super.init()
-    }
-    
-    func setupSwizzling(for plugin: FlutterUlinkSdkPlugin) {
-        guard !isSwizzled else { return }
-        self.plugin = plugin
-        
-        swizzleAppDelegateMethods()
-        isSwizzled = true
-    }
-    
-    func cleanup() {
-        self.plugin = nil
-    }
-    
-    private func swizzleAppDelegateMethods() {
-        guard let appDelegate = UIApplication.shared.delegate else {
-            print("[ULink] Warning: No app delegate found for swizzling")
-            return
-        }
-        
-        let appDelegateClass = type(of: appDelegate)
-        
-        // Swizzle universal link handling
-        swizzleUniversalLinkMethod(in: appDelegateClass)
-        
-        // Swizzle URL scheme handling
-        swizzleURLSchemeMethod(in: appDelegateClass)
-    }
-    
-    private func swizzleUniversalLinkMethod(in appDelegateClass: AnyClass) {
-        let originalSelector = #selector(UIApplicationDelegate.application(_:continue:restorationHandler:))
-        let swizzledSelector = #selector(ULinkAppDelegateSwizzler.swizzled_application(_:continue:restorationHandler:))
-        
-        // Get the swizzled method from the class (static method)
-        guard let swizzledMethod = class_getClassMethod(ULinkAppDelegateSwizzler.self, swizzledSelector) else {
-            print("[ULink] Warning: Could not find swizzled method for universal link swizzling")
-            return
-        }
-        
-        // Check if original method exists, if not we'll add our method
-        let originalMethod = class_getInstanceMethod(appDelegateClass, originalSelector)
-        
-        if let originalMethod = originalMethod {
-            // Original method exists, exchange implementations
-            method_exchangeImplementations(originalMethod, swizzledMethod)
-        } else {
-            // Original method doesn't exist, add our implementation
-            class_addMethod(appDelegateClass,
-                          originalSelector,
-                          method_getImplementation(swizzledMethod),
-                          method_getTypeEncoding(swizzledMethod))
-        }
-        
-        print("[ULink] Universal link method swizzling completed")
-    }
-    
-    private func swizzleURLSchemeMethod(in appDelegateClass: AnyClass) {
-        let originalSelector = #selector(UIApplicationDelegate.application(_:open:options:))
-        let swizzledSelector = #selector(ULinkAppDelegateSwizzler.swizzled_application(_:open:options:))
-        
-        // Get the swizzled method from the class (static method)
-        guard let swizzledMethod = class_getClassMethod(ULinkAppDelegateSwizzler.self, swizzledSelector) else {
-            print("[ULink] Warning: Could not find swizzled method for URL scheme swizzling")
-            return
-        }
-        
-        // Check if original method exists, if not we'll add our method
-        let originalMethod = class_getInstanceMethod(appDelegateClass, originalSelector)
-        
-        if let originalMethod = originalMethod {
-            // Original method exists, exchange implementations
-            method_exchangeImplementations(originalMethod, swizzledMethod)
-        } else {
-            // Original method doesn't exist, add our implementation
-            class_addMethod(appDelegateClass,
-                          originalSelector,
-                          method_getImplementation(swizzledMethod),
-                          method_getTypeEncoding(swizzledMethod))
-        }
-        
-        print("[ULink] URL scheme method swizzling completed")
-    }
-    
-    @objc private static func swizzled_application(_ application: UIApplication, continue userActivity: NSUserActivity, restorationHandler: @escaping ([UIUserActivityRestoring]?) -> Void) -> Bool {
-        var handled = false
-        
-        // Handle ULink universal links
-        if userActivity.activityType == NSUserActivityTypeBrowsingWeb,
-           let url = userActivity.webpageURL {
-            if let plugin = ULinkAppDelegateSwizzler.shared.plugin {
-                plugin.handleUniversalLink(url)
-                handled = true
-            } else {
-                print("[ULink] Warning: Plugin not initialized yet, cannot handle universal link: \(url)")
-            }
-        }
-        
-        // Call original implementation if it exists
-//        if let appDelegate = UIApplication.shared.delegate,
-//           appDelegate.responds(to: #selector(UIApplicationDelegate.application(_:continue:restorationHandler:))) {
-//            let originalSelector = #selector(ULinkAppDelegateSwizzler.swizzled_application(_:continue:restorationHandler:))
-//            if let originalMethod = class_getInstanceMethod(type(of: appDelegate), originalSelector) {
-//                typealias OriginalMethodType = @convention(c) (AnyObject, Selector, UIApplication, NSUserActivity, @escaping ([UIUserActivityRestoring]?) -> Void) -> Bool
-//                let originalImplementation = method_getImplementation(originalMethod)
-//                let originalFunction = unsafeBitCast(originalImplementation, to: OriginalMethodType.self)
-//                let originalResult = originalFunction(appDelegate, originalSelector, application, userActivity, restorationHandler)
-//                return handled || originalResult
-//            }
-//        }
-        
-        restorationHandler(nil)
-        return handled
-    }
-    
-    @objc private static func swizzled_application(_ app: UIApplication, open url: URL, options: [UIApplication.OpenURLOptionsKey: Any] = [:]) -> Bool {
-        var handled = false
-        
-        // Handle ULink URL schemes
-        if let plugin = ULinkAppDelegateSwizzler.shared.plugin {
-            plugin.handleURLScheme(url)
-            handled = true
-        } else {
-            print("[ULink] Warning: Plugin not initialized yet, cannot handle URL scheme: \(url)")
-        }
-        
-//        // Call original implementation if it exists
-//        if let appDelegate = UIApplication.shared.delegate,
-//           appDelegate.responds(to: #selector(UIApplicationDelegate.application(_:open:options:))) {
-//            let originalSelector = #selector(ULinkAppDelegateSwizzler.swizzled_application(_:open:options:))
-//            if let originalMethod = class_getInstanceMethod(type(of: appDelegate), originalSelector) {
-//                typealias OriginalMethodType = @convention(c) (AnyObject, Selector, UIApplication, URL, [UIApplication.OpenURLOptionsKey: Any]) -> Bool
-//                let originalImplementation = method_getImplementation(originalMethod)
-//                let originalFunction = unsafeBitCast(originalImplementation, to: OriginalMethodType.self)
-//                let originalResult = originalFunction(appDelegate, originalSelector, app, url, options)
-//                return handled || originalResult
-//            }
-//        }
-        
-        return handled
-    }
-}
+// MARK: - Legacy Swizzling Manager (kept for reference, no longer used)
+// The plugin now uses Flutter's addApplicationDelegate API instead of swizzling.
+// This is more reliable and avoids class/instance method mismatch issues.
 
 public class FlutterUlinkSdkPlugin: NSObject, FlutterPlugin {
     private struct PendingDeepLink {
@@ -182,33 +36,32 @@ public class FlutterUlinkSdkPlugin: NSObject, FlutterPlugin {
         let instance = FlutterUlinkSdkPlugin()
         instance.methodChannel = channel
         registrar.addMethodCallDelegate(instance, channel: channel)
-        
+
         // Set up event channels for streams
         let dynamicLinkEventChannel = FlutterEventChannel(name: "flutter_ulink_sdk/dynamic_links", binaryMessenger: registrar.messenger())
         let unifiedLinkEventChannel = FlutterEventChannel(name: "flutter_ulink_sdk/unified_links", binaryMessenger: registrar.messenger())
         let logEventChannel = FlutterEventChannel(name: "flutter_ulink_sdk/logs", binaryMessenger: registrar.messenger())
         let reinstallEventChannel = FlutterEventChannel(name: "flutter_ulink_sdk/reinstall_detected", binaryMessenger: registrar.messenger())
-        
+
         instance.dynamicLinkEventChannel = dynamicLinkEventChannel
         instance.unifiedLinkEventChannel = unifiedLinkEventChannel
         instance.logEventChannel = logEventChannel
         instance.reinstallEventChannel = reinstallEventChannel
-        
+
         instance.dynamicLinkStreamHandler = StreamHandler()
         instance.unifiedLinkStreamHandler = StreamHandler()
         instance.logStreamHandler = StreamHandler()
         instance.reinstallStreamHandler = StreamHandler()
-        
+
         dynamicLinkEventChannel.setStreamHandler(instance.dynamicLinkStreamHandler)
         unifiedLinkEventChannel.setStreamHandler(instance.unifiedLinkStreamHandler)
         logEventChannel.setStreamHandler(instance.logStreamHandler)
         reinstallEventChannel.setStreamHandler(instance.reinstallStreamHandler)
-        
-        // Set up automatic AppDelegate integration early to avoid race conditions
-        if instance.enableAutomaticAppDelegateIntegration {
-            ULinkAppDelegateSwizzler.shared.setupSwizzling(for: instance)
-            print("[ULink] Automatic AppDelegate integration enabled during registration")
-        }
+
+        // Register as application delegate to receive universal link and URL scheme callbacks
+        // This uses Flutter's proper plugin delegate forwarding instead of method swizzling
+        registrar.addApplicationDelegate(instance)
+        NSLog("[ULink] Plugin registered as application delegate for deep link handling")
     }
     
     public func handle(_ call: FlutterMethodCall, result: @escaping FlutterResult) {
@@ -292,7 +145,7 @@ public class FlutterUlinkSdkPlugin: NSObject, FlutterPlugin {
                     // Listen to reinstall detection stream
                     self.ulink?.onReinstallDetected
                         .sink { [weak self] installationInfo in
-                            print("[ULink] Reinstall detected: previousInstallationId=\(installationInfo.previousInstallationId ?? "nil")")
+                            NSLog("[ULink] Reinstall detected: previousInstallationId=%@", installationInfo.previousInstallationId ?? "nil")
                             self?.reinstallStreamHandler?.sendEvent([
                                 "installationId": installationInfo.installationId,
                                 "isReinstall": installationInfo.isReinstall,
@@ -315,7 +168,7 @@ public class FlutterUlinkSdkPlugin: NSObject, FlutterPlugin {
                     
                     for pending in pendingLinks {
                         let pendingUrl = pending.url
-                        print("[ULink] Processing pending deep link after initialization: \(pendingUrl)")
+                        NSLog("[ULink] Processing pending deep link after initialization: %@", pendingUrl.absoluteString)
                         self.processDeepLinkWithErrorHandling(pendingUrl, forceProcessing: pending.forceProcessing)
                     }
                     
@@ -439,7 +292,7 @@ public class FlutterUlinkSdkPlugin: NSObject, FlutterPlugin {
         guard let ulink = ulink else {
             // If SDK is not initialized yet, queue the deep link for later processing
             if !initializationCompleted {
-                print("[ULink] SDK not initialized yet, queuing manual deep link: \(url)")
+                NSLog("[ULink] SDK not initialized yet, queuing manual deep link: %@", url.absoluteString)
                 pendingDeepLinks.append(PendingDeepLink(url: url, forceProcessing: true))
                 result(true) // Return success as the link will be processed later
                 return
@@ -598,6 +451,24 @@ public class FlutterUlinkSdkPlugin: NSObject, FlutterPlugin {
         }
     }
     
+    // MARK: - UIApplicationDelegate Methods (forwarded by FlutterAppDelegate)
+
+    public func application(_ application: UIApplication, continue userActivity: NSUserActivity, restorationHandler: @escaping ([Any]) -> Void) -> Bool {
+        guard userActivity.activityType == NSUserActivityTypeBrowsingWeb,
+              let url = userActivity.webpageURL else {
+            return false
+        }
+        NSLog("[ULink] Received universal link via application delegate: %@", url.absoluteString)
+        handleUniversalLink(url)
+        return true
+    }
+
+    public func application(_ app: UIApplication, open url: URL, options: [UIApplication.OpenURLOptionsKey: Any] = [:]) -> Bool {
+        NSLog("[ULink] Received URL scheme via application delegate: %@", url.absoluteString)
+        handleURLScheme(url)
+        return true
+    }
+
     private func dispose(result: @escaping FlutterResult) {
         ulink?.dispose()
         cancellables.removeAll()
@@ -605,7 +476,6 @@ public class FlutterUlinkSdkPlugin: NSObject, FlutterPlugin {
         isInitialized = false
         initializationCompleted = false
         pendingDeepLinks.removeAll()
-        ULinkAppDelegateSwizzler.shared.cleanup()
         result(true)
     }
     
@@ -676,14 +546,14 @@ public class FlutterUlinkSdkPlugin: NSObject, FlutterPlugin {
     
     private func processDeepLinkWithErrorHandling(_ url: URL, forceProcessing: Bool = false) {
         guard enableDeepLinkIntegration || forceProcessing else {
-            print("[ULink] Deep link integration disabled - ignoring automatic link: \(url)")
+            NSLog("[ULink] Deep link integration disabled - ignoring automatic link: %@", url.absoluteString)
             return
         }
         
         guard let ulink = self.ulink else {
             // If SDK is not initialized yet, queue the deep link for later processing
             if !initializationCompleted {
-                print("[ULink] SDK not initialized yet, queuing deep link: \(url)")
+                NSLog("[ULink] SDK not initialized yet, queuing deep link: %@", url.absoluteString)
                 pendingDeepLinks.append(PendingDeepLink(url: url, forceProcessing: forceProcessing))
                 return
             }
@@ -754,19 +624,19 @@ public class FlutterUlinkSdkPlugin: NSObject, FlutterPlugin {
     
     internal func handleUniversalLink(_ url: URL) {
         guard enableDeepLinkIntegration else {
-            print("[ULink] Deep link integration disabled - ignoring universal link: \(url)")
+            NSLog("[ULink] Deep link integration disabled - ignoring universal link: %@", url.absoluteString)
             return
         }
-        print("[ULink] Handling universal link automatically: \(url)")
+        NSLog("[ULink] Handling universal link automatically: %@", url.absoluteString)
         processDeepLinkWithErrorHandling(url)
     }
     
     internal func handleURLScheme(_ url: URL) {
         guard enableDeepLinkIntegration else {
-            print("[ULink] Deep link integration disabled - ignoring URL scheme: \(url)")
+            NSLog("[ULink] Deep link integration disabled - ignoring URL scheme: %@", url.absoluteString)
             return
         }
-        print("[ULink] Handling URL scheme automatically: \(url)")
+        NSLog("[ULink] Handling URL scheme automatically: %@", url.absoluteString)
         processDeepLinkWithErrorHandling(url)
     }
     

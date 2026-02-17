@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_ulink_sdk/flutter_ulink_sdk_method_channel.dart';
@@ -501,6 +502,184 @@ void main() {
           ['Init', 'Init', 'Network', 'Session']);
 
       await subscription.cancel();
+    });
+  });
+
+  group('EventChannel listeners are set up before native initialize', () {
+    test('all event channel listeners activate before invokeMethod initialize',
+        () async {
+      final callOrder = <String>[];
+
+      // Track when each EventChannel onListen is triggered
+      TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+          .setMockStreamHandler(
+        platform.logEventChannel,
+        MockStreamHandler.inline(
+          onListen: (arguments, events) {
+            callOrder.add('log_onListen');
+          },
+        ),
+      );
+      TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+          .setMockStreamHandler(
+        platform.dynamicLinkEventChannel,
+        MockStreamHandler.inline(
+          onListen: (arguments, events) {
+            callOrder.add('dynamicLink_onListen');
+          },
+        ),
+      );
+      TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+          .setMockStreamHandler(
+        platform.unifiedLinkEventChannel,
+        MockStreamHandler.inline(
+          onListen: (arguments, events) {
+            callOrder.add('unifiedLink_onListen');
+          },
+        ),
+      );
+      TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+          .setMockStreamHandler(
+        platform.reinstallEventChannel,
+        MockStreamHandler.inline(
+          onListen: (arguments, events) {
+            callOrder.add('reinstall_onListen');
+          },
+        ),
+      );
+
+      // Track when method channel initialize is called
+      TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+          .setMockMethodCallHandler(
+        methodChannel,
+        (MethodCall methodCall) async {
+          if (methodCall.method == 'initialize') {
+            callOrder.add('initialize');
+          }
+          return true;
+        },
+      );
+
+      await platform.initialize(ULinkConfig(
+        apiKey: 'test-key',
+        baseUrl: 'https://api.test.com',
+      ));
+
+      // All EventChannel listeners must be set up BEFORE initialize is called
+      final initIndex = callOrder.indexOf('initialize');
+      expect(initIndex, greaterThan(-1), reason: 'initialize must be called');
+
+      for (final listenerName in [
+        'log_onListen',
+        'dynamicLink_onListen',
+        'unifiedLink_onListen',
+        'reinstall_onListen',
+      ]) {
+        final listenerIndex = callOrder.indexOf(listenerName);
+        expect(listenerIndex, greaterThan(-1),
+            reason: '$listenerName must be called');
+        expect(listenerIndex, lessThan(initIndex),
+            reason:
+                '$listenerName must be set up before native initialize call');
+      }
+    });
+
+    test(
+        'log events emitted during native init are received by pre-subscribed listener',
+        () async {
+      final logEvents = <ULinkLogEntry>[];
+
+      // Stream handler emits events immediately on listen (simulating native SDK
+      // sending buffered logs when EventChannel sink becomes active)
+      TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+          .setMockStreamHandler(
+        platform.logEventChannel,
+        MockStreamHandler.inline(
+          onListen: (arguments, events) {
+            events.success({
+              'level': 'info',
+              'tag': 'ULink',
+              'message': 'ULink SDK initialized',
+              'timestamp': 1700000000000,
+            });
+            events.success({
+              'level': 'debug',
+              'tag': 'ULink',
+              'message': 'Bootstrap completed',
+              'timestamp': 1700000001000,
+            });
+          },
+        ),
+      );
+
+      // Subscribe to log stream BEFORE initialize (like debug overlay does)
+      final subscription = platform.onLog.listen(logEvents.add);
+
+      await platform.initialize(ULinkConfig(
+        apiKey: 'test-key',
+        baseUrl: 'https://api.test.com',
+      ));
+
+      await Future.delayed(const Duration(milliseconds: 100));
+
+      expect(logEvents, hasLength(2));
+      expect(logEvents[0].message, 'ULink SDK initialized');
+      expect(logEvents[1].message, 'Bootstrap completed');
+
+      await subscription.cancel();
+    });
+  });
+
+  group('Log events are printed to debug console', () {
+    test('received log events call debugPrint with formatted message',
+        () async {
+      final printedMessages = <String>[];
+      // ignore: avoid_print
+      final originalDebugPrint = debugPrint;
+      debugPrint = (String? message, {int? wrapWidth}) {
+        if (message != null) printedMessages.add(message);
+      };
+
+      TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+          .setMockStreamHandler(
+        platform.logEventChannel,
+        MockStreamHandler.inline(
+          onListen: (arguments, events) {
+            events.success({
+              'level': 'info',
+              'tag': 'ULink',
+              'message': 'SDK initialized successfully',
+              'timestamp': 1700000000000,
+            });
+            events.success({
+              'level': 'error',
+              'tag': 'Network',
+              'message': 'Connection failed',
+              'timestamp': 1700000001000,
+            });
+          },
+        ),
+      );
+
+      try {
+        await platform.initialize(ULinkConfig(
+          apiKey: 'test-key',
+          baseUrl: 'https://api.test.com',
+        ));
+
+        await Future.delayed(const Duration(milliseconds: 100));
+
+        expect(
+          printedMessages,
+          contains('[ULink SDK] INFO: SDK initialized successfully'),
+        );
+        expect(
+          printedMessages,
+          contains('[ULink SDK] ERROR: Connection failed'),
+        );
+      } finally {
+        debugPrint = originalDebugPrint;
+      }
     });
   });
 

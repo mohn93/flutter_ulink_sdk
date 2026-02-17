@@ -50,9 +50,8 @@ class MethodChannelFlutterUlinkSdk extends FlutterUlinkSdkPlatform {
 
   @override
   Future<void> initialize(ULinkConfig config) async {
-    await methodChannel.invokeMethod('initialize', {'config': config.toMap()});
-
-    // Set up event channel listeners
+    // Set up event channel listeners BEFORE calling native initialize
+    // so the event sinks are active when the native SDK emits logs during init
     _dynamicLinkSubscription =
         dynamicLinkEventChannel.receiveBroadcastStream().listen(
       (dynamic event) {
@@ -89,6 +88,7 @@ class MethodChannelFlutterUlinkSdk extends FlutterUlinkSdkPlatform {
           final logEntry = ULinkLogEntry.fromMap(
             Map<dynamic, dynamic>.from(event),
           );
+          debugPrint('[ULink SDK] ${logEntry.level.toUpperCase()}: ${logEntry.message}');
           _logController.add(logEntry);
         }
       },
@@ -111,6 +111,9 @@ class MethodChannelFlutterUlinkSdk extends FlutterUlinkSdkPlatform {
         debugPrint('Reinstall event channel error: $error');
       },
     );
+
+    // Now call native initialize - event sinks are already active
+    await methodChannel.invokeMethod('initialize', {'config': config.toMap()});
   }
 
   @override
