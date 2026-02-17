@@ -1,5 +1,8 @@
 # Changelog
 
+## 0.2.11
+- Fix dart format CI issue from 0.2.10 release
+
 ## 0.2.10
 - Fix platform channel threading violation: EventChannel messages now always dispatched on the main/platform thread (Android & iOS)
 - Fix `onDetachedFromEngine` missing cleanup for log and reinstall event channels (Android)
