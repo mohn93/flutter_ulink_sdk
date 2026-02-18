@@ -88,7 +88,8 @@ class MethodChannelFlutterUlinkSdk extends FlutterUlinkSdkPlatform {
           final logEntry = ULinkLogEntry.fromMap(
             Map<dynamic, dynamic>.from(event),
           );
-          debugPrint('[ULink SDK] ${logEntry.level.toUpperCase()}: ${logEntry.message}');
+          debugPrint(
+              '[ULink SDK] ${logEntry.level.toUpperCase()}: ${logEntry.message}');
           _logController.add(logEntry);
         }
       },
