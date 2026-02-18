@@ -6,16 +6,11 @@ on:
   pull_request:
     branches: [main, develop]
 
-permissions:
-  contents: write
-
 jobs:
   analyze:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Setup Flutter
         uses: subosito/flutter-action@v2
@@ -25,22 +20,11 @@ jobs:
       - name: Install dependencies
         run: flutter pub get
 
-      - name: Analyze
-        run: flutter analyze --no-fatal-infos --no-fatal-warnings
-
       - name: Format code
         run: dart format .
 
-      - name: Check for formatting changes
-        run: |
-          if [ -n "$(git diff --name-only)" ]; then
-            echo "::warning::dart format changed files — committing fix"
-            git config user.name "github-actions[bot]"
-            git config user.email "github-actions[bot]@users.noreply.github.com"
-            git add -A
-            git commit -m "style: auto-format dart files"
-            git push
-          fi
+      - name: Analyze
+        run: flutter analyze --no-fatal-infos --no-fatal-warnings
 
   test:
     runs-on: ubuntu-latest
