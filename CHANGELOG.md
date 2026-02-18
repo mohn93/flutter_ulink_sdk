@@ -1,5 +1,8 @@
 # Changelog
 
+## 0.2.13
+- Bump Android SDK dependency to 1.0.10 — fixes app crash when bootstrap fails due to DNS resolution errors (network failures are now non-fatal)
+
 ## 0.2.12
 - Fix iOS deep link handling: replace broken method swizzling with Flutter's `addApplicationDelegate` API
 - Fix EventChannel listener ordering: set up listeners before calling native `initialize` so logs emitted during SDK init are captured
