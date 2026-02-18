@@ -1,0 +1,9 @@
+#!/bin/sh
+# Auto-format staged Dart files before committing
+
+DART_FILES=$(git diff --cached --name-only --diff-filter=ACM | grep '\.dart$' || true)
+
+if [ -n "$DART_FILES" ]; then
+  dart format $DART_FILES
+  git add $DART_FILES
+fi

@@ -23,8 +23,19 @@ jobs:
       - name: Analyze
         run: flutter analyze --no-fatal-infos --no-fatal-warnings
 
-      - name: Check formatting
-        run: dart format --set-exit-if-changed .
+      - name: Format code
+        run: dart format .
+
+      - name: Check for formatting changes
+        run: |
+          if [ -n "$(git diff --name-only)" ]; then
+            echo "::warning::dart format changed files — committing fix"
+            git config user.name "github-actions[bot]"
+            git config user.email "github-actions[bot]@users.noreply.github.com"
+            git add -A
+            git commit -m "style: auto-format dart files"
+            git push
+          fi
 
   test:
     runs-on: ubuntu-latest
