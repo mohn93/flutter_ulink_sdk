@@ -694,6 +694,15 @@ class FlutterUlinkSdkPlugin: FlutterPlugin, MethodCallHandler, ActivityAware, Pl
       android.util.Log.d("ULinkBridge", "Deep link integration disabled - ignoring intent: ${intent.data}")
       return false
     }
+
+    // If ULink is not initialized yet, store as pending intent so it gets
+    // processed after initialization completes (same as onAttachedToActivity)
+    if (ulink == null && intent.data != null) {
+      android.util.Log.d("ULinkBridge", "Storing new intent for later processing (ULink not initialized yet)")
+      pendingIntent = intent
+      return true
+    }
+
     handleIntent(intent)
     return true
   }
