@@ -1,5 +1,8 @@
 # Changelog
 
+## 0.2.14
+- Release version 0.2.14
+
 ## 0.2.13
 - Bump Android SDK dependency to 1.0.10 — fixes app crash when bootstrap fails due to DNS resolution errors (network failures are now non-fatal)
 
