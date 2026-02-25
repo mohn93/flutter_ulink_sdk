@@ -53,11 +53,21 @@ jobs:
           if git diff --quiet; then
             echo "No version changes needed (already at $VERSION)"
           else
+            DEFAULT_BRANCH=$(git remote show origin | grep 'HEAD branch' | cut -d' ' -f5)
+            git fetch origin $DEFAULT_BRANCH
+
             git add -A
             git commit -m "chore: bump version to $VERSION [skip ci]"
 
-            # Push to the default branch
-            DEFAULT_BRANCH=$(git remote show origin | grep 'HEAD branch' | cut -d' ' -f5)
+            # Rebase onto remote branch to handle the case where the bump
+            # was already pushed by a previous run (makes retries safe)
+            git rebase origin/$DEFAULT_BRANCH || {
+              echo "Rebase conflict — version bump likely already on $DEFAULT_BRANCH, skipping push"
+              git rebase --abort
+              git checkout origin/$DEFAULT_BRANCH -- pubspec.yaml CHANGELOG.md
+              exit 0
+            }
+
             git push origin HEAD:$DEFAULT_BRANCH
             echo "Version update committed and pushed"
           fi
