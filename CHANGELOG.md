@@ -1,5 +1,8 @@
 # Changelog
 
+## 0.2.15
+- Release version 0.2.15
+
 ## 0.2.14
 - Release version 0.2.14
 
