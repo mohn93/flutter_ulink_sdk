@@ -1,13 +1,8 @@
 # Changelog
 
 ## 0.2.16
-- Release version 0.2.16
-
-## 0.2.15
-- Release version 0.2.15
-
-## 0.2.14
-- Release version 0.2.14
+- Fix Android deep link not processed when app is brought to foreground before SDK initialization completes
+- Fix release workflow to be idempotent on retries
 
 ## 0.2.13
 - Bump Android SDK dependency to 1.0.10 — fixes app crash when bootstrap fails due to DNS resolution errors (network failures are now non-fatal)
