@@ -9,68 +9,28 @@ permissions:
   contents: write
 
 jobs:
-  # Job 1: Update version files, run tests, create GitHub release
+  # Job 1: Run tests, create GitHub release
   build-and-release:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-          token: ${{ secrets.GITHUB_TOKEN }}
 
       # Extract version from tag (v0.2.5 -> 0.2.5)
       - name: Extract version
         id: version
         run: echo "VERSION=${GITHUB_REF_NAME#v}" >> $GITHUB_OUTPUT
 
-      # Update version in pubspec.yaml from tag
-      - name: Update version from tag
+      # Verify version in pubspec.yaml matches the tag
+      - name: Verify version matches tag
         run: |
           VERSION="${{ steps.version.outputs.VERSION }}"
-          echo "Setting version to $VERSION from tag..."
-
-          # Update pubspec.yaml
-          sed -i "s/^version: .*/version: $VERSION/" pubspec.yaml
-          echo "Updated pubspec.yaml"
-
-          # Update CHANGELOG.md - add new version if not present
-          if ! grep -q "## $VERSION" CHANGELOG.md; then
-            sed -i "s/# Changelog/# Changelog\n\n## $VERSION\n- Release version $VERSION/" CHANGELOG.md
-            echo "Updated CHANGELOG.md"
+          PUBSPEC_VERSION=$(grep '^version:' pubspec.yaml | sed 's/version: //')
+          if [ "$PUBSPEC_VERSION" != "$VERSION" ]; then
+            echo "ERROR: pubspec.yaml version ($PUBSPEC_VERSION) does not match tag (v$VERSION)"
+            echo "Update pubspec.yaml and CHANGELOG.md before tagging."
+            exit 1
           fi
-
-          echo ""
-          echo "All files updated to version $VERSION"
-
-      # Commit version updates back to repo
-      - name: Commit version updates
-        run: |
-          VERSION="${{ steps.version.outputs.VERSION }}"
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-
-          # Check if there are changes to commit
-          if git diff --quiet; then
-            echo "No version changes needed (already at $VERSION)"
-          else
-            DEFAULT_BRANCH=$(git remote show origin | grep 'HEAD branch' | cut -d' ' -f5)
-            git fetch origin $DEFAULT_BRANCH
-
-            git add -A
-            git commit -m "chore: bump version to $VERSION [skip ci]"
-
-            # Rebase onto remote branch to handle the case where the bump
-            # was already pushed by a previous run (makes retries safe)
-            git rebase origin/$DEFAULT_BRANCH || {
-              echo "Rebase conflict — version bump likely already on $DEFAULT_BRANCH, skipping push"
-              git rebase --abort
-              git checkout origin/$DEFAULT_BRANCH -- pubspec.yaml CHANGELOG.md
-              exit 0
-            }
-
-            git push origin HEAD:$DEFAULT_BRANCH
-            echo "Version update committed and pushed"
-          fi
+          echo "Version $VERSION verified"
 
       # Setup Flutter
       - name: Setup Flutter
