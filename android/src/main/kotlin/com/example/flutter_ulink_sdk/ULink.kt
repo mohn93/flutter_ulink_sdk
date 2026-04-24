@@ -66,6 +66,7 @@ class ULink private constructor(private val context: Context, private val config
         val nativeParams = NativeULinkParameters(
             type = convertLinkType(parameters.type),
             slug = parameters.slug,
+            name = parameters.name,
             iosUrl = parameters.iosUrl,
             androidUrl = parameters.androidUrl,
             iosFallbackUrl = parameters.iosFallbackUrl,

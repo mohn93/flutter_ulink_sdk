@@ -844,6 +844,7 @@ public class FlutterUlinkSdkPlugin: NSObject, FlutterPlugin {
         }
         
         let slug = map["slug"] as? String
+        let name = map["name"] as? String
         let iosFallbackUrl = map["iosFallbackUrl"] as? String
         let androidFallbackUrl = map["androidFallbackUrl"] as? String
         let fallbackUrl = map["fallbackUrl"] as? String
@@ -868,6 +869,7 @@ public class FlutterUlinkSdkPlugin: NSObject, FlutterPlugin {
             parameters = ULinkParameters.dynamic(
                 domain: domain,
                 slug: slug,
+                name: name,
                 iosFallbackUrl: iosFallbackUrl,
                 androidFallbackUrl: androidFallbackUrl,
                 fallbackUrl: fallbackUrl,
@@ -883,6 +885,7 @@ public class FlutterUlinkSdkPlugin: NSObject, FlutterPlugin {
             parameters = ULinkParameters.unified(
                 domain: domain,
                 slug: slug,
+                name: name,
                 iosUrl: iosUrl,
                 androidUrl: androidUrl,
                 fallbackUrl: fallbackUrlRequired,

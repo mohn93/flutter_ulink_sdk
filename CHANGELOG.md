@@ -1,5 +1,8 @@
 # Changelog
 
+## 0.2.18
+- Fix `ULinkParameters.name` being silently dropped by the Android and iOS bridges — link names now reach `/sdk/links` and appear correctly in the dashboard (#7)
+
 ## 0.2.17
 - Fix Android deep link not processed when app is brought to foreground before SDK initialization completes
 - Simplify release workflow: version must be set in pubspec.yaml before tagging
