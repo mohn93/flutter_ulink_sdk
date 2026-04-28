@@ -1,5 +1,8 @@
 # Changelog
 
+## 0.2.19
+- Bump Android SDK dependency to 1.0.11 — fixes Android main-thread freeze during `ULink.initialize()` on cold start with slow or unstable networks (#8). The native `initialize()` no longer wraps `setup()` in `runBlocking`; concurrent callers now serialize via a suspend-safe `Mutex` instead of a JVM monitor.
+
 ## 0.2.18
 - Fix `ULinkParameters.name` being silently dropped by the Android and iOS bridges — link names now reach `/sdk/links` and appear correctly in the dashboard (#7)
 
