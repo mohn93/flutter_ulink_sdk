@@ -27,6 +27,16 @@ A Flutter SDK for creating and handling dynamic links with ULink, similar to Bra
 - Installation tracking
 - Clear distinction between dynamic and unified link types
 
+## AI-Assisted Setup
+
+Using Claude Code, Cursor, Codex, or another AI coding agent? Install the ULink onboarding skill in one command:
+
+```bash
+npx skills add https://ulink.ly
+```
+
+Then ask your assistant to **"setup ulink"** — it'll detect your Flutter project, configure your ULink dashboard, edit `pubspec.yaml`/`AndroidManifest.xml`/`Info.plist`, and verify the integration. Works with 50+ AI agents via the [open agent-skills CLI](https://github.com/vercel-labs/skills). [Learn more →](https://docs.ulink.ly/getting-started/ai-setup)
+
 ## Installation
 
 Add this to your `pubspec.yaml` dependencies:
