@@ -45,9 +45,11 @@ class ULinkParameters {
   /// link on repeat calls instead of creating a duplicate. Pick a deterministic
   /// key from your system, e.g. `share:user:123:post:456`.
   ///
-  /// Note: end-to-end plumbing (Dart -> bridge -> native -> REST) ships
-  /// once the native SDKs publish 1.1.0 and this plugin bumps its pinned
-  /// versions. Until then this field is captured but the bridges drop it.
+  /// **Requires flutter_ulink_sdk ≥ 0.3.0 to actually take effect.** In
+  /// earlier versions the field is accepted on the Dart side but silently
+  /// dropped by the native bridges before reaching the REST API. End-to-end
+  /// plumbing (Dart -> bridge -> native -> REST) ships once the native SDKs
+  /// publish 1.1.0 and this plugin bumps its pinned versions.
   final String? externalId;
 
   /// Creates a new set of ULink parameters
