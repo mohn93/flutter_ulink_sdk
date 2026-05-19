@@ -850,20 +850,21 @@ public class FlutterUlinkSdkPlugin: NSObject, FlutterPlugin {
         let fallbackUrl = map["fallbackUrl"] as? String
         let additionalParameters = map["parameters"] as? [String: String]
         let metadata = map["metadata"] as? [String: Any]
-        
+        let externalId = map["externalId"] as? String
+
         var socialTags: SocialMediaTags? = nil
         if let socialMediaArgs = map["socialMediaTags"] as? [String: Any] {
             let ogTitle = socialMediaArgs["ogTitle"] as? String
             let ogDescription = socialMediaArgs["ogDescription"] as? String
             let ogImage = socialMediaArgs["ogImage"] as? String
-            
+
             socialTags = SocialMediaTags(
                 ogTitle: ogTitle,
                 ogDescription: ogDescription,
                 ogImage: ogImage
             )
         }
-        
+
         let parameters: ULinkParameters
         if type == "dynamic" {
             parameters = ULinkParameters.dynamic(
@@ -875,13 +876,14 @@ public class FlutterUlinkSdkPlugin: NSObject, FlutterPlugin {
                 fallbackUrl: fallbackUrl,
                 parameters: additionalParameters,
                 socialMediaTags: socialTags,
-                metadata: metadata
+                metadata: metadata,
+                externalId: externalId
             )
         } else {
             let iosUrl = map["iosUrl"] as? String ?? ""
             let androidUrl = map["androidUrl"] as? String ?? ""
             let fallbackUrlRequired = fallbackUrl ?? ""
-            
+
             parameters = ULinkParameters.unified(
                 domain: domain,
                 slug: slug,
@@ -891,10 +893,11 @@ public class FlutterUlinkSdkPlugin: NSObject, FlutterPlugin {
                 fallbackUrl: fallbackUrlRequired,
                 parameters: additionalParameters,
                 socialMediaTags: socialTags,
-                metadata: metadata
+                metadata: metadata,
+                externalId: externalId
             )
         }
-        
+
         return parameters
     }
     
