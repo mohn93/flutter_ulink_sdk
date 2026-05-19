@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.3.0
+- Add optional `externalId` to `ULinkParameters` for idempotent link creation. Set a deterministic key (e.g. `share:user:123:post:456`) and repeat calls return the existing link instead of creating a duplicate. See https://docs.ulink.ly/create-links/idempotent-link-creation
+- Forward `externalId` end-to-end through the Kotlin and Swift native bridges
+- Bump pinned native SDKs to ULinkSDK ~> 1.1.0 (iOS) and ly.ulink:ulink-sdk:1.1.0 (Android)
+
 ## 0.2.19
 - Bump Android SDK dependency to 1.0.11 — fixes Android main-thread freeze during `ULink.initialize()` on cold start with slow or unstable networks (#8). The native `initialize()` no longer wraps `setup()` in `runBlocking`; concurrent callers now serialize via a suspend-safe `Mutex` instead of a JVM monitor.
 

@@ -243,8 +243,6 @@ if (unifiedResponse.success) {
 
 ### Idempotent Link Creation
 
-> ⚠️ **Requires flutter_ulink_sdk ≥ 0.3.0.** In earlier versions the field is accepted on the Dart side but silently dropped by the native bridges before reaching the REST API — **do not rely on it for deduplication until you've upgraded.** End-to-end forwarding (Dart → native bridge → REST) ships once the native iOS and Android SDKs publish 1.1.0 and this plugin bumps its pinned versions.
-
 Pass `externalId` to avoid creating duplicates when the same share button is tapped repeatedly. ULink scopes the key to your project — repeat calls return the existing link instead of creating a new one. See the [docs](https://docs.ulink.ly/create-links/idempotent-link-creation) for full semantics.
 
 ```dart
@@ -257,9 +255,8 @@ final response = await ULink.instance.createLink(
     externalId: 'share:user:123:post:456',
   ),
 );
-// SDK ≥ 0.3.0:
-//   First call:        creates link, returns 201
-//   Subsequent calls:  returns the same link, 200
+// First call:        creates link, returns 201
+// Subsequent calls:  returns the same link, 200
 ```
 
 ## Factory Methods for Cleaner API

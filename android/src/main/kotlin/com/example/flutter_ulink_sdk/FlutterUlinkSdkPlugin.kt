@@ -576,7 +576,8 @@ class FlutterUlinkSdkPlugin: FlutterPlugin, MethodCallHandler, ActivityAware, Pl
       fallbackUrl = parametersMap["fallbackUrl"] as? String,
       parameters = parametersConverted,
       socialMediaTags = socialMediaTags,
-      metadata = metadataConverted
+      metadata = metadataConverted,
+      externalId = parametersMap["externalId"] as? String
     )
   }
   
