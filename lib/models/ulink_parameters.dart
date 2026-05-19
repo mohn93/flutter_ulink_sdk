@@ -40,6 +40,16 @@ class ULinkParameters {
   /// when projects have multiple domains configured.
   final String domain;
 
+  /// Optional caller-supplied identifier used to make link creation idempotent.
+  /// When set, ULink scopes the key to your project and returns the existing
+  /// link on repeat calls instead of creating a duplicate. Pick a deterministic
+  /// key from your system, e.g. `share:user:123:post:456`.
+  ///
+  /// Note: end-to-end plumbing (Dart -> bridge -> native -> REST) ships
+  /// once the native SDKs publish 1.1.0 and this plugin bumps its pinned
+  /// versions. Until then this field is captured but the bridges drop it.
+  final String? externalId;
+
   /// Creates a new set of ULink parameters
   ULinkParameters({
     this.type = 'dynamic',
@@ -54,6 +64,7 @@ class ULinkParameters {
     this.parameters,
     this.socialMediaTags,
     this.metadata,
+    this.externalId,
   });
 
   /// Factory constructor for creating dynamic links
@@ -67,6 +78,7 @@ class ULinkParameters {
     String? fallbackUrl,
     Map<String, dynamic>? parameters,
     SocialMediaTags? socialMediaTags,
+    String? externalId,
   }) {
     return ULinkParameters(
       type: 'dynamic',
@@ -78,6 +90,7 @@ class ULinkParameters {
       fallbackUrl: fallbackUrl,
       parameters: parameters,
       socialMediaTags: socialMediaTags,
+      externalId: externalId,
     );
   }
 
@@ -92,6 +105,7 @@ class ULinkParameters {
     String? fallbackUrl,
     Map<String, dynamic>? parameters,
     SocialMediaTags? socialMediaTags,
+    String? externalId,
   }) {
     return ULinkParameters(
       type: 'unified',
@@ -103,6 +117,7 @@ class ULinkParameters {
       fallbackUrl: fallbackUrl,
       parameters: parameters,
       socialMediaTags: socialMediaTags,
+      externalId: externalId,
     );
   }
 
@@ -121,6 +136,7 @@ class ULinkParameters {
     if (androidFallbackUrl != null)
       data['androidFallbackUrl'] = androidFallbackUrl;
     if (fallbackUrl != null) data['fallbackUrl'] = fallbackUrl;
+    if (externalId != null) data['externalId'] = externalId;
     if (parameters != null) data['parameters'] = parameters;
     if (socialMediaTags != null)
       data['socialMediaTags'] = socialMediaTags!.toJson();
@@ -150,6 +166,7 @@ class ULinkParameters {
       metadata: json['metadata'] != null
           ? Map<String, dynamic>.from(json['metadata'])
           : null,
+      externalId: json['externalId'],
     );
   }
 }
