@@ -332,6 +332,18 @@ void initState() {
 }
 ```
 
+### Query Parameter Passthrough
+
+When a link has **`allowQueryPassthrough`** enabled (set via the ULink dashboard, REST API, or MCP — not a field in the Flutter SDK itself), any query params appended to the link URL at click time (e.g. `?orderId=123`) are merged into the link's `parameters` map before delivery. Passthrough values override stored params with the same key and always arrive as strings. This works on both direct app open and after a deferred install — no SDK changes needed.
+
+```dart
+ULink.instance.onLink.listen((data) {
+  final orderId = data.parameters?['orderId']; // e.g. "123"
+});
+```
+
+> **Note:** Passthrough values always arrive as strings and override any stored param with the same key. Enable `allowQueryPassthrough` on the link via the dashboard or REST API.
+
 ## Resolving Links Manually
 
 Resolve a dynamic link to get its data:
