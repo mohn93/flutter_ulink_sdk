@@ -1,5 +1,8 @@
 # Changelog
 
+## 0.3.1
+- Add Swift Package Manager support for the iOS plugin. The plugin now ships an `ios/flutter_ulink_sdk/Package.swift` alongside the existing CocoaPods podspec, so apps that have enabled Flutter's Swift Package Manager integration no longer warn that `flutter_ulink_sdk` lacks SPM support. CocoaPods consumers are unaffected — both build systems share the same source under `ios/flutter_ulink_sdk/Sources/`.
+
 ## 0.3.0
 - Add optional `externalId` to `ULinkParameters` for idempotent link creation. Set a deterministic key (e.g. `share:user:123:post:456`) and repeat calls return the existing link instead of creating a duplicate. See https://docs.ulink.ly/create-links/idempotent-link-creation
 - Forward `externalId` end-to-end through the Kotlin and Swift native bridges
