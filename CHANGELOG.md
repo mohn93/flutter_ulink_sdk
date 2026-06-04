@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.4.0
+- **BREAKING (minimum Flutter):** Requires Flutter >= 3.44 / Dart >= 3.12. Apps on older Flutter must stay on 0.3.x.
+- Complete the Built-in Kotlin migration: the Android plugin no longer applies the Kotlin Gradle Plugin (KGP) at all. Flutter (>= 3.44) auto-applies KGP to plugins that apply the Android library plugin, so `flutter_ulink_sdk` no longer appears in the "Your app uses the following plugins that apply Kotlin Gradle Plugin (KGP)" build warning, and will keep building when a future Flutter turns that warning into a hard error. 0.3.2's conditional `apply plugin: "kotlin-android"` did not resolve the warning because Flutter detects KGP usage via a textual scan of the plugin's build.gradle that ignores the surrounding `if` guard. See https://docs.flutter.dev/release/breaking-changes/migrate-to-built-in-kotlin/for-plugin-authors
+
 ## 0.3.2
 - Migrate the Android plugin to Flutter's Built-in Kotlin model: the plugin no longer applies the Kotlin Gradle Plugin (KGP) via its own buildscript classpath. KGP is now applied conditionally only on AGP < 9 (`apply plugin: "kotlin-android"`); on AGP 9+ Flutter's built-in Kotlin is used. This removes `flutter_ulink_sdk` from the "plugins that apply KGP" build warning and keeps it building on future Flutter releases. See https://docs.flutter.dev/release/breaking-changes/migrate-to-built-in-kotlin/for-plugin-authors
 - Replace the deprecated `kotlinOptions { jvmTarget }` block with the `kotlin { compilerOptions { jvmTarget } }` DSL.
