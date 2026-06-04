@@ -8,7 +8,7 @@ buildscript {
     }
 
     dependencies {
-        classpath("com.android.tools.build:gradle:8.7.3")
+        classpath("com.android.tools.build:gradle:8.11.1")
     }
 }
 
@@ -24,14 +24,13 @@ allprojects {
 
 apply plugin: "com.android.library"
 
-// Built-in Kotlin migration: AGP 9+ ships a built-in Kotlin Gradle Plugin (KGP),
-// so applying KGP ourselves there would conflict. Only apply it on older AGP, where
-// the host app's buildscript classpath provides KGP. See:
+// Built-in Kotlin: this plugin intentionally does NOT apply the Kotlin Gradle Plugin
+// (KGP) itself. Flutter (>= 3.44) auto-applies KGP to plugins that apply the Android
+// library plugin, sourcing it from the host app's classpath (AGP < 9) or AGP's
+// built-in Kotlin (AGP 9+). Declaring KGP here — even guarded by an `if` — is matched
+// by Flutter's textual scan and trips the "plugins that apply KGP" build failure.
+// Requires Flutter >= 3.44 (the auto-apply does not exist before then). See:
 // https://docs.flutter.dev/release/breaking-changes/migrate-to-built-in-kotlin/for-plugin-authors
-def agpMajorVersion = com.android.Version.ANDROID_GRADLE_PLUGIN_VERSION.tokenize(".")[0] as int
-if (agpMajorVersion < 9) {
-    apply plugin: "kotlin-android"
-}
 
 android {
     namespace "com.example.flutter_ulink_sdk"
