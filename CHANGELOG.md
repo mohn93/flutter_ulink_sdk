@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.3.2
+- Migrate the Android plugin to Flutter's Built-in Kotlin model: the plugin no longer applies the Kotlin Gradle Plugin (KGP) via its own buildscript classpath. KGP is now applied conditionally only on AGP < 9 (`apply plugin: "kotlin-android"`); on AGP 9+ Flutter's built-in Kotlin is used. This removes `flutter_ulink_sdk` from the "plugins that apply KGP" build warning and keeps it building on future Flutter releases. See https://docs.flutter.dev/release/breaking-changes/migrate-to-built-in-kotlin/for-plugin-authors
+- Replace the deprecated `kotlinOptions { jvmTarget }` block with the `kotlin { compilerOptions { jvmTarget } }` DSL.
+- Drop the unused `kotlinx-serialization` Kotlin compiler plugin. The plugin used no `@Serializable` types; only the `kotlinx-serialization-json` runtime API is used, which remains a dependency. No behavior change.
+
 ## 0.3.1
 - Add Swift Package Manager support for the iOS plugin. The plugin now ships an `ios/flutter_ulink_sdk/Package.swift` alongside the existing CocoaPods podspec, so apps that have enabled Flutter's Swift Package Manager integration no longer warn that `flutter_ulink_sdk` lacks SPM support. CocoaPods consumers are unaffected — both build systems share the same source under `ios/flutter_ulink_sdk/Sources/`.
 
