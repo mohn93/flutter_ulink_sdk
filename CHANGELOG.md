@@ -1,5 +1,8 @@
 # Changelog
 
+## 0.3.3
+- Bump pinned native iOS SDK to `ULinkSDK ~> 1.1.1`, which fixes iOS-only loss of appended query parameters during link resolution. On iOS the deep link was sent to `/sdk/resolve` with `&`/`=` left unencoded, so the server saw only the first appended parameter (e.g. `?app=poc&screen=product&id=123` resolved to just `{app: poc}`); every parameter after the first was dropped. Android was unaffected. Requires rebuilding the iOS app against the updated pod/SwiftPM dependency.
+
 ## 0.3.2
 - Migrate the Android plugin to Flutter's Built-in Kotlin model: the plugin no longer applies the Kotlin Gradle Plugin (KGP) via its own buildscript classpath. KGP is now applied conditionally only on AGP < 9 (`apply plugin: "kotlin-android"`); on AGP 9+ Flutter's built-in Kotlin is used. This removes `flutter_ulink_sdk` from the "plugins that apply KGP" build warning and keeps it building on future Flutter releases. See https://docs.flutter.dev/release/breaking-changes/migrate-to-built-in-kotlin/for-plugin-authors
 - Replace the deprecated `kotlinOptions { jvmTarget }` block with the `kotlin { compilerOptions { jvmTarget } }` DSL.

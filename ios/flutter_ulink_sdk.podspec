@@ -15,7 +15,7 @@ A new Flutter plugin project.
   s.source           = { :path => '.' }
   s.source_files = 'flutter_ulink_sdk/Sources/flutter_ulink_sdk/**/*.swift'
   s.dependency 'Flutter'
-  s.dependency 'ULinkSDK', '~> 1.1.0'
+  s.dependency 'ULinkSDK', '~> 1.1.1'
   s.platform = :ios, '13.0'
 
   # Flutter.framework does not contain a i386 slice.
