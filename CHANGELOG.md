@@ -1,5 +1,8 @@
 # Changelog
 
+## 0.3.4
+- Bump pinned native Android SDK to `ly.ulink:ulink-sdk:1.1.1`, which fixes a client-version telemetry mismatch — the 1.1.0 artifact was sending `X-ULink-Client-Version: 1.0.11` on all backend calls (bootstrap, sessions/start, sessions/end, resolve, deferred match). Version header now reports the correct `1.1.1`. iOS was unaffected (already correct in 0.3.3).
+
 ## 0.3.3
 - Bump pinned native iOS SDK to `ULinkSDK ~> 1.1.1`, which fixes iOS-only loss of appended query parameters during link resolution. On iOS the deep link was sent to `/sdk/resolve` with `&`/`=` left unencoded, so the server saw only the first appended parameter (e.g. `?app=poc&screen=product&id=123` resolved to just `{app: poc}`); every parameter after the first was dropped. Android was unaffected. Requires rebuilding the iOS app against the updated pod/SwiftPM dependency.
 
