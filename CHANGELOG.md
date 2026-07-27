@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.3.5
+- Bump pinned native Android SDK to `ly.ulink:ulink-sdk:1.1.4`, picking up three releases of Android-only fixes (1.1.2, 1.1.3, 1.1.4). iOS is unaffected and its pin is unchanged.
+  - Dynamic links are no longer emitted twice when the app is already installed (1.1.2).
+  - The deferred-match endpoint now honours the configured `baseUrl` instead of always calling `https://api.ulink.ly`; integrators pointing the SDK at a staging or self-hosted API were silently sending device fingerprints to production (1.1.3).
+  - The "retry bootstrap on next foreground" recovery is now reachable. A failed bootstrap marks itself completed, and the retry was keyed off that flag, so a single transient network error at cold start left the SDK degraded for the whole process lifetime — no sessions, no deferred links (1.1.3).
+  - Transient pre-send network failures (DNS resolution, connect, no route) are retried with exponential backoff instead of failing permanently on the first attempt. Failures that may already have reached the server, such as read timeouts, are deliberately not retried so sessions and installations cannot be duplicated (1.1.4).
+  - The deferred-link check is no longer lost when the cold-start bootstrap fails: it is re-attempted once bootstrap recovers, serialized so overlapping foregrounds cannot consume two deferred clicks, and retried until the request actually completes (1.1.4).
+
 ## 0.3.4
 - Bump pinned native Android SDK to `ly.ulink:ulink-sdk:1.1.1`, which fixes a client-version telemetry mismatch — the 1.1.0 artifact was sending `X-ULink-Client-Version: 1.0.11` on all backend calls (bootstrap, sessions/start, sessions/end, resolve, deferred match). Version header now reports the correct `1.1.1`. iOS was unaffected (already correct in 0.3.3).
 
