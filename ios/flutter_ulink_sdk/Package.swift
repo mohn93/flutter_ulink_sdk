@@ -14,7 +14,7 @@ let package = Package(
     dependencies: [
         // Native ULink iOS SDK. Mirrors the `ULinkSDK ~> 1.1.1` CocoaPods
         // dependency declared in flutter_ulink_sdk.podspec.
-        .package(url: "https://github.com/mohn93/ios_ulink_sdk.git", from: "1.1.1")
+        .package(url: "https://github.com/mohn93/ios_ulink_sdk.git", from: "1.2.0")
     ],
     targets: [
         .target(
