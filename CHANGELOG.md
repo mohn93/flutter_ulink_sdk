@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.3.6
+- Bump pinned native Android SDK to `ly.ulink:ulink-sdk:1.2.0`. iOS is unaffected and its pin is unchanged.
+  - Deep links are no longer lost when they arrive while the SDK is still starting up. A link that reached the SDK before bootstrap finished was rejected outright, and because the intent had already been marked as handled, nothing retried it — so cold starts launched by tapping a link, the most common case, dropped the link. Measured on a device: the intent was processed 0.9s after process start and bootstrap completed 2.2s later, with the listener never firing.
+  - The same wait now applies to the deferred-link check, which is a once-per-install call — losing it to the startup race lost the install's attribution permanently.
+  - A failure while the SDK was setting up could leave bootstrap in a non-terminal state, parking every later deep link for the life of the process.
+  - Ending the SDK no longer reports its own shutdown as a deep-link failure, and no longer silently stops delivering entries to the log stream.
+  - Disposing the SDK now actually ends the active session; the request was previously cancelled before it was ever sent.
+  - Re-initialising after disposing now returns a working instance instead of the disposed one, whose background work silently did nothing.
+
 ## 0.3.5
 - Bump pinned native Android SDK to `ly.ulink:ulink-sdk:1.1.4`, picking up three releases of Android-only fixes (1.1.2, 1.1.3, 1.1.4). iOS is unaffected and its pin is unchanged.
   - Dynamic links are no longer emitted twice when the app is already installed (1.1.2).
