@@ -24,12 +24,14 @@ allprojects {
 
 apply plugin: "com.android.library"
 
-// Built-in Kotlin migration: AGP 9+ ships a built-in Kotlin Gradle Plugin (KGP),
-// so applying KGP ourselves there would conflict. Only apply it on older AGP, where
-// the host app's buildscript classpath provides KGP. See:
+// Built-in Kotlin migration: AGP 9+ ships a built-in Kotlin Gradle Plugin (KGP) and
+// registers the `kotlin` extension itself, so applying KGP there would conflict. On
+// older AGP the extension comes from the host app's buildscript classpath instead.
+// Ask for the extension rather than inferring it from the AGP version: an app on AGP 9
+// can opt out of built-in Kotlin with `android.builtInKotlin=false`, and a version
+// check would then skip KGP and leave no `kotlin` extension for the block below. See:
 // https://docs.flutter.dev/release/breaking-changes/migrate-to-built-in-kotlin/for-plugin-authors
-def agpMajorVersion = com.android.Version.ANDROID_GRADLE_PLUGIN_VERSION.tokenize(".")[0] as int
-if (agpMajorVersion < 9) {
+if (project.extensions.findByName("kotlin") == null) {
     apply plugin: "kotlin-android"
 }
 

@@ -1,5 +1,8 @@
 # Changelog
 
+## 0.3.8
+- Fix an Android build failure on AGP 9 for apps that opt out of built-in Kotlin. The plugin decided whether to apply the Kotlin Gradle Plugin from the AGP major version, assuming AGP 9 always registers the `kotlin` extension via built-in Kotlin. An app that sets `android.builtInKotlin=false` in `android/gradle.properties` gets neither: the version check skips KGP, AGP registers nothing, and evaluating the plugin fails with `Could not find method kotlin() ... on project ':flutter_ulink_sdk'`. The plugin now checks for the extension itself and applies KGP only when it is absent. No change for apps on AGP 8, or on AGP 9 with built-in Kotlin left enabled.
+
 ## 0.3.7
 - Bump the pinned native iOS SDK to `ULinkSDK` 1.2.0. Android is unaffected and its pin is unchanged.
   - Deep links are no longer lost on iOS when they arrive while the SDK is still starting up. A host launched by a universal link hands the link to the SDK moments after initialization begins, and link resolution rejected anything arriving before bootstrap finished — the error was swallowed into a log line, so the launch link was dropped silently.
