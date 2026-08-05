@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.3.9
+- Raise the pinned native iOS SDK to `ULinkSDK` 1.2.2, which fixes a crash when a deep link arrives before the SDK finishes initializing.
+  - `ULink.shared` called `fatalError` when the SDK was not yet initialized, and iOS delivers the launch URL during a cold start before an async `initialize()` completes. A host that handled the URL through `shared` was killed on exactly the launch path deep links exist for.
+  - 1.2.2 adds a static `ULink.handleIncomingURL(_:)` that buffers a URL arriving before initialization and replays it once initialization finishes, plus `ULink.isInitialized`. Hosts that reach the SDK through this plugin are unaffected either way; the bump matters for apps that also call the native SDK directly.
+  - Unlike the 0.3.7 bump, the previous constraint did not block the new version: `~> 1.2.0` already resolves to `>= 1.2.0, < 1.3.0`. Raising the floor to `~> 1.2.2` stops a lockfile holding a host on 1.2.0 or 1.2.1 and missing the fix.
+- Correct the Swift Package Manager comment, which still described the pin as `~> 1.1.1` after it had moved twice.
+- Android is unaffected and its pin is unchanged.
+
 ## 0.3.8
 - Fix an Android build failure on AGP 9 for apps that opt out of built-in Kotlin. The plugin decided whether to apply the Kotlin Gradle Plugin from the AGP major version, assuming AGP 9 always registers the `kotlin` extension via built-in Kotlin. An app that sets `android.builtInKotlin=false` in `android/gradle.properties` gets neither: the version check skips KGP, AGP registers nothing, and evaluating the plugin fails with `Could not find method kotlin() ... on project ':flutter_ulink_sdk'`. The plugin now checks for the extension itself and applies KGP only when it is absent. No change for apps on AGP 8, or on AGP 9 with built-in Kotlin left enabled.
 
