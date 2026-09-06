@@ -32,11 +32,14 @@ jobs:
           fi
           echo "Version $VERSION verified"
 
-      # Setup Flutter
+      # Setup Flutter. Pinned to match ci.yml so releases are reproducible and a
+      # newer floating stable can't change tooling behaviour under us. Keep this
+      # version in sync with .github/workflows/ci.yml.
       - name: Setup Flutter
         uses: subosito/flutter-action@v2
         with:
           channel: 'stable'
+          flutter-version: '3.41.5'
 
       # Install dependencies
       - name: Install dependencies
@@ -52,7 +55,13 @@ jobs:
 
       # Dry run to verify package is ready
       - name: Verify package
-        run: dart pub publish --dry-run
+        run: |
+          # `flutter pub get` can leave tracked files modified on some toolchain
+          # versions (a regenerated analysis_options.yaml, pubspec.lock, ...),
+          # which pub's publish validation reports as an unclean git state and
+          # fails on. Reset to the committed sources first. Mirrors ci.yml.
+          git checkout -- .
+          dart pub publish --dry-run
 
       # Create GitHub Release
       - name: Create Release
