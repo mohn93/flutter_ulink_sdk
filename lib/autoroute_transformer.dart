@@ -83,9 +83,7 @@ class ULinkAutoRouteTransformer {
   /// Resolves a ULink URI to get the associated data.
   Future<ULinkResolvedData?> _resolveULink(Uri uri) async {
     try {
-      final response = await ULink.instance.resolveLink(
-        uri.toString(),
-      );
+      final response = await ULink.instance.resolveLink(uri.toString());
       if (response.success && response.data != null) {
         return ULinkResolvedData.fromJson(response.data!);
       }
@@ -100,7 +98,8 @@ class ULinkAutoRouteTransformer {
   /// Handles unified links by extracting the target URL.
   Uri _handleUnifiedLink(ULinkResolvedData data, Uri originalUri) {
     // For unified links, try to extract the target URL from parameters
-    final targetUrl = data.parameters?['target_url'] ??
+    final targetUrl =
+        data.parameters?['target_url'] ??
         data.parameters?['url'] ??
         data.fallbackUrl;
 

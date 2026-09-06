@@ -46,15 +46,24 @@ void main() {
 
       // These wrong keys were the cause of the iOS bug.
       // If someone accidentally changes toJson to use these, this test catches it.
-      expect(json.containsKey('title'), isFalse,
-          reason:
-              'Must use "ogTitle", not "title" — native plugins expect "ogTitle"');
-      expect(json.containsKey('description'), isFalse,
-          reason:
-              'Must use "ogDescription", not "description" — native plugins expect "ogDescription"');
-      expect(json.containsKey('imageUrl'), isFalse,
-          reason:
-              'Must use "ogImage", not "imageUrl" — native plugins expect "ogImage"');
+      expect(
+        json.containsKey('title'),
+        isFalse,
+        reason:
+            'Must use "ogTitle", not "title" — native plugins expect "ogTitle"',
+      );
+      expect(
+        json.containsKey('description'),
+        isFalse,
+        reason:
+            'Must use "ogDescription", not "description" — native plugins expect "ogDescription"',
+      );
+      expect(
+        json.containsKey('imageUrl'),
+        isFalse,
+        reason:
+            'Must use "ogImage", not "imageUrl" — native plugins expect "ogImage"',
+      );
     });
 
     test('toJson omits null fields', () {
@@ -147,8 +156,11 @@ void main() {
       expect(tags.containsKey('title'), isFalse);
 
       final parameters = json['parameters'] as Map;
-      expect(parameters.containsKey('ogTitle'), isFalse,
-          reason: 'OG tags should not leak into parameters');
+      expect(
+        parameters.containsKey('ogTitle'),
+        isFalse,
+        reason: 'OG tags should not leak into parameters',
+      );
     });
 
     test('unified link serializes social media tags correctly', () {
@@ -189,13 +201,14 @@ void main() {
 
       TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
           .setMockMethodCallHandler(channel, (MethodCall methodCall) async {
-        if (methodCall.method == 'createLink') {
-          capturedArguments =
-              Map<String, dynamic>.from(methodCall.arguments as Map);
-          return {'success': true, 'url': 'https://test.ulink.ly/abc123'};
-        }
-        return null;
-      });
+            if (methodCall.method == 'createLink') {
+              capturedArguments = Map<String, dynamic>.from(
+                methodCall.arguments as Map,
+              );
+              return {'success': true, 'url': 'https://test.ulink.ly/abc123'};
+            }
+            return null;
+          });
     });
 
     tearDown(() {
@@ -203,75 +216,84 @@ void main() {
           .setMockMethodCallHandler(channel, null);
     });
 
-    test('createLink passes social media tags with correct keys to native',
-        () async {
-      final params = ULinkParameters.dynamic(
-        domain: 'example.com',
-        slug: 'test',
-        socialMediaTags: SocialMediaTags(
-          ogTitle: 'Native Bridge Title',
-          ogDescription: 'Native Bridge Description',
-          ogImage: 'https://example.com/native.png',
-        ),
-      );
+    test(
+      'createLink passes social media tags with correct keys to native',
+      () async {
+        final params = ULinkParameters.dynamic(
+          domain: 'example.com',
+          slug: 'test',
+          socialMediaTags: SocialMediaTags(
+            ogTitle: 'Native Bridge Title',
+            ogDescription: 'Native Bridge Description',
+            ogImage: 'https://example.com/native.png',
+          ),
+        );
 
-      await platform.createLink(params);
+        await platform.createLink(params);
 
-      expect(capturedArguments, isNotNull);
-      final parametersMap =
-          Map<String, dynamic>.from(capturedArguments!['parameters'] as Map);
-      final socialTags =
-          Map<String, dynamic>.from(parametersMap['socialMediaTags'] as Map);
+        expect(capturedArguments, isNotNull);
+        final parametersMap = Map<String, dynamic>.from(
+          capturedArguments!['parameters'] as Map,
+        );
+        final socialTags = Map<String, dynamic>.from(
+          parametersMap['socialMediaTags'] as Map,
+        );
 
-      // These are the exact keys the native plugins read:
-      // iOS: FlutterUlinkSdkPlugin.swift line 985-987
-      // Android: FlutterUlinkSdkPlugin.kt line 522-532
-      expect(socialTags['ogTitle'], 'Native Bridge Title');
-      expect(socialTags['ogDescription'], 'Native Bridge Description');
-      expect(socialTags['ogImage'], 'https://example.com/native.png');
+        // These are the exact keys the native plugins read:
+        // iOS: FlutterUlinkSdkPlugin.swift line 985-987
+        // Android: FlutterUlinkSdkPlugin.kt line 522-532
+        expect(socialTags['ogTitle'], 'Native Bridge Title');
+        expect(socialTags['ogDescription'], 'Native Bridge Description');
+        expect(socialTags['ogImage'], 'https://example.com/native.png');
 
-      // Must NOT contain wrong keys
-      expect(socialTags.containsKey('title'), isFalse);
-      expect(socialTags.containsKey('description'), isFalse);
-      expect(socialTags.containsKey('imageUrl'), isFalse);
-    });
+        // Must NOT contain wrong keys
+        expect(socialTags.containsKey('title'), isFalse);
+        expect(socialTags.containsKey('description'), isFalse);
+        expect(socialTags.containsKey('imageUrl'), isFalse);
+      },
+    );
 
-    test('createLink without social media tags omits the key entirely',
-        () async {
-      final params = ULinkParameters.dynamic(
-        domain: 'example.com',
-        slug: 'no-social',
-      );
+    test(
+      'createLink without social media tags omits the key entirely',
+      () async {
+        final params = ULinkParameters.dynamic(
+          domain: 'example.com',
+          slug: 'no-social',
+        );
 
-      await platform.createLink(params);
+        await platform.createLink(params);
 
-      expect(capturedArguments, isNotNull);
-      final parametersMap =
-          Map<String, dynamic>.from(capturedArguments!['parameters'] as Map);
-      expect(parametersMap.containsKey('socialMediaTags'), isFalse);
-    });
+        expect(capturedArguments, isNotNull);
+        final parametersMap = Map<String, dynamic>.from(
+          capturedArguments!['parameters'] as Map,
+        );
+        expect(parametersMap.containsKey('socialMediaTags'), isFalse);
+      },
+    );
 
-    test('createLink with partial social media tags sends only provided keys',
-        () async {
-      final params = ULinkParameters.dynamic(
-        domain: 'example.com',
-        slug: 'partial',
-        socialMediaTags: SocialMediaTags(
-          ogTitle: 'Only Title Set',
-        ),
-      );
+    test(
+      'createLink with partial social media tags sends only provided keys',
+      () async {
+        final params = ULinkParameters.dynamic(
+          domain: 'example.com',
+          slug: 'partial',
+          socialMediaTags: SocialMediaTags(ogTitle: 'Only Title Set'),
+        );
 
-      await platform.createLink(params);
+        await platform.createLink(params);
 
-      expect(capturedArguments, isNotNull);
-      final parametersMap =
-          Map<String, dynamic>.from(capturedArguments!['parameters'] as Map);
-      final socialTags =
-          Map<String, dynamic>.from(parametersMap['socialMediaTags'] as Map);
+        expect(capturedArguments, isNotNull);
+        final parametersMap = Map<String, dynamic>.from(
+          capturedArguments!['parameters'] as Map,
+        );
+        final socialTags = Map<String, dynamic>.from(
+          parametersMap['socialMediaTags'] as Map,
+        );
 
-      expect(socialTags, {'ogTitle': 'Only Title Set'});
-      expect(socialTags.containsKey('ogDescription'), isFalse);
-      expect(socialTags.containsKey('ogImage'), isFalse);
-    });
+        expect(socialTags, {'ogTitle': 'Only Title Set'});
+        expect(socialTags.containsKey('ogDescription'), isFalse);
+        expect(socialTags.containsKey('ogImage'), isFalse);
+      },
+    );
   });
 }

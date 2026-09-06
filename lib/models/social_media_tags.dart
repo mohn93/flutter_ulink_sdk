@@ -10,11 +10,7 @@ class SocialMediaTags {
   final String? ogImage;
 
   /// Creates a new set of social media tags
-  SocialMediaTags({
-    this.ogTitle,
-    this.ogDescription,
-    this.ogImage,
-  });
+  SocialMediaTags({this.ogTitle, this.ogDescription, this.ogImage});
 
   /// Converts the social media tags to a JSON map
   Map<String, dynamic> toJson() {

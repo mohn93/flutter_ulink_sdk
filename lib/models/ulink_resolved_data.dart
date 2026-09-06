@@ -101,8 +101,9 @@ class ULinkResolvedData {
 
     // Determine link type based on type field from rawData
     final typeFromData = json['type'] as String?;
-    final linkType =
-        typeFromData == 'dynamic' ? ULinkType.dynamic : ULinkType.unified;
+    final linkType = typeFromData == 'dynamic'
+        ? ULinkType.dynamic
+        : ULinkType.unified;
 
     return ULinkResolvedData(
       slug: json['slug'],

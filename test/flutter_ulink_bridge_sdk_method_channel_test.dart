@@ -12,22 +12,19 @@ void main() {
   setUp(() {
     TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
         .setMockMethodCallHandler(channel, (MethodCall methodCall) async {
-      switch (methodCall.method) {
-        case 'createLink':
-          return {
-            'success': true,
-            'url': 'https://test.ulink.ly/abc123',
-          };
-        case 'getCurrentSessionId':
-          return 'session123';
-        case 'hasActiveSession':
-          return true;
-        case 'getSessionState':
-          return 'active';
-        default:
-          return null;
-      }
-    });
+          switch (methodCall.method) {
+            case 'createLink':
+              return {'success': true, 'url': 'https://test.ulink.ly/abc123'};
+            case 'getCurrentSessionId':
+              return 'session123';
+            case 'hasActiveSession':
+              return true;
+            case 'getSessionState':
+              return 'active';
+            default:
+              return null;
+          }
+        });
   });
 
   tearDown(() {

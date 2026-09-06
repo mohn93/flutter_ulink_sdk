@@ -7,7 +7,7 @@ import Combine
 // The plugin now uses Flutter's addApplicationDelegate API instead of swizzling.
 // This is more reliable and avoids class/instance method mismatch issues.
 
-public class FlutterUlinkSdkPlugin: NSObject, FlutterPlugin {
+public class FlutterUlinkSdkPlugin: NSObject, FlutterPlugin, FlutterSceneLifeCycleDelegate {
     private struct PendingDeepLink {
         let url: URL
         let forceProcessing: Bool
@@ -61,7 +61,12 @@ public class FlutterUlinkSdkPlugin: NSObject, FlutterPlugin {
         // Register as application delegate to receive universal link and URL scheme callbacks
         // This uses Flutter's proper plugin delegate forwarding instead of method swizzling
         registrar.addApplicationDelegate(instance)
-        NSLog("[ULink] Plugin registered as application delegate for deep link handling")
+        // Also register as a scene-lifecycle delegate. Apps that adopt the
+        // UIScene lifecycle no longer deliver the UIApplicationDelegate deep-link
+        // callbacks; Flutter forwards the scene equivalents instead. Registering
+        // both keeps deep linking working on migrated and non-migrated apps.
+        registrar.addSceneDelegate(instance)
+        NSLog("[ULink] Plugin registered as application + scene delegate for deep link handling")
     }
     
     public func handle(_ call: FlutterMethodCall, result: @escaping FlutterResult) {
@@ -467,6 +472,63 @@ public class FlutterUlinkSdkPlugin: NSObject, FlutterPlugin {
         NSLog("[ULink] Received URL scheme via application delegate: %@", url.absoluteString)
         handleURLScheme(url)
         return true
+    }
+
+    // MARK: - FlutterSceneLifeCycleDelegate (forwarded under the UIScene lifecycle)
+    // On apps that adopt the UIScene lifecycle, the UIApplicationDelegate deep-link
+    // callbacks above are not delivered. Flutter forwards these scene equivalents
+    // instead, so we mirror the same handling here. Deployment target is iOS 13,
+    // so UIScene APIs are always available.
+
+    // Cold start (app not already running): a universal link or custom-scheme URL
+    // that launches the app is delivered ONLY in the scene's connection options —
+    // it is never re-delivered to scene(_:continue:) / scene(_:openURLContexts:),
+    // which fire only for the warm case. Without this method, migrated apps would
+    // silently drop the launch deep link. Links received before ULink.initialize()
+    // completes are queued in pendingDeepLinks and drained once initialization runs.
+    public func scene(
+        _ scene: UIScene,
+        willConnectTo session: UISceneSession,
+        options connectionOptions: UIScene.ConnectionOptions
+    ) -> Bool {
+        var handled = false
+        for userActivity in connectionOptions.userActivities {
+            guard userActivity.activityType == NSUserActivityTypeBrowsingWeb,
+                  let url = userActivity.webpageURL else {
+                continue
+            }
+            NSLog("[ULink] Received cold-start universal link via scene willConnectTo: %@", url.absoluteString)
+            handleUniversalLink(url)
+            handled = true
+        }
+        for context in connectionOptions.urlContexts {
+            let url = context.url
+            NSLog("[ULink] Received cold-start URL scheme via scene willConnectTo: %@", url.absoluteString)
+            handleURLScheme(url)
+            handled = true
+        }
+        return handled
+    }
+
+    public func scene(_ scene: UIScene, continue userActivity: NSUserActivity) -> Bool {
+        guard userActivity.activityType == NSUserActivityTypeBrowsingWeb,
+              let url = userActivity.webpageURL else {
+            return false
+        }
+        NSLog("[ULink] Received universal link via scene delegate: %@", url.absoluteString)
+        handleUniversalLink(url)
+        return true
+    }
+
+    public func scene(_ scene: UIScene, openURLContexts URLContexts: Set<UIOpenURLContext>) -> Bool {
+        var handled = false
+        for context in URLContexts {
+            let url = context.url
+            NSLog("[ULink] Received URL scheme via scene delegate: %@", url.absoluteString)
+            handleURLScheme(url)
+            handled = true
+        }
+        return handled
     }
 
     private func dispose(result: @escaping FlutterResult) {
