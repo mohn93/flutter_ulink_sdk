@@ -105,8 +105,9 @@ class ULinkConfig {
       clearLastLinkOnRead: json['clearLastLinkOnRead'] ?? true,
       redactAllParametersInLastLink:
           json['redactAllParametersInLastLink'] ?? false,
-      redactedParameterKeysInLastLink:
-          List<String>.from(json['redactedParameterKeysInLastLink'] ?? []),
+      redactedParameterKeysInLastLink: List<String>.from(
+        json['redactedParameterKeysInLastLink'] ?? [],
+      ),
       enableDeepLinkIntegration: json['enableDeepLinkIntegration'] ?? true,
       enableAutomaticAppDelegateIntegration:
           json['enableAutomaticAppDelegateIntegration'] ?? true,

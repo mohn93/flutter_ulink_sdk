@@ -35,15 +35,15 @@ void main() {
     // Mock the method channel to handle 'initialize' call
     TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
         .setMockMethodCallHandler(methodChannel, (MethodCall methodCall) async {
-      switch (methodCall.method) {
-        case 'initialize':
-          return true;
-        case 'dispose':
-          return true;
-        default:
-          return null;
-      }
-    });
+          switch (methodCall.method) {
+            case 'initialize':
+              return true;
+            case 'dispose':
+              return true;
+            default:
+              return null;
+          }
+        });
   });
 
   tearDown(() {
@@ -58,10 +58,7 @@ void main() {
       reinstallChannelName,
     ]) {
       TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
-          .setMockStreamHandler(
-        EventChannel(name),
-        null,
-      );
+          .setMockStreamHandler(EventChannel(name), null);
     }
   });
 
@@ -84,77 +81,77 @@ void main() {
   });
 
   group('Log event channel (flutter_ulink_sdk/logs)', () {
-    test('parses log events from native and forwards to onLog stream',
-        () async {
-      final logEvents = <ULinkLogEntry>[];
+    test(
+      'parses log events from native and forwards to onLog stream',
+      () async {
+        final logEvents = <ULinkLogEntry>[];
 
-      // Set up mock stream handler to emit log events
-      TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
-          .setMockStreamHandler(
-        platform.logEventChannel,
-        MockStreamHandler.inline(
-          onListen: (arguments, events) {
-            events.success({
-              'level': 'debug',
-              'tag': 'ULink',
-              'message': 'SDK initialized',
-              'timestamp': 1700000000000,
-            });
-            events.success({
-              'level': 'error',
-              'tag': 'Network',
-              'message': 'Connection failed',
-              'timestamp': 1700000001000,
-            });
-          },
-        ),
-      );
+        // Set up mock stream handler to emit log events
+        TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+            .setMockStreamHandler(
+              platform.logEventChannel,
+              MockStreamHandler.inline(
+                onListen: (arguments, events) {
+                  events.success({
+                    'level': 'debug',
+                    'tag': 'ULink',
+                    'message': 'SDK initialized',
+                    'timestamp': 1700000000000,
+                  });
+                  events.success({
+                    'level': 'error',
+                    'tag': 'Network',
+                    'message': 'Connection failed',
+                    'timestamp': 1700000001000,
+                  });
+                },
+              ),
+            );
 
-      // Initialize to start listening
-      await platform.initialize(ULinkConfig(
-        apiKey: 'test-key',
-        baseUrl: 'https://api.test.com',
-      ));
+        // Initialize to start listening
+        await platform.initialize(
+          ULinkConfig(apiKey: 'test-key', baseUrl: 'https://api.test.com'),
+        );
 
-      // Collect log events
-      final subscription = platform.onLog.listen(logEvents.add);
-      await Future.delayed(const Duration(milliseconds: 100));
+        // Collect log events
+        final subscription = platform.onLog.listen(logEvents.add);
+        await Future.delayed(const Duration(milliseconds: 100));
 
-      expect(logEvents, hasLength(2));
-      expect(logEvents[0].level, 'debug');
-      expect(logEvents[0].tag, 'ULink');
-      expect(logEvents[0].message, 'SDK initialized');
-      expect(logEvents[0].timestamp, 1700000000000);
-      expect(logEvents[1].level, 'error');
-      expect(logEvents[1].tag, 'Network');
-      expect(logEvents[1].message, 'Connection failed');
+        expect(logEvents, hasLength(2));
+        expect(logEvents[0].level, 'debug');
+        expect(logEvents[0].tag, 'ULink');
+        expect(logEvents[0].message, 'SDK initialized');
+        expect(logEvents[0].timestamp, 1700000000000);
+        expect(logEvents[1].level, 'error');
+        expect(logEvents[1].tag, 'Network');
+        expect(logEvents[1].message, 'Connection failed');
 
-      await subscription.cancel();
-    });
+        await subscription.cancel();
+      },
+    );
 
     test('handles null log events gracefully', () async {
       final logEvents = <ULinkLogEntry>[];
 
       TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
           .setMockStreamHandler(
-        platform.logEventChannel,
-        MockStreamHandler.inline(
-          onListen: (arguments, events) {
-            events.success(null); // null event should be skipped
-            events.success({
-              'level': 'info',
-              'tag': 'ULink',
-              'message': 'Valid event',
-              'timestamp': 1700000000000,
-            });
-          },
-        ),
-      );
+            platform.logEventChannel,
+            MockStreamHandler.inline(
+              onListen: (arguments, events) {
+                events.success(null); // null event should be skipped
+                events.success({
+                  'level': 'info',
+                  'tag': 'ULink',
+                  'message': 'Valid event',
+                  'timestamp': 1700000000000,
+                });
+              },
+            ),
+          );
 
-      await platform.initialize(ULinkConfig(
-        apiKey: 'test-key',
-        baseUrl: 'https://api.test.com',
-      ));
+      await platform.initialize(
+        ULinkConfig(apiKey: 'test-key', baseUrl: 'https://api.test.com'),
+      );
 
       final subscription = platform.onLog.listen(logEvents.add);
       await Future.delayed(const Duration(milliseconds: 100));
@@ -170,19 +167,18 @@ void main() {
 
       TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
           .setMockStreamHandler(
-        platform.logEventChannel,
-        MockStreamHandler.inline(
-          onListen: (arguments, events) {
-            // Minimal map with no fields - should use defaults
-            events.success(<String, dynamic>{});
-          },
-        ),
-      );
+            platform.logEventChannel,
+            MockStreamHandler.inline(
+              onListen: (arguments, events) {
+                // Minimal map with no fields - should use defaults
+                events.success(<String, dynamic>{});
+              },
+            ),
+          );
 
-      await platform.initialize(ULinkConfig(
-        apiKey: 'test-key',
-        baseUrl: 'https://api.test.com',
-      ));
+      await platform.initialize(
+        ULinkConfig(apiKey: 'test-key', baseUrl: 'https://api.test.com'),
+      );
 
       final subscription = platform.onLog.listen(logEvents.add);
       await Future.delayed(const Duration(milliseconds: 100));
@@ -197,57 +193,57 @@ void main() {
   });
 
   group('Dynamic link event channel (flutter_ulink_sdk/dynamic_links)', () {
-    test('parses dynamic link events and forwards to onDynamicLink stream',
-        () async {
-      final linkEvents = <ULinkResolvedData>[];
+    test(
+      'parses dynamic link events and forwards to onDynamicLink stream',
+      () async {
+        final linkEvents = <ULinkResolvedData>[];
 
-      TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
-          .setMockStreamHandler(
-        platform.dynamicLinkEventChannel,
-        MockStreamHandler.inline(
-          onListen: (arguments, events) {
-            events.success({
-              'slug': 'test-link',
-              'fallbackUrl': 'https://example.com',
-              'parameters': {'screen': 'home'},
-              'type': 'dynamic',
-            });
-          },
-        ),
-      );
+        TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+            .setMockStreamHandler(
+              platform.dynamicLinkEventChannel,
+              MockStreamHandler.inline(
+                onListen: (arguments, events) {
+                  events.success({
+                    'slug': 'test-link',
+                    'fallbackUrl': 'https://example.com',
+                    'parameters': {'screen': 'home'},
+                    'type': 'dynamic',
+                  });
+                },
+              ),
+            );
 
-      await platform.initialize(ULinkConfig(
-        apiKey: 'test-key',
-        baseUrl: 'https://api.test.com',
-      ));
+        await platform.initialize(
+          ULinkConfig(apiKey: 'test-key', baseUrl: 'https://api.test.com'),
+        );
 
-      final subscription = platform.onDynamicLink.listen(linkEvents.add);
-      await Future.delayed(const Duration(milliseconds: 100));
+        final subscription = platform.onDynamicLink.listen(linkEvents.add);
+        await Future.delayed(const Duration(milliseconds: 100));
 
-      expect(linkEvents, hasLength(1));
-      expect(linkEvents[0].slug, 'test-link');
-      expect(linkEvents[0].fallbackUrl, 'https://example.com');
+        expect(linkEvents, hasLength(1));
+        expect(linkEvents[0].slug, 'test-link');
+        expect(linkEvents[0].fallbackUrl, 'https://example.com');
 
-      await subscription.cancel();
-    });
+        await subscription.cancel();
+      },
+    );
 
     test('handles null dynamic link events gracefully', () async {
       final linkEvents = <ULinkResolvedData>[];
 
       TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
           .setMockStreamHandler(
-        platform.dynamicLinkEventChannel,
-        MockStreamHandler.inline(
-          onListen: (arguments, events) {
-            events.success(null);
-          },
-        ),
-      );
+            platform.dynamicLinkEventChannel,
+            MockStreamHandler.inline(
+              onListen: (arguments, events) {
+                events.success(null);
+              },
+            ),
+          );
 
-      await platform.initialize(ULinkConfig(
-        apiKey: 'test-key',
-        baseUrl: 'https://api.test.com',
-      ));
+      await platform.initialize(
+        ULinkConfig(apiKey: 'test-key', baseUrl: 'https://api.test.com'),
+      );
 
       final subscription = platform.onDynamicLink.listen(linkEvents.add);
       await Future.delayed(const Duration(milliseconds: 100));
@@ -259,195 +255,205 @@ void main() {
   });
 
   group('Unified link event channel (flutter_ulink_sdk/unified_links)', () {
-    test('parses unified link events and forwards to onUnifiedLink stream',
-        () async {
-      final linkEvents = <ULinkResolvedData>[];
+    test(
+      'parses unified link events and forwards to onUnifiedLink stream',
+      () async {
+        final linkEvents = <ULinkResolvedData>[];
 
-      TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
-          .setMockStreamHandler(
-        platform.unifiedLinkEventChannel,
-        MockStreamHandler.inline(
-          onListen: (arguments, events) {
-            events.success({
-              'slug': 'unified-link',
-              'iosUrl': 'https://apps.apple.com/app/123',
-              'androidUrl':
-                  'https://play.google.com/store/apps/details?id=com.test',
-              'fallbackUrl': 'https://example.com/unified',
-              'type': 'unified',
-            });
-          },
-        ),
-      );
+        TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+            .setMockStreamHandler(
+              platform.unifiedLinkEventChannel,
+              MockStreamHandler.inline(
+                onListen: (arguments, events) {
+                  events.success({
+                    'slug': 'unified-link',
+                    'iosUrl': 'https://apps.apple.com/app/123',
+                    'androidUrl':
+                        'https://play.google.com/store/apps/details?id=com.test',
+                    'fallbackUrl': 'https://example.com/unified',
+                    'type': 'unified',
+                  });
+                },
+              ),
+            );
 
-      await platform.initialize(ULinkConfig(
-        apiKey: 'test-key',
-        baseUrl: 'https://api.test.com',
-      ));
+        await platform.initialize(
+          ULinkConfig(apiKey: 'test-key', baseUrl: 'https://api.test.com'),
+        );
 
-      final subscription = platform.onUnifiedLink.listen(linkEvents.add);
-      await Future.delayed(const Duration(milliseconds: 100));
+        final subscription = platform.onUnifiedLink.listen(linkEvents.add);
+        await Future.delayed(const Duration(milliseconds: 100));
 
-      expect(linkEvents, hasLength(1));
-      expect(linkEvents[0].slug, 'unified-link');
-      expect(linkEvents[0].fallbackUrl, 'https://example.com/unified');
+        expect(linkEvents, hasLength(1));
+        expect(linkEvents[0].slug, 'unified-link');
+        expect(linkEvents[0].fallbackUrl, 'https://example.com/unified');
 
-      await subscription.cancel();
-    });
+        await subscription.cancel();
+      },
+    );
   });
 
   group(
-      'Reinstall detection event channel (flutter_ulink_sdk/reinstall_detected)',
-      () {
-    test('parses reinstall events and forwards to onReinstallDetected stream',
+    'Reinstall detection event channel (flutter_ulink_sdk/reinstall_detected)',
+    () {
+      test(
+        'parses reinstall events and forwards to onReinstallDetected stream',
         () async {
-      final reinstallEvents = <ULinkInstallationInfo>[];
+          final reinstallEvents = <ULinkInstallationInfo>[];
 
-      TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
-          .setMockStreamHandler(
-        platform.reinstallEventChannel,
-        MockStreamHandler.inline(
-          onListen: (arguments, events) {
-            events.success({
-              'installationId': 'new-install-123',
-              'isReinstall': true,
-              'previousInstallationId': 'old-install-456',
-              'reinstallDetectedAt': '2024-01-15T10:30:00Z',
-              'persistentDeviceId': 'device-789',
-            });
-          },
-        ),
+          TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+              .setMockStreamHandler(
+                platform.reinstallEventChannel,
+                MockStreamHandler.inline(
+                  onListen: (arguments, events) {
+                    events.success({
+                      'installationId': 'new-install-123',
+                      'isReinstall': true,
+                      'previousInstallationId': 'old-install-456',
+                      'reinstallDetectedAt': '2024-01-15T10:30:00Z',
+                      'persistentDeviceId': 'device-789',
+                    });
+                  },
+                ),
+              );
+
+          await platform.initialize(
+            ULinkConfig(apiKey: 'test-key', baseUrl: 'https://api.test.com'),
+          );
+
+          final subscription = platform.onReinstallDetected.listen(
+            reinstallEvents.add,
+          );
+          await Future.delayed(const Duration(milliseconds: 100));
+
+          expect(reinstallEvents, hasLength(1));
+          expect(reinstallEvents[0].installationId, 'new-install-123');
+          expect(reinstallEvents[0].isReinstall, isTrue);
+          expect(reinstallEvents[0].previousInstallationId, 'old-install-456');
+          expect(
+            reinstallEvents[0].reinstallDetectedAt,
+            '2024-01-15T10:30:00Z',
+          );
+          expect(reinstallEvents[0].persistentDeviceId, 'device-789');
+
+          await subscription.cancel();
+        },
       );
 
-      await platform.initialize(ULinkConfig(
-        apiKey: 'test-key',
-        baseUrl: 'https://api.test.com',
-      ));
+      test('handles fresh install event (isReinstall false)', () async {
+        final reinstallEvents = <ULinkInstallationInfo>[];
 
-      final subscription =
-          platform.onReinstallDetected.listen(reinstallEvents.add);
-      await Future.delayed(const Duration(milliseconds: 100));
-
-      expect(reinstallEvents, hasLength(1));
-      expect(reinstallEvents[0].installationId, 'new-install-123');
-      expect(reinstallEvents[0].isReinstall, isTrue);
-      expect(reinstallEvents[0].previousInstallationId, 'old-install-456');
-      expect(reinstallEvents[0].reinstallDetectedAt, '2024-01-15T10:30:00Z');
-      expect(reinstallEvents[0].persistentDeviceId, 'device-789');
-
-      await subscription.cancel();
-    });
-
-    test('handles fresh install event (isReinstall false)', () async {
-      final reinstallEvents = <ULinkInstallationInfo>[];
-
-      TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
-          .setMockStreamHandler(
-        platform.reinstallEventChannel,
-        MockStreamHandler.inline(
-          onListen: (arguments, events) {
-            events.success({
-              'installationId': 'fresh-install-123',
-              'isReinstall': false,
-            });
-          },
-        ),
-      );
-
-      await platform.initialize(ULinkConfig(
-        apiKey: 'test-key',
-        baseUrl: 'https://api.test.com',
-      ));
-
-      final subscription =
-          platform.onReinstallDetected.listen(reinstallEvents.add);
-      await Future.delayed(const Duration(milliseconds: 100));
-
-      expect(reinstallEvents, hasLength(1));
-      expect(reinstallEvents[0].installationId, 'fresh-install-123');
-      expect(reinstallEvents[0].isReinstall, isFalse);
-      expect(reinstallEvents[0].previousInstallationId, isNull);
-
-      await subscription.cancel();
-    });
-  });
-
-  group('Dispose cleans up all event channel subscriptions', () {
-    test('dispose cancels all stream subscriptions and closes controllers',
-        () async {
-      // Set up mock streams for all channels
-      for (final channel in [
-        platform.logEventChannel,
-        platform.dynamicLinkEventChannel,
-        platform.unifiedLinkEventChannel,
-        platform.reinstallEventChannel,
-      ]) {
         TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
             .setMockStreamHandler(
-          channel,
-          MockStreamHandler.inline(
-            onListen: (arguments, events) {
-              // Just open the stream, don't send anything
-            },
-          ),
+              platform.reinstallEventChannel,
+              MockStreamHandler.inline(
+                onListen: (arguments, events) {
+                  events.success({
+                    'installationId': 'fresh-install-123',
+                    'isReinstall': false,
+                  });
+                },
+              ),
+            );
+
+        await platform.initialize(
+          ULinkConfig(apiKey: 'test-key', baseUrl: 'https://api.test.com'),
         );
-      }
 
-      await platform.initialize(ULinkConfig(
-        apiKey: 'test-key',
-        baseUrl: 'https://api.test.com',
-      ));
+        final subscription = platform.onReinstallDetected.listen(
+          reinstallEvents.add,
+        );
+        await Future.delayed(const Duration(milliseconds: 100));
 
-      // Verify streams are active before dispose
-      final logCompleter = Completer<void>();
-      final dynamicLinkCompleter = Completer<void>();
-      final unifiedLinkCompleter = Completer<void>();
-      final reinstallCompleter = Completer<void>();
+        expect(reinstallEvents, hasLength(1));
+        expect(reinstallEvents[0].installationId, 'fresh-install-123');
+        expect(reinstallEvents[0].isReinstall, isFalse);
+        expect(reinstallEvents[0].previousInstallationId, isNull);
 
-      final sub1 = platform.onLog.listen(
-        (_) {},
-        onDone: () => logCompleter.complete(),
-      );
-      final sub2 = platform.onDynamicLink.listen(
-        (_) {},
-        onDone: () => dynamicLinkCompleter.complete(),
-      );
-      final sub3 = platform.onUnifiedLink.listen(
-        (_) {},
-        onDone: () => unifiedLinkCompleter.complete(),
-      );
-      final sub4 = platform.onReinstallDetected.listen(
-        (_) {},
-        onDone: () => reinstallCompleter.complete(),
-      );
+        await subscription.cancel();
+      });
+    },
+  );
 
-      // Dispose should close all controllers
-      await platform.dispose();
+  group('Dispose cleans up all event channel subscriptions', () {
+    test(
+      'dispose cancels all stream subscriptions and closes controllers',
+      () async {
+        // Set up mock streams for all channels
+        for (final channel in [
+          platform.logEventChannel,
+          platform.dynamicLinkEventChannel,
+          platform.unifiedLinkEventChannel,
+          platform.reinstallEventChannel,
+        ]) {
+          TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+              .setMockStreamHandler(
+                channel,
+                MockStreamHandler.inline(
+                  onListen: (arguments, events) {
+                    // Just open the stream, don't send anything
+                  },
+                ),
+              );
+        }
 
-      // All stream controllers should have sent done events
-      await logCompleter.future.timeout(
-        const Duration(seconds: 1),
-        onTimeout: () => fail('onLog stream not closed after dispose'),
-      );
-      await dynamicLinkCompleter.future.timeout(
-        const Duration(seconds: 1),
-        onTimeout: () => fail('onDynamicLink stream not closed after dispose'),
-      );
-      await unifiedLinkCompleter.future.timeout(
-        const Duration(seconds: 1),
-        onTimeout: () => fail('onUnifiedLink stream not closed after dispose'),
-      );
-      await reinstallCompleter.future.timeout(
-        const Duration(seconds: 1),
-        onTimeout: () =>
-            fail('onReinstallDetected stream not closed after dispose'),
-      );
+        await platform.initialize(
+          ULinkConfig(apiKey: 'test-key', baseUrl: 'https://api.test.com'),
+        );
 
-      await sub1.cancel();
-      await sub2.cancel();
-      await sub3.cancel();
-      await sub4.cancel();
-    });
+        // Verify streams are active before dispose
+        final logCompleter = Completer<void>();
+        final dynamicLinkCompleter = Completer<void>();
+        final unifiedLinkCompleter = Completer<void>();
+        final reinstallCompleter = Completer<void>();
+
+        final sub1 = platform.onLog.listen(
+          (_) {},
+          onDone: () => logCompleter.complete(),
+        );
+        final sub2 = platform.onDynamicLink.listen(
+          (_) {},
+          onDone: () => dynamicLinkCompleter.complete(),
+        );
+        final sub3 = platform.onUnifiedLink.listen(
+          (_) {},
+          onDone: () => unifiedLinkCompleter.complete(),
+        );
+        final sub4 = platform.onReinstallDetected.listen(
+          (_) {},
+          onDone: () => reinstallCompleter.complete(),
+        );
+
+        // Dispose should close all controllers
+        await platform.dispose();
+
+        // All stream controllers should have sent done events
+        await logCompleter.future.timeout(
+          const Duration(seconds: 1),
+          onTimeout: () => fail('onLog stream not closed after dispose'),
+        );
+        await dynamicLinkCompleter.future.timeout(
+          const Duration(seconds: 1),
+          onTimeout: () =>
+              fail('onDynamicLink stream not closed after dispose'),
+        );
+        await unifiedLinkCompleter.future.timeout(
+          const Duration(seconds: 1),
+          onTimeout: () =>
+              fail('onUnifiedLink stream not closed after dispose'),
+        );
+        await reinstallCompleter.future.timeout(
+          const Duration(seconds: 1),
+          onTimeout: () =>
+              fail('onReinstallDetected stream not closed after dispose'),
+        );
+
+        await sub1.cancel();
+        await sub2.cancel();
+        await sub3.cancel();
+        await sub4.cancel();
+      },
+    );
   });
 
   group('Multiple events on same channel', () {
@@ -456,231 +462,245 @@ void main() {
 
       TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
           .setMockStreamHandler(
-        platform.logEventChannel,
-        MockStreamHandler.inline(
-          onListen: (arguments, events) {
-            events.success({
-              'level': 'debug',
-              'tag': 'Init',
-              'message': 'Starting initialization',
-              'timestamp': 1700000000000,
-            });
-            events.success({
-              'level': 'info',
-              'tag': 'Init',
-              'message': 'Bootstrap complete',
-              'timestamp': 1700000001000,
-            });
-            events.success({
-              'level': 'warning',
-              'tag': 'Network',
-              'message': 'Slow connection detected',
-              'timestamp': 1700000002000,
-            });
-            events.success({
-              'level': 'error',
-              'tag': 'Session',
-              'message': 'Session creation failed',
-              'timestamp': 1700000003000,
-            });
-          },
-        ),
-      );
+            platform.logEventChannel,
+            MockStreamHandler.inline(
+              onListen: (arguments, events) {
+                events.success({
+                  'level': 'debug',
+                  'tag': 'Init',
+                  'message': 'Starting initialization',
+                  'timestamp': 1700000000000,
+                });
+                events.success({
+                  'level': 'info',
+                  'tag': 'Init',
+                  'message': 'Bootstrap complete',
+                  'timestamp': 1700000001000,
+                });
+                events.success({
+                  'level': 'warning',
+                  'tag': 'Network',
+                  'message': 'Slow connection detected',
+                  'timestamp': 1700000002000,
+                });
+                events.success({
+                  'level': 'error',
+                  'tag': 'Session',
+                  'message': 'Session creation failed',
+                  'timestamp': 1700000003000,
+                });
+              },
+            ),
+          );
 
-      await platform.initialize(ULinkConfig(
-        apiKey: 'test-key',
-        baseUrl: 'https://api.test.com',
-      ));
+      await platform.initialize(
+        ULinkConfig(apiKey: 'test-key', baseUrl: 'https://api.test.com'),
+      );
 
       final subscription = platform.onLog.listen(logEvents.add);
       await Future.delayed(const Duration(milliseconds: 100));
 
       expect(logEvents, hasLength(4));
-      expect(logEvents.map((e) => e.level).toList(),
-          ['debug', 'info', 'warning', 'error']);
-      expect(logEvents.map((e) => e.tag).toList(),
-          ['Init', 'Init', 'Network', 'Session']);
+      expect(logEvents.map((e) => e.level).toList(), [
+        'debug',
+        'info',
+        'warning',
+        'error',
+      ]);
+      expect(logEvents.map((e) => e.tag).toList(), [
+        'Init',
+        'Init',
+        'Network',
+        'Session',
+      ]);
 
       await subscription.cancel();
     });
   });
 
   group('EventChannel listeners are set up before native initialize', () {
-    test('all event channel listeners activate before invokeMethod initialize',
-        () async {
-      final callOrder = <String>[];
+    test(
+      'all event channel listeners activate before invokeMethod initialize',
+      () async {
+        final callOrder = <String>[];
 
-      // Track when each EventChannel onListen is triggered
-      TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
-          .setMockStreamHandler(
-        platform.logEventChannel,
-        MockStreamHandler.inline(
-          onListen: (arguments, events) {
-            callOrder.add('log_onListen');
-          },
-        ),
-      );
-      TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
-          .setMockStreamHandler(
-        platform.dynamicLinkEventChannel,
-        MockStreamHandler.inline(
-          onListen: (arguments, events) {
-            callOrder.add('dynamicLink_onListen');
-          },
-        ),
-      );
-      TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
-          .setMockStreamHandler(
-        platform.unifiedLinkEventChannel,
-        MockStreamHandler.inline(
-          onListen: (arguments, events) {
-            callOrder.add('unifiedLink_onListen');
-          },
-        ),
-      );
-      TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
-          .setMockStreamHandler(
-        platform.reinstallEventChannel,
-        MockStreamHandler.inline(
-          onListen: (arguments, events) {
-            callOrder.add('reinstall_onListen');
-          },
-        ),
-      );
+        // Track when each EventChannel onListen is triggered
+        TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+            .setMockStreamHandler(
+              platform.logEventChannel,
+              MockStreamHandler.inline(
+                onListen: (arguments, events) {
+                  callOrder.add('log_onListen');
+                },
+              ),
+            );
+        TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+            .setMockStreamHandler(
+              platform.dynamicLinkEventChannel,
+              MockStreamHandler.inline(
+                onListen: (arguments, events) {
+                  callOrder.add('dynamicLink_onListen');
+                },
+              ),
+            );
+        TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+            .setMockStreamHandler(
+              platform.unifiedLinkEventChannel,
+              MockStreamHandler.inline(
+                onListen: (arguments, events) {
+                  callOrder.add('unifiedLink_onListen');
+                },
+              ),
+            );
+        TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+            .setMockStreamHandler(
+              platform.reinstallEventChannel,
+              MockStreamHandler.inline(
+                onListen: (arguments, events) {
+                  callOrder.add('reinstall_onListen');
+                },
+              ),
+            );
 
-      // Track when method channel initialize is called
-      TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
-          .setMockMethodCallHandler(
-        methodChannel,
-        (MethodCall methodCall) async {
-          if (methodCall.method == 'initialize') {
-            callOrder.add('initialize');
-          }
-          return true;
-        },
-      );
+        // Track when method channel initialize is called
+        TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+            .setMockMethodCallHandler(methodChannel, (
+              MethodCall methodCall,
+            ) async {
+              if (methodCall.method == 'initialize') {
+                callOrder.add('initialize');
+              }
+              return true;
+            });
 
-      await platform.initialize(ULinkConfig(
-        apiKey: 'test-key',
-        baseUrl: 'https://api.test.com',
-      ));
+        await platform.initialize(
+          ULinkConfig(apiKey: 'test-key', baseUrl: 'https://api.test.com'),
+        );
 
-      // All EventChannel listeners must be set up BEFORE initialize is called
-      final initIndex = callOrder.indexOf('initialize');
-      expect(initIndex, greaterThan(-1), reason: 'initialize must be called');
+        // All EventChannel listeners must be set up BEFORE initialize is called
+        final initIndex = callOrder.indexOf('initialize');
+        expect(initIndex, greaterThan(-1), reason: 'initialize must be called');
 
-      for (final listenerName in [
-        'log_onListen',
-        'dynamicLink_onListen',
-        'unifiedLink_onListen',
-        'reinstall_onListen',
-      ]) {
-        final listenerIndex = callOrder.indexOf(listenerName);
-        expect(listenerIndex, greaterThan(-1),
-            reason: '$listenerName must be called');
-        expect(listenerIndex, lessThan(initIndex),
+        for (final listenerName in [
+          'log_onListen',
+          'dynamicLink_onListen',
+          'unifiedLink_onListen',
+          'reinstall_onListen',
+        ]) {
+          final listenerIndex = callOrder.indexOf(listenerName);
+          expect(
+            listenerIndex,
+            greaterThan(-1),
+            reason: '$listenerName must be called',
+          );
+          expect(
+            listenerIndex,
+            lessThan(initIndex),
             reason:
-                '$listenerName must be set up before native initialize call');
-      }
-    });
+                '$listenerName must be set up before native initialize call',
+          );
+        }
+      },
+    );
 
     test(
-        'log events emitted during native init are received by pre-subscribed listener',
-        () async {
-      final logEvents = <ULinkLogEntry>[];
+      'log events emitted during native init are received by pre-subscribed listener',
+      () async {
+        final logEvents = <ULinkLogEntry>[];
 
-      // Stream handler emits events immediately on listen (simulating native SDK
-      // sending buffered logs when EventChannel sink becomes active)
-      TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
-          .setMockStreamHandler(
-        platform.logEventChannel,
-        MockStreamHandler.inline(
-          onListen: (arguments, events) {
-            events.success({
-              'level': 'info',
-              'tag': 'ULink',
-              'message': 'ULink SDK initialized',
-              'timestamp': 1700000000000,
-            });
-            events.success({
-              'level': 'debug',
-              'tag': 'ULink',
-              'message': 'Bootstrap completed',
-              'timestamp': 1700000001000,
-            });
-          },
-        ),
-      );
+        // Stream handler emits events immediately on listen (simulating native SDK
+        // sending buffered logs when EventChannel sink becomes active)
+        TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+            .setMockStreamHandler(
+              platform.logEventChannel,
+              MockStreamHandler.inline(
+                onListen: (arguments, events) {
+                  events.success({
+                    'level': 'info',
+                    'tag': 'ULink',
+                    'message': 'ULink SDK initialized',
+                    'timestamp': 1700000000000,
+                  });
+                  events.success({
+                    'level': 'debug',
+                    'tag': 'ULink',
+                    'message': 'Bootstrap completed',
+                    'timestamp': 1700000001000,
+                  });
+                },
+              ),
+            );
 
-      // Subscribe to log stream BEFORE initialize (like debug overlay does)
-      final subscription = platform.onLog.listen(logEvents.add);
+        // Subscribe to log stream BEFORE initialize (like debug overlay does)
+        final subscription = platform.onLog.listen(logEvents.add);
 
-      await platform.initialize(ULinkConfig(
-        apiKey: 'test-key',
-        baseUrl: 'https://api.test.com',
-      ));
-
-      await Future.delayed(const Duration(milliseconds: 100));
-
-      expect(logEvents, hasLength(2));
-      expect(logEvents[0].message, 'ULink SDK initialized');
-      expect(logEvents[1].message, 'Bootstrap completed');
-
-      await subscription.cancel();
-    });
-  });
-
-  group('Log events are printed to debug console', () {
-    test('received log events call debugPrint with formatted message',
-        () async {
-      final printedMessages = <String>[];
-      // ignore: avoid_print
-      final originalDebugPrint = debugPrint;
-      debugPrint = (String? message, {int? wrapWidth}) {
-        if (message != null) printedMessages.add(message);
-      };
-
-      TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
-          .setMockStreamHandler(
-        platform.logEventChannel,
-        MockStreamHandler.inline(
-          onListen: (arguments, events) {
-            events.success({
-              'level': 'info',
-              'tag': 'ULink',
-              'message': 'SDK initialized successfully',
-              'timestamp': 1700000000000,
-            });
-            events.success({
-              'level': 'error',
-              'tag': 'Network',
-              'message': 'Connection failed',
-              'timestamp': 1700000001000,
-            });
-          },
-        ),
-      );
-
-      try {
-        await platform.initialize(ULinkConfig(
-          apiKey: 'test-key',
-          baseUrl: 'https://api.test.com',
-        ));
+        await platform.initialize(
+          ULinkConfig(apiKey: 'test-key', baseUrl: 'https://api.test.com'),
+        );
 
         await Future.delayed(const Duration(milliseconds: 100));
 
-        expect(
-          printedMessages,
-          contains('[ULink SDK] INFO: SDK initialized successfully'),
-        );
-        expect(
-          printedMessages,
-          contains('[ULink SDK] ERROR: Connection failed'),
-        );
-      } finally {
-        debugPrint = originalDebugPrint;
-      }
-    });
+        expect(logEvents, hasLength(2));
+        expect(logEvents[0].message, 'ULink SDK initialized');
+        expect(logEvents[1].message, 'Bootstrap completed');
+
+        await subscription.cancel();
+      },
+    );
+  });
+
+  group('Log events are printed to debug console', () {
+    test(
+      'received log events call debugPrint with formatted message',
+      () async {
+        final printedMessages = <String>[];
+        // ignore: avoid_print
+        final originalDebugPrint = debugPrint;
+        debugPrint = (String? message, {int? wrapWidth}) {
+          if (message != null) printedMessages.add(message);
+        };
+
+        TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+            .setMockStreamHandler(
+              platform.logEventChannel,
+              MockStreamHandler.inline(
+                onListen: (arguments, events) {
+                  events.success({
+                    'level': 'info',
+                    'tag': 'ULink',
+                    'message': 'SDK initialized successfully',
+                    'timestamp': 1700000000000,
+                  });
+                  events.success({
+                    'level': 'error',
+                    'tag': 'Network',
+                    'message': 'Connection failed',
+                    'timestamp': 1700000001000,
+                  });
+                },
+              ),
+            );
+
+        try {
+          await platform.initialize(
+            ULinkConfig(apiKey: 'test-key', baseUrl: 'https://api.test.com'),
+          );
+
+          await Future.delayed(const Duration(milliseconds: 100));
+
+          expect(
+            printedMessages,
+            contains('[ULink SDK] INFO: SDK initialized successfully'),
+          );
+          expect(
+            printedMessages,
+            contains('[ULink SDK] ERROR: Connection failed'),
+          );
+        } finally {
+          debugPrint = originalDebugPrint;
+        }
+      },
+    );
   });
 
   group('ULinkLogEntry model', () {
@@ -732,7 +752,9 @@ void main() {
       );
 
       expect(
-          entry.formattedTime, matches(RegExp(r'^\d{2}:\d{2}:\d{2}\.\d{3}$')));
+        entry.formattedTime,
+        matches(RegExp(r'^\d{2}:\d{2}:\d{2}\.\d{3}$')),
+      );
     });
 
     test('level constants are correct', () {

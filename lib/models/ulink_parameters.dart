@@ -119,10 +119,7 @@ class ULinkParameters {
 
   /// Converts the parameters to a JSON map
   Map<String, dynamic> toJson() {
-    final Map<String, dynamic> data = {
-      'type': type,
-      'domain': domain,
-    };
+    final Map<String, dynamic> data = {'type': type, 'domain': domain};
 
     if (slug != null) data['slug'] = slug;
     if (name != null) data['name'] = name;

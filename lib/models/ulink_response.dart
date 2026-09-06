@@ -13,28 +13,16 @@ class ULinkResponse {
   final Map<String, dynamic>? data;
 
   /// Creates a new ULink response
-  ULinkResponse({
-    required this.success,
-    this.url,
-    this.error,
-    this.data,
-  });
+  ULinkResponse({required this.success, this.url, this.error, this.data});
 
   /// Creates a successful response
   factory ULinkResponse.success(String url, [Map<String, dynamic>? data]) {
-    return ULinkResponse(
-      success: true,
-      url: url,
-      data: data,
-    );
+    return ULinkResponse(success: true, url: url, data: data);
   }
 
   /// Creates an error response
   factory ULinkResponse.error(String error) {
-    return ULinkResponse(
-      success: false,
-      error: error,
-    );
+    return ULinkResponse(success: false, error: error);
   }
 
   /// Creates a response from a Map (for platform channel)
@@ -55,10 +43,7 @@ class ULinkResponse {
       return ULinkResponse.error(json['error']);
     }
 
-    return ULinkResponse.success(
-      json['url'] ?? '',
-      json,
-    );
+    return ULinkResponse.success(json['url'] ?? '', json);
   }
 
   /// Converts the response to a Map

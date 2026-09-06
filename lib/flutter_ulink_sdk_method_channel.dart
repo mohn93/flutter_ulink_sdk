@@ -25,9 +25,7 @@ class MethodChannelFlutterUlinkSdk extends FlutterUlinkSdkPlatform {
 
   /// Event channel for log events
   @visibleForTesting
-  final logEventChannel = const EventChannel(
-    'flutter_ulink_sdk/logs',
-  );
+  final logEventChannel = const EventChannel('flutter_ulink_sdk/logs');
 
   /// Event channel for reinstall detection events
   @visibleForTesting
@@ -52,35 +50,37 @@ class MethodChannelFlutterUlinkSdk extends FlutterUlinkSdkPlatform {
   Future<void> initialize(ULinkConfig config) async {
     // Set up event channel listeners BEFORE calling native initialize
     // so the event sinks are active when the native SDK emits logs during init
-    _dynamicLinkSubscription =
-        dynamicLinkEventChannel.receiveBroadcastStream().listen(
-      (dynamic event) {
-        if (event != null) {
-          final linkData = ULinkResolvedData.fromJson(
-            Map<String, dynamic>.from(event),
-          );
-          _dynamicLinkController.add(linkData);
-        }
-      },
-      onError: (error) {
-        debugPrint('Dynamic link event channel error: $error');
-      },
-    );
+    _dynamicLinkSubscription = dynamicLinkEventChannel
+        .receiveBroadcastStream()
+        .listen(
+          (dynamic event) {
+            if (event != null) {
+              final linkData = ULinkResolvedData.fromJson(
+                Map<String, dynamic>.from(event),
+              );
+              _dynamicLinkController.add(linkData);
+            }
+          },
+          onError: (error) {
+            debugPrint('Dynamic link event channel error: $error');
+          },
+        );
 
-    _unifiedLinkSubscription =
-        unifiedLinkEventChannel.receiveBroadcastStream().listen(
-      (dynamic event) {
-        if (event != null) {
-          final linkData = ULinkResolvedData.fromJson(
-            Map<String, dynamic>.from(event),
-          );
-          _unifiedLinkController.add(linkData);
-        }
-      },
-      onError: (error) {
-        debugPrint('Unified link event channel error: $error');
-      },
-    );
+    _unifiedLinkSubscription = unifiedLinkEventChannel
+        .receiveBroadcastStream()
+        .listen(
+          (dynamic event) {
+            if (event != null) {
+              final linkData = ULinkResolvedData.fromJson(
+                Map<String, dynamic>.from(event),
+              );
+              _unifiedLinkController.add(linkData);
+            }
+          },
+          onError: (error) {
+            debugPrint('Unified link event channel error: $error');
+          },
+        );
 
     _logSubscription = logEventChannel.receiveBroadcastStream().listen(
       (dynamic event) {
@@ -89,7 +89,8 @@ class MethodChannelFlutterUlinkSdk extends FlutterUlinkSdkPlatform {
             Map<dynamic, dynamic>.from(event),
           );
           debugPrint(
-              '[ULink SDK] ${logEntry.level.toUpperCase()}: ${logEntry.message}');
+            '[ULink SDK] ${logEntry.level.toUpperCase()}: ${logEntry.message}',
+          );
           _logController.add(logEntry);
         }
       },
@@ -98,20 +99,21 @@ class MethodChannelFlutterUlinkSdk extends FlutterUlinkSdkPlatform {
       },
     );
 
-    _reinstallSubscription =
-        reinstallEventChannel.receiveBroadcastStream().listen(
-      (dynamic event) {
-        if (event != null) {
-          final installationInfo = ULinkInstallationInfo.fromJson(
-            Map<String, dynamic>.from(event),
-          );
-          _reinstallController.add(installationInfo);
-        }
-      },
-      onError: (error) {
-        debugPrint('Reinstall event channel error: $error');
-      },
-    );
+    _reinstallSubscription = reinstallEventChannel
+        .receiveBroadcastStream()
+        .listen(
+          (dynamic event) {
+            if (event != null) {
+              final installationInfo = ULinkInstallationInfo.fromJson(
+                Map<String, dynamic>.from(event),
+              );
+              _reinstallController.add(installationInfo);
+            }
+          },
+          onError: (error) {
+            debugPrint('Reinstall event channel error: $error');
+          },
+        );
 
     // Now call native initialize - event sinks are already active
     await methodChannel.invokeMethod('initialize', {'config': config.toMap()});

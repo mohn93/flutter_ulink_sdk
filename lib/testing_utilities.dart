@@ -210,9 +210,11 @@ class ULinkTestingUtilities {
     } else if (json['type'] == 'unified') {
       final hasIosUrl =
           json['iosUrl'] != null && (json['iosUrl'] as String).isNotEmpty;
-      final hasAndroidUrl = json['androidUrl'] != null &&
+      final hasAndroidUrl =
+          json['androidUrl'] != null &&
           (json['androidUrl'] as String).isNotEmpty;
-      final hasFallbackUrl = json['fallbackUrl'] != null &&
+      final hasFallbackUrl =
+          json['fallbackUrl'] != null &&
           (json['fallbackUrl'] as String).isNotEmpty;
 
       if (!hasIosUrl && !hasAndroidUrl && !hasFallbackUrl) {
@@ -326,9 +328,7 @@ extension ULinkTestingUtilitiesExtension on ULinkTestingUtilities {
     // Test 3: Link creation
     try {
       final parameters = ULinkTestingUtilities.createMockParameters();
-      final response = await ULink.instance.createLink(
-        parameters,
-      );
+      final response = await ULink.instance.createLink(parameters);
       results['link_creation'] =
           response.success && response.url != null && response.url!.isNotEmpty;
       ULinkTestingUtilities._log(
