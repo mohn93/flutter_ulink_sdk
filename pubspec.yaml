@@ -4,8 +4,10 @@ version: 0.3.9
 homepage: https://github.com/mohn93/flutter_ulink_sdk
 
 environment:
-  sdk: ^3.6.2
-  flutter: ">=1.17.0"
+  sdk: ^3.10.0
+  # The iOS plugin adopts Flutter's UIScene lifecycle
+  # (FlutterSceneLifeCycleDelegate / addSceneDelegate), introduced in 3.38.0.
+  flutter: ">=3.38.0"
 
 dependencies:
   flutter:
