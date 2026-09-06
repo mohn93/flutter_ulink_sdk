@@ -480,6 +480,36 @@ public class FlutterUlinkSdkPlugin: NSObject, FlutterPlugin, FlutterSceneLifeCyc
     // instead, so we mirror the same handling here. Deployment target is iOS 13,
     // so UIScene APIs are always available.
 
+    // Cold start (app not already running): a universal link or custom-scheme URL
+    // that launches the app is delivered ONLY in the scene's connection options —
+    // it is never re-delivered to scene(_:continue:) / scene(_:openURLContexts:),
+    // which fire only for the warm case. Without this method, migrated apps would
+    // silently drop the launch deep link. Links received before ULink.initialize()
+    // completes are queued in pendingDeepLinks and drained once initialization runs.
+    public func scene(
+        _ scene: UIScene,
+        willConnectTo session: UISceneSession,
+        options connectionOptions: UIScene.ConnectionOptions
+    ) -> Bool {
+        var handled = false
+        for userActivity in connectionOptions.userActivities {
+            guard userActivity.activityType == NSUserActivityTypeBrowsingWeb,
+                  let url = userActivity.webpageURL else {
+                continue
+            }
+            NSLog("[ULink] Received cold-start universal link via scene willConnectTo: %@", url.absoluteString)
+            handleUniversalLink(url)
+            handled = true
+        }
+        for context in connectionOptions.urlContexts {
+            let url = context.url
+            NSLog("[ULink] Received cold-start URL scheme via scene willConnectTo: %@", url.absoluteString)
+            handleURLScheme(url)
+            handled = true
+        }
+        return handled
+    }
+
     public func scene(_ scene: UIScene, continue userActivity: NSUserActivity) -> Bool {
         guard userActivity.activityType == NSUserActivityTypeBrowsingWeb,
               let url = userActivity.webpageURL else {
