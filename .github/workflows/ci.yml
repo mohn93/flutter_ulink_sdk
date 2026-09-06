@@ -6,6 +6,14 @@ on:
   pull_request:
     branches: [main, develop]
 
+# The Flutter toolchain is pinned so CI is reproducible. With a floating
+# `channel: stable`, a new Flutter/Dart release could silently change
+# `dart format` output — failing the format gate on files nobody touched — and
+# make `flutter pub get` rewrite analysis_options.yaml, failing the publish
+# dry-run on an "unclean git state". Pin to the maintainer's dev version and
+# bump it deliberately (reformatting in the same commit) rather than letting it
+# drift. Keep this in sync with the Release workflow.
+
 jobs:
   analyze:
     runs-on: ubuntu-latest
@@ -16,6 +24,7 @@ jobs:
         uses: subosito/flutter-action@v2
         with:
           channel: 'stable'
+          flutter-version: '3.41.5'
 
       - name: Install dependencies
         run: flutter pub get
@@ -35,6 +44,7 @@ jobs:
         uses: subosito/flutter-action@v2
         with:
           channel: 'stable'
+          flutter-version: '3.41.5'
 
       - name: Install dependencies
         run: flutter pub get
@@ -51,9 +61,17 @@ jobs:
         uses: subosito/flutter-action@v2
         with:
           channel: 'stable'
+          flutter-version: '3.41.5'
 
       - name: Install dependencies
         run: flutter pub get
 
       - name: Dry run publish
-        run: dart pub publish --dry-run
+        run: |
+          # `flutter pub get` can leave tracked files modified on some toolchain
+          # versions (a regenerated analysis_options.yaml, pubspec.lock, ...),
+          # which pub's publish validation reports as an unclean git state and
+          # fails on. Reset to the committed sources so the dry-run validates
+          # exactly what will be published.
+          git checkout -- .
+          dart pub publish --dry-run
