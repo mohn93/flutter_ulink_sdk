@@ -75,3 +75,25 @@ jobs:
           # exactly what will be published.
           git checkout -- .
           dart pub publish --dry-run
+
+  # Compile the plugin's native iOS (Swift) code. The analyze/test/dry-run jobs
+  # are Dart-only and never build the Swift, so a plugin Swift compile error can
+  # merge and ship undetected (as a UIScene scene-delegate signature mismatch
+  # once did). Building the example for a device with --no-codesign compiles the
+  # plugin without needing a signing certificate or a simulator destination.
+  build-ios:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: 'stable'
+          flutter-version: '3.41.5'
+
+      - name: Build example for iOS (compiles the plugin's Swift)
+        working-directory: example
+        run: |
+          flutter pub get
+          flutter build ios --no-codesign
