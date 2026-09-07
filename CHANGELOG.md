@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 0.4.0
 - Adopt Flutter's UIScene lifecycle on iOS. The plugin previously received deep links only through `UIApplicationDelegate` forwarding (`application:continueUserActivity:restorationHandler:` and `application:openURL:options:`). On recent Flutter versions this logs "Plugin FlutterUlinkSdkPlugin uses deprecated application lifecycle events", and on apps that adopt the UIScene lifecycle those callbacks are no longer delivered — so universal links and custom URL schemes would stop reaching the plugin.
   - The plugin now also conforms to `FlutterSceneLifeCycleDelegate`, registers via `registrar.addSceneDelegate(_:)` alongside `addApplicationDelegate(_:)`, and implements the scene equivalents of the application-delegate deep-link callbacks. Registering both keeps deep linking working on migrated and non-migrated apps.
     - Warm start (app already running): `scene(_:continue:)` for universal links and `scene(_:openURLContexts:)` for custom URL schemes, mirroring `application:continueUserActivity:` / `application:openURL:`.
