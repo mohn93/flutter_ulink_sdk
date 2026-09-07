@@ -489,8 +489,11 @@ public class FlutterUlinkSdkPlugin: NSObject, FlutterPlugin, FlutterSceneLifeCyc
     public func scene(
         _ scene: UIScene,
         willConnectTo session: UISceneSession,
-        options connectionOptions: UIScene.ConnectionOptions
+        options connectionOptions: UIScene.ConnectionOptions?
     ) -> Bool {
+        // The protocol declares connectionOptions nullable: it can be nil when
+        // another plugin already handled the connection. Nothing to do then.
+        guard let connectionOptions else { return false }
         var handled = false
         for userActivity in connectionOptions.userActivities {
             guard userActivity.activityType == NSUserActivityTypeBrowsingWeb,
