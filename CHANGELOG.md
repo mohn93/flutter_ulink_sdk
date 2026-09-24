@@ -1,5 +1,8 @@
 # Changelog
 
+## 0.4.1
+- Bump the native Android SDK to `ly.ulink:ulink-sdk:1.2.2`. The Android library no longer packages template `ic_launcher` resources that could replace a host app's icon when it had no adaptive icon of its own. iOS is unchanged.
+
 ## 0.4.0
 - Adopt Flutter's UIScene lifecycle on iOS. The plugin previously received deep links only through `UIApplicationDelegate` forwarding (`application:continueUserActivity:restorationHandler:` and `application:openURL:options:`). On recent Flutter versions this logs "Plugin FlutterUlinkSdkPlugin uses deprecated application lifecycle events", and on apps that adopt the UIScene lifecycle those callbacks are no longer delivered — so universal links and custom URL schemes would stop reaching the plugin.
   - The plugin now also conforms to `FlutterSceneLifeCycleDelegate`, registers via `registrar.addSceneDelegate(_:)` alongside `addApplicationDelegate(_:)`, and implements the scene equivalents of the application-delegate deep-link callbacks. Registering both keeps deep linking working on migrated and non-migrated apps.
