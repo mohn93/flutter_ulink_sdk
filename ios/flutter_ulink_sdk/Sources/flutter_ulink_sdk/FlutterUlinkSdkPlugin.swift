@@ -120,70 +120,27 @@ public class FlutterUlinkSdkPlugin: NSObject, FlutterPlugin, FlutterSceneLifeCyc
             
             Task {
                 do {
-                    self.ulink = try await ULink.initialize(config: config)
-                    
-                    // Set up enhanced stream listeners with error handling
-                    self.ulink?.dynamicLinkStream
-                        .sink { [weak self] linkData in
-                            self?.handleStreamLinkData(linkData, streamHandler: self?.dynamicLinkStreamHandler, streamType: "dynamic")
-                        }
-                        .store(in: &self.cancellables)
-                    
-                    self.ulink?.unifiedLinkStream
-                        .sink { [weak self] linkData in
-                            self?.handleStreamLinkData(linkData, streamHandler: self?.unifiedLinkStreamHandler, streamType: "unified")
-                        }
-                        .store(in: &self.cancellables)
-                    
-                    // Listen to log stream
-                    self.ulink?.logStream
-                        .sink { [weak self] logEntry in
-                            self?.logStreamHandler?.sendEvent([
-                                "level": logEntry.level,
-                                "tag": logEntry.tag,
-                                "message": logEntry.message,
-                                "timestamp": logEntry.timestamp
-                            ])
-                        }
-                        .store(in: &self.cancellables)
-                    
-                    // Listen to reinstall detection stream
-                    self.ulink?.onReinstallDetected
-                        .sink { [weak self] installationInfo in
-                            NSLog("[ULink] Reinstall detected: previousInstallationId=%@", installationInfo.previousInstallationId ?? "nil")
-                            self?.reinstallStreamHandler?.sendEvent([
-                                "installationId": installationInfo.installationId,
-                                "isReinstall": installationInfo.isReinstall,
-                                "previousInstallationId": installationInfo.previousInstallationId as Any,
-                                "reinstallDetectedAt": installationInfo.reinstallDetectedAt as Any,
-                                "persistentDeviceId": installationInfo.persistentDeviceId as Any
-                            ])
-                        }
-                        .store(in: &self.cancellables)
-                    
-                    // AppDelegate integration is already set up during registration
-                    
-                    // Mark as initialized and process pending deep links
-                    self.isInitialized = true
-                    self.initializationCompleted = true
-                    
-                    // Process any pending deep links that were received before initialization
-                    let pendingLinks = self.pendingDeepLinks
-                    self.pendingDeepLinks.removeAll()
-                    
-                    for pending in pendingLinks {
-                        let pendingUrl = pending.url
-                        NSLog("[ULink] Processing pending deep link after initialization: %@", pendingUrl.absoluteString)
-                        self.processDeepLinkWithErrorHandling(pendingUrl, forceProcessing: pending.forceProcessing)
-                    }
-                    
-                    DispatchQueue.main.async {
-                        result(true)
-                    }
+                    let sdk = try await ULink.initialize(config: config)
+                    self.completeInitialization(sdk)
                 } catch {
-                    DispatchQueue.main.async {
-                        result(FlutterError(code: "INITIALIZATION_ERROR", message: error.localizedDescription, details: nil))
+                    // The native iOS SDK throws when bootstrap fails (non-2xx such as
+                    // a 503 under load shedding or a 403 at the plan's MAU cap, or no
+                    // network). The instance still exists and retries bootstrap on the
+                    // next foreground and before handling a link, which is how the
+                    // Android SDK behaves. Report success in that case so an app that
+                    // awaits initialize() before runApp() still launches, and wire the
+                    // streams so later links are delivered instead of queued forever.
+                    guard ULink.isInitialized else {
+                        DispatchQueue.main.async {
+                            result(FlutterError(code: "INITIALIZATION_ERROR", message: error.localizedDescription, details: nil))
+                        }
+                        return
                     }
+                    NSLog("[ULink] Initialization degraded, bootstrap will be retried: %@", error.localizedDescription)
+                    self.completeInitialization(ULink.shared)
+                }
+                DispatchQueue.main.async {
+                    result(true)
                 }
             }
         } catch {
@@ -191,6 +148,69 @@ public class FlutterUlinkSdkPlugin: NSObject, FlutterPlugin, FlutterSceneLifeCyc
         }
     }
     
+    /// Wires the SDK streams and drains links queued before initialization.
+    /// Safe to call again on a re-initialize: earlier subscriptions are dropped
+    /// first so each link is delivered once.
+    private func completeInitialization(_ sdk: ULink) {
+        ulink = sdk
+        cancellables.removeAll()
+
+        // Set up enhanced stream listeners with error handling
+        sdk.dynamicLinkStream
+            .sink { [weak self] linkData in
+                self?.handleStreamLinkData(linkData, streamHandler: self?.dynamicLinkStreamHandler, streamType: "dynamic")
+            }
+            .store(in: &self.cancellables)
+        
+        sdk.unifiedLinkStream
+            .sink { [weak self] linkData in
+                self?.handleStreamLinkData(linkData, streamHandler: self?.unifiedLinkStreamHandler, streamType: "unified")
+            }
+            .store(in: &self.cancellables)
+        
+        // Listen to log stream
+        sdk.logStream
+            .sink { [weak self] logEntry in
+                self?.logStreamHandler?.sendEvent([
+                    "level": logEntry.level,
+                    "tag": logEntry.tag,
+                    "message": logEntry.message,
+                    "timestamp": logEntry.timestamp
+                ])
+            }
+            .store(in: &self.cancellables)
+        
+        // Listen to reinstall detection stream
+        sdk.onReinstallDetected
+            .sink { [weak self] installationInfo in
+                NSLog("[ULink] Reinstall detected: previousInstallationId=%@", installationInfo.previousInstallationId ?? "nil")
+                self?.reinstallStreamHandler?.sendEvent([
+                    "installationId": installationInfo.installationId,
+                    "isReinstall": installationInfo.isReinstall,
+                    "previousInstallationId": installationInfo.previousInstallationId as Any,
+                    "reinstallDetectedAt": installationInfo.reinstallDetectedAt as Any,
+                    "persistentDeviceId": installationInfo.persistentDeviceId as Any
+                ])
+            }
+            .store(in: &self.cancellables)
+        
+        // AppDelegate integration is already set up during registration
+        
+        // Mark as initialized and process pending deep links
+        self.isInitialized = true
+        self.initializationCompleted = true
+        
+        // Process any pending deep links that were received before initialization
+        let pendingLinks = self.pendingDeepLinks
+        self.pendingDeepLinks.removeAll()
+        
+        for pending in pendingLinks {
+            let pendingUrl = pending.url
+            NSLog("[ULink] Processing pending deep link after initialization: %@", pendingUrl.absoluteString)
+            self.processDeepLinkWithErrorHandling(pendingUrl, forceProcessing: pending.forceProcessing)
+        }
+    }
+
     private func createLink(call: FlutterMethodCall, result: @escaping FlutterResult) {
         guard let args = call.arguments as? [String: Any],
               let parametersMap = args["parameters"] as? [String: Any] else {

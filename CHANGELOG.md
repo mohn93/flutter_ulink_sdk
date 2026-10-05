@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.4.3
+- iOS: a failed startup request no longer fails `initialize()`. When `POST /sdk/bootstrap` returned a non-2xx status (a 503 under load, a 403 at a plan limit) or the network was unavailable, the plugin returned `INITIALIZATION_ERROR`. An app that awaited `initialize()` before `runApp()` without a `try`/`catch` then never rendered. The plugin also skipped wiring the link streams in that case, so links that arrived later stayed queued for the life of the process.
+  - The plugin now matches Android: `initialize()` completes, the streams are wired, queued links are processed, and the native SDK retries the request when the app returns to the foreground and before it handles a link. `INITIALIZATION_ERROR` is still returned when the native SDK could not be created at all.
+  - Calling `initialize()` again no longer subscribes to the native streams a second time, so a link is delivered once.
+- README: wrap `initialize()` in `try`/`catch` in the setup example and document the degraded mode.
+
 ## 0.4.2
 - Bump the native Android SDK to `ly.ulink:ulink-sdk:1.2.3`. The Android library manifest no longer declares `<application>` attributes (`android:theme`, `allowBackup`, `dataExtractionRules`, `fullBackupContent`), and the library no longer packages template theme, color, `app_name` string or backup-rule resources. A host app that did not set these itself inherited the SDK's values. iOS is unchanged.
 
