@@ -1,5 +1,8 @@
 # Changelog
 
+## 0.4.2
+- Bump the native Android SDK to `ly.ulink:ulink-sdk:1.2.3`. The Android library manifest no longer declares `<application>` attributes (`android:theme`, `allowBackup`, `dataExtractionRules`, `fullBackupContent`), and the library no longer packages template theme, color, `app_name` string or backup-rule resources. A host app that did not set these itself inherited the SDK's values. iOS is unchanged.
+
 ## 0.4.1
 - Bump the native Android SDK to `ly.ulink:ulink-sdk:1.2.2`. The Android library no longer packages template `ic_launcher` resources that could replace a host app's icon when it had no adaptive icon of its own. iOS is unchanged.
 
