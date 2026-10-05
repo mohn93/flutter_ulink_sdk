@@ -17,7 +17,7 @@ let package = Package(
         // step — this comment previously named 1.1.1 while the pin below had
         // moved on twice, which is exactly the drift that makes a reader trust
         // the wrong constraint.
-        .package(url: "https://github.com/mohn93/ios_ulink_sdk.git", from: "1.2.2")
+        .package(url: "https://github.com/mohn93/ios_ulink_sdk.git", from: "1.2.3")
     ],
     targets: [
         .target(

@@ -2,8 +2,10 @@
 
 ## 0.4.3
 - iOS: a failed startup request no longer fails `initialize()`. When `POST /sdk/bootstrap` returned a non-2xx status (a 503 under load, a 403 at a plan limit) or the network was unavailable, the plugin returned `INITIALIZATION_ERROR`. An app that awaited `initialize()` before `runApp()` without a `try`/`catch` then never rendered. The plugin also skipped wiring the link streams in that case, so links that arrived later stayed queued for the life of the process.
-  - The plugin now matches Android: `initialize()` completes, the streams are wired, queued links are processed, and the native SDK retries the request when the app returns to the foreground and before it handles a link. `INITIALIZATION_ERROR` is still returned when the native SDK could not be created at all.
-  - Calling `initialize()` again no longer subscribes to the native streams a second time, so a link is delivered once.
+  - The plugin now matches Android: `initialize()` completes, the streams are wired and queued links are processed. `INITIALIZATION_ERROR` is still returned if the native SDK instance was not created.
+  - Initialization state is now updated on the main thread, where the deep-link callbacks also run.
+  - Calling `initialize()` again keeps the existing stream subscriptions instead of re-subscribing, which replayed the most recent link.
+- Raise the pinned native iOS SDK to `ULinkSDK` 1.2.3. After a failed startup request it retries before resolving a link, creating a link or checking for a deferred link (previously only on the next foreground), honours the server's `Retry-After`, and runs the automatic deferred-link check once a retry succeeds.
 - README: wrap `initialize()` in `try`/`catch` in the setup example and document the degraded mode.
 
 ## 0.4.2

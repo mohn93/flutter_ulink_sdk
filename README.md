@@ -175,7 +175,7 @@ void main() async {
 }
 ```
 
-If the ULink API cannot be reached or rejects the startup request (no network, a temporary 503, or a plan limit), `initialize()` still completes: the SDK runs in a degraded mode and retries the request when the app returns to the foreground and before it handles an incoming link. Link streams stay connected, so links that arrive later are still delivered. `initialize()` throws only for setup errors such as an invalid configuration; the `try`/`catch` above keeps those from blocking `runApp()`.
+If the ULink API cannot be reached or rejects the startup request (no network, a temporary 503, or a plan limit), `initialize()` still completes. The SDK runs in a degraded mode and retries the request when the app returns to the foreground and before it resolves a link, creates a link or checks for a deferred link. Link streams stay connected, so links that arrive later are still delivered once a retry succeeds. `initialize()` throws for invalid arguments or configuration (`INVALID_ARGUMENTS`, `PARSE_CONFIG_ERROR`); the `try`/`catch` above keeps those from blocking `runApp()`.
 
 ## Link Types
 
