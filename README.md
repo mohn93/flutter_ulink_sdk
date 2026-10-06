@@ -159,17 +159,23 @@ import 'package:flutter_ulink_sdk/flutter_ulink_sdk.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  // Initialize with your configuration
-  await ULink.instance.initialize(
-    ULinkConfig(
-      apiKey: 'your_api_key',
-      debug: true, // Enable debug logging (optional)
-    ),
-  );
+  try {
+    await ULink.instance.initialize(
+      ULinkConfig(
+        apiKey: 'your_api_key',
+        debug: true, // Enable debug logging (optional)
+      ),
+    );
+  } catch (e) {
+    // Never let deep-link setup stop the app from launching.
+    debugPrint('ULink initialization failed: $e');
+  }
 
   runApp(MyApp());
 }
 ```
+
+If the ULink API cannot be reached or rejects the startup request (no network, a temporary 503, or a plan limit), `initialize()` still completes. The SDK runs in a degraded mode and retries the request when the app returns to the foreground and before it resolves a link, creates a link or checks for a deferred link. Link streams stay connected, so links that arrive later are still delivered once a retry succeeds. `initialize()` throws for invalid arguments or configuration (`INVALID_ARGUMENTS`, `PARSE_CONFIG_ERROR`); the `try`/`catch` above keeps those from blocking `runApp()`.
 
 ## Link Types
 

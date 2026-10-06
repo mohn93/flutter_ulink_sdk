@@ -119,71 +119,31 @@ public class FlutterUlinkSdkPlugin: NSObject, FlutterPlugin, FlutterSceneLifeCyc
             let config = try parseULinkConfig(from: configMap)
             
             Task {
+                let sdk: ULink
                 do {
-                    self.ulink = try await ULink.initialize(config: config)
-                    
-                    // Set up enhanced stream listeners with error handling
-                    self.ulink?.dynamicLinkStream
-                        .sink { [weak self] linkData in
-                            self?.handleStreamLinkData(linkData, streamHandler: self?.dynamicLinkStreamHandler, streamType: "dynamic")
-                        }
-                        .store(in: &self.cancellables)
-                    
-                    self.ulink?.unifiedLinkStream
-                        .sink { [weak self] linkData in
-                            self?.handleStreamLinkData(linkData, streamHandler: self?.unifiedLinkStreamHandler, streamType: "unified")
-                        }
-                        .store(in: &self.cancellables)
-                    
-                    // Listen to log stream
-                    self.ulink?.logStream
-                        .sink { [weak self] logEntry in
-                            self?.logStreamHandler?.sendEvent([
-                                "level": logEntry.level,
-                                "tag": logEntry.tag,
-                                "message": logEntry.message,
-                                "timestamp": logEntry.timestamp
-                            ])
-                        }
-                        .store(in: &self.cancellables)
-                    
-                    // Listen to reinstall detection stream
-                    self.ulink?.onReinstallDetected
-                        .sink { [weak self] installationInfo in
-                            NSLog("[ULink] Reinstall detected: previousInstallationId=%@", installationInfo.previousInstallationId ?? "nil")
-                            self?.reinstallStreamHandler?.sendEvent([
-                                "installationId": installationInfo.installationId,
-                                "isReinstall": installationInfo.isReinstall,
-                                "previousInstallationId": installationInfo.previousInstallationId as Any,
-                                "reinstallDetectedAt": installationInfo.reinstallDetectedAt as Any,
-                                "persistentDeviceId": installationInfo.persistentDeviceId as Any
-                            ])
-                        }
-                        .store(in: &self.cancellables)
-                    
-                    // AppDelegate integration is already set up during registration
-                    
-                    // Mark as initialized and process pending deep links
-                    self.isInitialized = true
-                    self.initializationCompleted = true
-                    
-                    // Process any pending deep links that were received before initialization
-                    let pendingLinks = self.pendingDeepLinks
-                    self.pendingDeepLinks.removeAll()
-                    
-                    for pending in pendingLinks {
-                        let pendingUrl = pending.url
-                        NSLog("[ULink] Processing pending deep link after initialization: %@", pendingUrl.absoluteString)
-                        self.processDeepLinkWithErrorHandling(pendingUrl, forceProcessing: pending.forceProcessing)
-                    }
-                    
-                    DispatchQueue.main.async {
-                        result(true)
-                    }
+                    sdk = try await ULink.initialize(config: config)
                 } catch {
-                    DispatchQueue.main.async {
-                        result(FlutterError(code: "INITIALIZATION_ERROR", message: error.localizedDescription, details: nil))
+                    // The native iOS SDK throws when bootstrap fails (non-2xx such as
+                    // a 503 under load shedding or a 403 at the plan's MAU cap, or no
+                    // network). The instance still exists and retries bootstrap on the
+                    // next foreground and before any link resolution or API call,
+                    // which is how the Android SDK behaves. Report success in that
+                    // case so an app that awaits initialize() before runApp() still
+                    // launches, and wire the streams so later links are delivered.
+                    guard ULink.isInitialized else {
+                        await MainActor.run {
+                            result(FlutterError(code: "INITIALIZATION_ERROR", message: error.localizedDescription, details: nil))
+                        }
+                        return
                     }
+                    NSLog("[ULink] Initialization degraded, bootstrap will be retried: %@", error.localizedDescription)
+                    sdk = ULink.shared
+                }
+                // Plugin state is also read and written by the deep-link delegate
+                // callbacks, which run on the main thread.
+                await MainActor.run {
+                    self.completeInitialization(sdk)
+                    result(true)
                 }
             }
         } catch {
@@ -191,6 +151,75 @@ public class FlutterUlinkSdkPlugin: NSObject, FlutterPlugin, FlutterSceneLifeCyc
         }
     }
     
+    /// Wires the SDK streams and drains links queued before initialization.
+    /// Must run on the main thread. A repeated initialize() against the same
+    /// native instance keeps the existing subscriptions: the native link streams
+    /// replay their latest value to a new subscriber, so re-subscribing would
+    /// deliver the previous link again.
+    private func completeInitialization(_ sdk: ULink) {
+        let needsWiring = ulink !== sdk || cancellables.isEmpty
+        ulink = sdk
+        if needsWiring {
+            cancellables.removeAll()
+            wireStreams(sdk)
+        }
+
+        // Mark as initialized and process pending deep links
+        self.isInitialized = true
+        self.initializationCompleted = true
+
+        // Process any pending deep links that were received before initialization
+        let pendingLinks = self.pendingDeepLinks
+        self.pendingDeepLinks.removeAll()
+
+        for pending in pendingLinks {
+            let pendingUrl = pending.url
+            NSLog("[ULink] Processing pending deep link after initialization: %@", pendingUrl.absoluteString)
+            self.processDeepLinkWithErrorHandling(pendingUrl, forceProcessing: pending.forceProcessing)
+        }
+    }
+
+    private func wireStreams(_ sdk: ULink) {
+        // Set up enhanced stream listeners with error handling
+        sdk.dynamicLinkStream
+            .sink { [weak self] linkData in
+                self?.handleStreamLinkData(linkData, streamHandler: self?.dynamicLinkStreamHandler, streamType: "dynamic")
+            }
+            .store(in: &self.cancellables)
+        
+        sdk.unifiedLinkStream
+            .sink { [weak self] linkData in
+                self?.handleStreamLinkData(linkData, streamHandler: self?.unifiedLinkStreamHandler, streamType: "unified")
+            }
+            .store(in: &self.cancellables)
+        
+        // Listen to log stream
+        sdk.logStream
+            .sink { [weak self] logEntry in
+                self?.logStreamHandler?.sendEvent([
+                    "level": logEntry.level,
+                    "tag": logEntry.tag,
+                    "message": logEntry.message,
+                    "timestamp": logEntry.timestamp
+                ])
+            }
+            .store(in: &self.cancellables)
+        
+        // Listen to reinstall detection stream
+        sdk.onReinstallDetected
+            .sink { [weak self] installationInfo in
+                NSLog("[ULink] Reinstall detected: previousInstallationId=%@", installationInfo.previousInstallationId ?? "nil")
+                self?.reinstallStreamHandler?.sendEvent([
+                    "installationId": installationInfo.installationId,
+                    "isReinstall": installationInfo.isReinstall,
+                    "previousInstallationId": installationInfo.previousInstallationId as Any,
+                    "reinstallDetectedAt": installationInfo.reinstallDetectedAt as Any,
+                    "persistentDeviceId": installationInfo.persistentDeviceId as Any
+                ])
+            }
+            .store(in: &self.cancellables)
+    }
+
     private func createLink(call: FlutterMethodCall, result: @escaping FlutterResult) {
         guard let args = call.arguments as? [String: Any],
               let parametersMap = args["parameters"] as? [String: Any] else {
