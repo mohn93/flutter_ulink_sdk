@@ -1,7 +1,16 @@
 name: flutter_ulink_sdk
-description: "Flutter SDK for creating and handling dynamic links, similar to Branch.io"
+description: "Flutter SDK for Ulinkly deep linking: Universal Links, App Links, deferred deep links and attribution. A Firebase Dynamic Links replacement."
 version: 0.4.3
-homepage: https://github.com/mohn93/flutter_ulink_sdk
+homepage: https://ulink.ly/framework/flutter
+repository: https://github.com/mohn93/flutter_ulink_sdk
+issue_tracker: https://github.com/mohn93/flutter_ulink_sdk/issues
+documentation: https://docs.ulink.ly/getting-started/flutter
+topics:
+  - deep-linking
+  - dynamic-links
+  - universal-links
+  - app-links
+  - deferred-deep-linking
 
 environment:
   sdk: ^3.10.0

@@ -11,9 +11,11 @@ and the Flutter guide for
 [developing packages and plugins](https://flutter.dev/to/develop-packages).
 -->
 
-# ULink SDK for Flutter
+# Ulinkly SDK for Flutter
 
-A Flutter SDK for creating and handling dynamic links with ULink, similar to Branch.io.
+The official Flutter SDK for [Ulinkly](https://ulink.ly), a deep linking platform and Firebase Dynamic Links replacement: Universal Links, App Links, deferred deep linking and install attribution for Flutter apps.
+
+[Flutter deep linking guide](https://ulink.ly/framework/flutter) | [Docs](https://docs.ulink.ly/getting-started/flutter) | [Migrating from Firebase Dynamic Links](https://ulink.ly/migrate/firebase-dynamic-links) | [Pricing](https://ulink.ly/pricing)
 
 ## ULink SDKs
 
