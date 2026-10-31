@@ -149,6 +149,8 @@ Note: The domain configuration including required files in the `.well-known` dir
 
 Note: The domain configuration including required files in the `.well-known` directory is automatically handled when you register your subdomain on shared.ly through the ULink service.
 
+To check those files, use the free [AASA validator](https://ulink.ly/tools/apple-app-site-association-validator) (iOS) and [assetlinks.json validator](https://ulink.ly/tools/assetlinks-validator) (Android). To check a link end to end, use the [deep link tester](https://ulink.ly/tools/deep-link-tester).
+
 ### 3. Flutter SDK Initialization
 
 Initialize the SDK in your app:
