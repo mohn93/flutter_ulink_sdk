@@ -1,5 +1,8 @@
 # Changelog
 
+## 0.4.4
+- Android: native SDK 1.2.4 (`ly.ulink:ulink-sdk:1.2.4`), Java initialization now ready before the first Activity. The plugin initializes through the Kotlin API, so Flutter apps see no behaviour change. iOS is unchanged.
+
 ## 0.4.3
 - iOS: a failed startup request no longer fails `initialize()`. When `POST /sdk/bootstrap` returned a non-2xx status (a 503 under load, a 403 at a plan limit) or the network was unavailable, the plugin returned `INITIALIZATION_ERROR`. An app that awaited `initialize()` before `runApp()` without a `try`/`catch` then never rendered. The plugin also skipped wiring the link streams in that case, so links that arrived later stayed queued for the life of the process.
   - The plugin now matches Android: `initialize()` completes, the streams are wired and queued links are processed. `INITIALIZATION_ERROR` is still returned if the native SDK instance was not created.
