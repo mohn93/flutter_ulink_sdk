@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.4.5
+- Android: native SDK 1.2.5 (`ly.ulink:ulink-sdk:1.2.5`), which declares `INTERNET` and `ACCESS_NETWORK_STATE` in its manifest. Neither the plugin nor the native SDK declared them before, and the Flutter template only adds `INTERNET` to the debug and profile manifests, so release builds that had not added it themselves could not reach the API (`Bootstrap failed: HTTP -1: Permission denied`) and logged a `SecurityException` for the network callback on every start. Both permissions now merge into the app automatically. iOS is unchanged.
+- README: install line now shows the current version.
+
 ## 0.4.4
 - Android: native SDK 1.2.4 (`ly.ulink:ulink-sdk:1.2.4`), Java initialization now ready before the first Activity. The plugin initializes through the Kotlin API, so Flutter apps see no behaviour change. iOS is unchanged.
 
