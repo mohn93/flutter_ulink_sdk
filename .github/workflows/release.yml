@@ -32,6 +32,17 @@ jobs:
           fi
           echo "Version $VERSION verified"
 
+      # The README install line is what pub.dev shows; it must name this version
+      - name: Verify README install line matches tag
+        run: |
+          VERSION="${{ steps.version.outputs.VERSION }}"
+          if ! grep -qF "flutter_ulink_sdk: ^$VERSION" README.md; then
+            echo "ERROR: README.md install line is not 'flutter_ulink_sdk: ^$VERSION'"
+            grep -n "flutter_ulink_sdk: ^" README.md || true
+            exit 1
+          fi
+          echo "README install line verified"
+
       # Setup Flutter. Pinned to match ci.yml so releases are reproducible and a
       # newer floating stable can't change tooling behaviour under us. Keep this
       # version in sync with .github/workflows/ci.yml.
